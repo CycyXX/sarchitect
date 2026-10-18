@@ -246,9 +246,9 @@ const TR_LIST = [
 const TR = { de: {}, gsw: {} };
 for (const [en, de, gsw] of TR_LIST) { TR.de[en] = de; TR.gsw[en] = gsw; }
 const trMiss = new Set();
-// the action button: "A" on touch screens, the Enter key on keyboards ([A] in texts)
+// the action button: "A" on touch screens, the Enter key (↵) on keyboards ([A] in texts)
 const IS_TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
-const BTN_A = IS_TOUCH ? 'A' : 'Enter';
+const BTN_A = IS_TOUCH ? 'A' : '↵';
 function t(s, ...a) {
   let r = s;
   if (LANG !== 'en') { if (TR[LANG][s] !== undefined) r = TR[LANG][s]; else trMiss.add(s); }
