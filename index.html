@@ -73,7 +73,7 @@ function cycleLang(dir = 1) {
 const TR_LIST = [
   // signs
   ["SEILSPRINGEN CLUB LUZERN — Skip {0} in a row for a reward! (C-Real is on rope duty.)", "SEILSPRINGEN CLUB LUZERN — Spring {0} Mal am Stück für eine Belohnung! (C-Real dreht das Seil.)", "SEILSPRINGEN CLUB LUZERN — Gump {0} Mal am Stück und überchum e Belohnig! (De C-Real drüllt s Seil.)"],
-  ["VIERWALDSTÄTTERSEE. Too cold to swim today. Rumor says California is warmer... far to the east.", "VIERWALDSTÄTTERSEE. Heute zu kalt zum Baden. Man munkelt, Kalifornien sei wärmer... weit im Osten.", "VIERWALDSTÄTTERSEE. Hüt z chalt zum Bade. Me seit, Kalifornie sig wärmer... wiit im Oschte."],
+  ["VIERWALDSTÄTTERSEE. Too cold to swim today. Rumor says Italy is warmer... far to the east.", "VIERWALDSTÄTTERSEE. Heute zu kalt zum Baden. Man munkelt, Italien sei wärmer... weit im Osten.", "VIERWALDSTÄTTERSEE. Hüt z chalt zum Bade. Me seit, Italie sig wärmer... wiit im Oschte."],
   ["LÖWENDENKMAL — the famous dying lion of Luzern, carved right into the rock.", "LÖWENDENKMAL — der berühmte sterbende Löwe von Luzern, direkt in den Fels gehauen.", "LÖWEDÄNKMAL — de berüehmti stärbendi Löi vo Lozärn, diräkt in Fels ghaue."],
   ["Finally. A lion I actually like.", "Endlich. Ein Löwe, den ich mag.", "Ändlich. En Löi, won ich mag."],
   ["It does not poop.", "Er macht keinen Kot.", "Er macht kei Gaggi."],
@@ -97,7 +97,7 @@ const TR_LIST = [
   // interiors
   ["Holzhaus Huber, Luzern", "Holzhaus Huber, Luzern", "Holzhuus Huber, Lozärn"], ["Dovetail Joint", "Schwalbenschwanz-Verbindung", "Schwalbeschwanz-Verbindig"], ["Holzhaus in Luzern", "Holzhaus in Luzern", "Holzhuus z Lozärn"],
   ["Schwalbenschwanz! A dovetail joint locks two timbers together without a single nail — the wood simply holds itself.", "Schwalbenschwanz! Diese Verbindung hält zwei Hölzer ohne einen einzigen Nagel zusammen — das Holz hält sich einfach selbst.", "Schwalbeschwanz! Die Verbindig hebt zwei Hölzer ohni en einzige Nagel zäme — s Holz hebt sich eifach sälber."],
-  ["in Luzern", "in Luzern", "z Lozärn"], ["in the Bireggwald", "im Bireggwald", "im Bireggwald"], ["in the Alps (find the key!)", "in den Alpen (finde den Schlüssel!)", "i de Alpe (find de Schlüssel!)"], ["in the Alps (bouncer!)", "in den Alpen (Türsteher!)", "i de Alpe (Türsteher!)"], ["in California", "in Kalifornien", "in Kalifornie"],
+  ["in Luzern", "in Luzern", "z Lozärn"], ["in the Bireggwald", "im Bireggwald", "im Bireggwald"], ["in the Alps (find the key!)", "in den Alpen (finde den Schlüssel!)", "i de Alpe (find de Schlüssel!)"], ["in the Alps (bouncer!)", "in den Alpen (Türsteher!)", "i de Alpe (Türsteher!)"], ["in Italy", "in Italien", "in Italie"],
   ["Shingles & Timber Ribs", "Schindeln & Holzrippen", "Schindle & Holzrippe"],
   ["A leaf-shaped plan clad in larch shingles that silver with age. Inside, a ring of slender timber columns stands free of the wall, like the ribs of a boat.", "Ein blattförmiger Grundriss mit Lärchenschindeln, die mit der Zeit silbern werden. Innen steht ein Ring schlanker Holzstützen frei von der Wand, wie die Rippen eines Boots.", "En blattförmige Grundriss mit Lärcheschindle, wo mit de Ziit silbrig wärded. Dinne stoht en Ring vo schlanke Holzstütze frei vo de Wand, wie d Rippe vomene Boot."],
   ["Stall in Vrin", "Stall in Vrin", "Stall z Vrin"], ["Strickbau Corner", "Strickbau-Ecke", "Strickbau-Egge"], ["Stall in Vrin — Gion A. Caminada", "Stall in Vrin — Gion A. Caminada", "Stall z Vrin — Gion A. Caminada"],
@@ -136,7 +136,7 @@ const TR_LIST = [
   ["Welcome to the Alps — Caminada and Zumthor country! 🏔", "Willkommen in den Alpen — im Land von Caminada und Zumthor! 🏔", "Willkomme i de Alpe — im Land vom Caminada und vom Zumthor! 🏔"],
   ["Also... mountain lions. 🦁", "Ausserdem... Berglöwen. 🦁", "Und... Berglöie. 🦁"], ["NO.", "NEIN.", "NEI."],
   ["I know, I know. Rope skip over their poop and use your bike if they chase you. You've got this.", "Ich weiss, ich weiss. Spring mit dem Seil über ihren Kot und nimm das Velo, wenn sie dich jagen. Du schaffst das.", "Ich weiss, ich weiss. Gump mit em Seil über ihre Gaggi und nimm s Velo, wenn s di jaged. Du schaffsch das."],
-  ["CALIFORNIA! You made it! 🌊", "KALIFORNIEN! Du hast es geschafft! 🌊", "KALIFORNIE! Du hesch es gschafft! 🌊"],
+  ["ITALY! You made it! 🌊", "ITALIEN! Du hast es geschafft! 🌊", "ITALIE! Du hesch es gschafft! 🌊"],
   ["See that Bolleblu waterslide park? It only opens for complete sketchbooks.", "Siehst du den Rutschbahn-Park Bolleblu? Er öffnet nur für volle Skizzenbücher.", "Gsehsch de Rutschbahn-Park Bolleblu? Dä gaht nur für volli Skizzebüecher uf."],
   ["Says who?", "Sagt wer?", "Seit wer?"], ["Says me. My world, my rules. 😘", "Sag ich. Meine Welt, meine Regeln. 😘", "Säg ich. Mini Wält, mini Regle. 😘"],
   ["You look tired. Risotto ai funghi? (2 🍄)", "Du siehst müde aus. Risotto ai funghi? (2 🍄)", "Du gsehsch müed us. Risotto ai funghi? (2 🍄)"],
@@ -150,9 +150,9 @@ const TR_LIST = [
   ["You've got the stable key! Mind the cows — they're perfect for hiding behind.", "Du hast den Stallschlüssel! Achte auf die Kühe — hinter ihnen kann man sich perfekt verstecken.", "Du hesch de Stallschlüssel! Lueg uf d Chüe — hinder dene chasch di perfekt verstecke."],
   ["The Therme Vals bouncer is scary. You know what's scarier? A snow tiger. They say one appears if you pet 5 cats. ({0}/5)", "Der Türsteher der Therme Vals ist furchteinflössend. Weisst du, was noch furchteinflössender ist? Ein Schneetiger. Angeblich erscheint einer, wenn du 5 Katzen streichelst. ({0}/5)", "De Türsteher vo de Therme Vals isch gfürchig. Weisch, was no gfürchiger isch? En Schneetiger. Me seit, es chunnt eine, wenn du 5 Chatze strichlisch. ({0}/5)"],
   ["Take your snow tiger to visit the Therme Vals bouncer. 😼", "Besuch mit deinem Schneetiger den Türsteher der Therme Vals. 😼", "Gang mit dim Schneetiger de Türsteher vo de Therme Vals go bsueche. 😼"],
-  ["The pavilion guard in California loves risotto. Bring him 5 mushrooms. ({0}/5)", "Der Wächter am Pavillon in Kalifornien liebt Risotto. Bring ihm 5 Pilze. ({0}/5)", "De Wächter vom Pavillon in Kalifornie liebt Risotto. Bring ihm 5 Pilz. ({0}/5)"],
+  ["The pavilion guard in Italy loves risotto. Bring him 5 mushrooms. ({0}/5)", "Der Wächter am Pavillon in Italien liebt Risotto. Bring ihm 5 Pilze. ({0}/5)", "De Wächter vom Pavillon in Italie liebt Risotto. Bring ihm 5 Pilz. ({0}/5)"],
   ["The Hortus Conclusus pavilion: two guards, very dark. The garden is in the middle. You can do it!", "Der Hortus-Conclusus-Pavillon: zwei Wächter, sehr dunkel. Der Garten ist in der Mitte. Du schaffst das!", "De Hortus-Conclusus-Pavillon: zwei Wächter, mega dunkel. De Garte isch i de Mitti. Du schaffsch das!"],
-  ["Your sketchbook is full! The Bolleblu waterslide park in California is open. I'll meet you at the bottom. 💙", "Dein Skizzenbuch ist voll! Der Rutschbahn-Park Bolleblu in Kalifornien ist offen. Wir sehen uns unten. 💙", "Dis Skizzebuech isch voll! De Rutschbahn-Park Bolleblu in Kalifornie isch offe. Mer gsehnd üs dunne. 💙"],
+  ["Your sketchbook is full! The Bolleblu waterslide park in Italy is open. I'll meet you at the bottom. 💙", "Dein Skizzenbuch ist voll! Der Rutschbahn-Park Bolleblu in Italien ist offen. Wir sehen uns unten. 💙", "Dis Skizzebuech isch voll! De Rutschbahn-Park Bolleblu in Italie isch offe. Mer gsehnd üs dunne. 💙"],
   // buildings
   ["I already sketched the \"{0}\" here. Still gorgeous.", "Hier habe ich \"{0}\" schon skizziert. Immer noch wunderschön.", "Da han ich \"{0}\" scho skizziert. Immer no wunderschön."],
   ["Locked. I need something to pick it with... maybe C-Real has something.", "Verschlossen. Ich brauche etwas zum Knacken... vielleicht hat C-Real etwas.", "Bschlosse. Ich bruuch öppis zum Knacke... vilicht het de C-Real öppis."],
@@ -204,17 +204,17 @@ const TR_LIST = [
   ["Caught? 😂 Watch their flashlight cones. Try again!", "Erwischt? 😂 Achte auf die Lichtkegel. Nochmal!", "Verwütscht? 😂 Lueg uf d Liechtchegel. Nomal!"],
   ["Got it! \"{0}\" — sketched. ✏️", "Geschafft! \"{0}\" — skizziert. ✏️", "Gschafft! \"{0}\" — skizziert. ✏️"],
   ["Now let's get out of here before anyone notices...", "Jetzt nichts wie raus, bevor es jemand merkt...", "Jetzt aber nüt wie use, bevor s öpper merkt..."],
-  ["ALL FIVE?!?! Meet me at the Bolleblu waterslide park in California!! 🌊", "ALLE FÜNF?!?! Wir treffen uns beim Rutschbahn-Park Bolleblu in Kalifornien!! 🌊", "ALLI FÖIF?!?! Mer träffed üs bim Rutschbahn-Park Bolleblu in Kalifornie!! 🌊"],
+  ["ALL FIVE?!?! Meet me at the Bolleblu waterslide park in Italy!! 🌊", "ALLE FÜNF?!?! Wir treffen uns beim Rutschbahn-Park Bolleblu in Italien!! 🌊", "ALLI FÖIF?!?! Mer träffed üs bim Rutschbahn-Park Bolleblu in Italie!! 🌊"],
   ["{0}/5 sketches! You're a professional break-in architect. 😍", "{0}/5 Skizzen! Du bist eine professionelle Einbruchs-Architektin. 😍", "{0}/5 Skizze! Du bisch e professionelli Ibruch-Architektin. 😍"],
   ["Bike on!", "Aufs Velo!", "Ufs Velo!"], ["Bike off", "Vom Velo", "Vom Velo abe"], ["No bike yet!", "Noch kein Velo!", "No kei Velo!"],
   ["EWW! It's in the tire treads!", "IGITT! Es klebt im Reifenprofil!", "GRUSIG! Es chläbt im Pneu!"], ["EWWW! Lion poop!", "IGITT! Löwenkot!", "GRUSIG! Löiegaggi!"],
   ["Did you just... 🤢 Press [A] to rope skip OVER it next time!", "Bist du gerade... 🤢 Drück nächstes Mal [A] und spring DARÜBER!", "Bisch du grad... 🤢 Drück s nächscht Mal [A] und gump DRÜBER!"],
   ["Whoa... the buildings are breathing...", "Whoa... die Gebäude atmen...", "Whoa... d Hüser schnuufed..."],
   ["Red with white dots?! I SAID NOT THOSE. 😂 It wears off soon.", "Rot mit weissen Punkten?! ICH SAGTE NICHT DIE. 😂 Das vergeht bald.", "Rot mit wisse Pünkt?! ICH HA GSEIT NÖD DIE. 😂 Das gaht bald verbii."],
-  ["Bireggwald", "Bireggwald", "Bireggwald"], ["The Alps · Lion Country", "Die Alpen · Löwenland", "D Alpe · Löieland"], ["California", "Kalifornien", "Kalifornie"],
+  ["Bireggwald", "Bireggwald", "Bireggwald"], ["The Alps · Lion Country", "Die Alpen · Löwenland", "D Alpe · Löieland"], ["Italy", "Italien", "Italie"],
   ["Bireggwald! Brown & orange = yum. Red with dots = NO. 🍄", "Bireggwald! Braun & orange = lecker. Rot mit Punkten = NEIN. 🍄", "Bireggwald! Bruun & orange = fein. Rot mit Pünkt = NEI. 🍄"],
   ["Lion country!! 🦁 Jump ([A]) over the poop, bike (B) away if they chase you!", "Löwenland!! 🦁 Spring ([A]) über den Kot, fahr (B) weg, wenn sie dich jagen!", "Löieland!! 🦁 Gump ([A]) über de Gaggi, fahr (B) devo, wenn s di jaged!"],
-  ["CALIFORNIA!! 🌊 Smell that? Freedom. And sunscreen.", "KALIFORNIEN!! 🌊 Riechst du das? Freiheit. Und Sonnencreme.", "KALIFORNIE!! 🌊 Schmöcksch das? Freiheit. Und Sunnecreme."],
+  ["ITALY!! 🌊 Smell that? Pizza. And sunscreen.", "ITALIEN!! 🌊 Riechst du das? Pizza. Und Sonnencreme.", "ITALIE!! 🌊 Schmöcksch das? Pizza. Und Sunnecreme."],
   ["No bikes indoors!", "Keine Velos drinnen!", "Kei Velos dinne!"], ["❤ Rope skipping champion! +1 max heart", "❤ Seilspring-Champion! +1 Herz", "❤ Seilgump-Champion! +1 Härzli"], ["EWW! -15", "IGITT! -15", "GRUSIG! -15"],
   ["🔇 Sound off", "🔇 Ton aus", "🔇 Ton us"], ["🔊 Sound on", "🔊 Ton an", "🔊 Ton aa"],
   // prompt labels
@@ -240,7 +240,7 @@ const TR_LIST = [
   ["Book (Tab, Q): your sketchbook", "Buch (Tab, Q): dein Skizzenbuch", "Buech (Tab, Q): dis Skizzebuech"], ["M: mute · Esc / P: pause", "M: Ton aus · Esc / P: Pause", "M: Ton us · Esc / P: Pause"],
   ["Avoid guard flashlight cones & lions.", "Meide die Lichtkegel der Wächter & die Löwen.", "Gang de Liechtchegel vo de Wächter & de Löie us em Wäg."], ["Jump over lion poop. Pet cats. ❤", "Spring über Löwenkot. Streichle Katzen. ❤", "Gump über Löiegaggi. Strichle Chatze. ❤"],
   ["Press [A] or Esc to continue", "Drück [A] oder Esc zum Weiterspielen", "Drück [A] oder Esc zum Wiiterspiele"], ["◀ ▶ Language: {0}", "◀ ▶ Sprache: {0}", "◀ ▶ Sprach: {0}"],
-  ["My Architectural Sketchbook — page {0}/5", "Mein Architektur-Skizzenbuch — Seite {0}/5", "Mis Architektur-Skizzebuech — Siite {0}/5"], ["??? (not yet sketched)", "??? (noch nicht skizziert)", "??? (no nöd skizziert)"], ["Somewhere {0}...", "Irgendwo {0}...", "Irgendwo {0}..."],
+  ["My Architectural Sketchbook — page {0}/{1}", "Mein Architektur-Skizzenbuch — Seite {0}/{1}", "Mis Architektur-Skizzebuech — Siite {0}/{1}"], ["??? (not yet sketched)", "??? (noch nicht skizziert)", "??? (no nöd skizziert)"], ["Somewhere {0}...", "Irgendwo {0}...", "Irgendwo {0}..."],
   ["A locked building with a beautiful detail inside. Find a way in, avoid the guards, and hold [A] at the ✨ spot.", "Ein verschlossenes Gebäude mit einem schönen Detail im Innern. Finde einen Weg hinein, meide die Wächter und halte [A] am ✨-Ort.", "Es bschlossnigs Gebäud mit emne schöne Detail drin. Find en Wäg ine, gang de Wächter us em Wäg und heb [A] am ✨-Ort."],
   ["◀ ▶ flip pages   ·   [A] / Tab: close", "◀ ▶ blättern   ·   [A] / Tab: schliessen", "◀ ▶ blättere   ·   [A] / Tab: zuetue"],
   // secret brewery under the farmhouse
@@ -282,9 +282,21 @@ const TR_LIST = [
   ["It's... a beer. Technically.", "Das ist... ein Bier. Technisch gesehen.", "Das isch... es Bier. Technisch gseh."],
   ["*cough* ...I'll use it to clean the kettles.", "*hust* ...damit putze ich die Kessel.", "*hueschte* ...demit putz ich d Chessel."],
   ["Weird beers brewed: {0}", "Verrückte Biere gebraut: {0}", "Verruckti Bier braut: {0}"],
+  // Miller & Maranta bonus building + level switching
+  ["in the Alps (bonus!)", "in den Alpen (Bonus!)", "i de Alpe (Bonus!)"], ["Wood-panelled Rooms", "Holzgetäferte Zimmer", "Holzgetäferti Zimmer"],
+  ["Basel architects Miller & Maranta slipped warm, wood-panelled rooms into the thick stone walls of the centuries-old Gotthard hospice, and crowned it with a striking new roof.", "Die Basler Architekten Miller & Maranta haben warme, holzgetäferte Zimmer in die dicken Steinmauern des jahrhundertealten Gotthard-Hospizes gesetzt und ihm ein markantes neues Dach aufgesetzt.", "D Basler Architekte Miller & Maranta händ warmi, holzgetäferti Zimmer i di dicke Steimuure vom jahrhundertealte Gotthard-Hospiz gsetzt und ihm es markants neus Dach ufgsetzt."],
+  ["Hut warden", "Hüttenwart", "Hüttewart"],
+  ["Grüessech! Check-in is at four. And not through the back!", "Grüessech! Check-in ist um vier. Und nicht durch den Hintereingang!", "Grüessech! Check-in isch am vieri. Und nöd dur de Hinderiigang!"],
+  ["Hey! Hiking boots off in the rooms!", "Hey! Wanderschuhe aus in den Zimmern!", "Hey! Wanderschue abzieh i de Zimmer!"],
+  ["The old Gotthard hospice, renovated by Miller & Maranta! Quintus Miller and Paola Maranta from Basel...", "Das alte Gotthard-Hospiz, umgebaut von Miller & Maranta! Quintus Miller und Paola Maranta aus Basel...", "S alte Gotthard-Hospiz, umbaut vo Miller & Maranta! De Quintus Miller und d Paola Maranta us Basel..."],
+  ["They hid wooden rooms inside those massive stone walls. I HAVE to see one. 😍", "Sie haben Holzzimmer in diesen massiven Steinmauern versteckt. Ich MUSS eins sehen. 😍", "Si händ Holzzimmer i dene massive Steimuure versteckt. Ich MUESS eis gseh. 😍"],
+  ["A bonus sketch! Miller & Maranta would frame that one. 🏔", "Eine Bonus-Skizze! Miller & Maranta würden die einrahmen. 🏔", "E Bonus-Skizze! Miller & Maranta würded die iirahme. 🏔"],
+  ["🏔 Level 1: Luzern", "🏔 Level 1: Luzern", "🏔 Level 1: Lozärn"], ["✈️ Level 2: California", "✈️ Level 2: Kalifornien", "✈️ Level 2: Kalifornie"],
+  ["[A]: fly to California ✈️   ·   B: keep exploring", "[A]: nach Kalifornien fliegen ✈️   ·   B: weiter erkunden", "[A]: uf Kalifornie flüge ✈️   ·   B: wiiter erkunde"],
 ];
 const TR = { de: {}, gsw: {} };
-for (const [en, de, gsw] of TR_LIST) { TR.de[en] = de; TR.gsw[en] = gsw; }
+function addTR(rows) { for (const [en, de, gsw] of rows) { TR.de[en] = de; TR.gsw[en] = gsw; } }
+addTR(TR_LIST);
 const trMiss = new Set();
 // the action button: "A" on touch screens, the Enter key (↵) on keyboards ([A] in texts)
 const IS_TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
@@ -454,28 +466,40 @@ function music(dt, which) {
 // ---------------------------------------------------------------- save state
 const SAVE_KEY = 'sarchitect_v1';
 function defaultState() {
-  return { sk: {}, items: { pin: false, bike: false, key: false }, cats: [], mush: 0, mushTaken: [], maxHearts: CONFIG.startHearts, hearts: CONFIG.startHearts,
-    flags: {}, cp: 'baar', met: {}, visited: {}, tiger: false, px: null, py: null, stats: { poop: 0, caught: 0, hits: 0, mush: 0, slide: 0, beers: 0 } };
+  return { level: 1, sk: {}, items: { pin: false, bike: false, key: false }, cats: [], mush: 0, mushTaken: [], maxHearts: CONFIG.startHearts, hearts: CONFIG.startHearts,
+    flags: {}, cp: 'baar', met: {}, visited: {}, tiger: false, px: null, py: null, pos: {}, stats: { poop: 0, caught: 0, hits: 0, mush: 0, slide: 0, beers: 0 },
+    l2: defaultL2() };
 }
+// Level 2 progress (filled in by california.js; kept separate so Level 1 stays intact)
+function defaultL2() { return { postcards: {}, laws: {}, money: 0, permits: {}, flags: {}, cp: null, met: {}, visited: {}, donuts: 0, stats: {} }; }
 let ST = defaultState();
-function saveGame() { try { if (scene === 'world') { ST.px = P.x; ST.py = P.y; } localStorage.setItem(SAVE_KEY, JSON.stringify(ST)); } catch (e) { } }
+function saveGame() {
+  try {
+    if (scene === 'world') { ST.px = P.x; ST.py = P.y; ST.pos[ST.level] = { x: P.x, y: P.y }; }
+    localStorage.setItem(SAVE_KEY, JSON.stringify(ST));
+  } catch (e) { }
+}
 function loadGame() {
-  try { const s = localStorage.getItem(SAVE_KEY); if (s) { const d = JSON.parse(s), base = defaultState(); return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}) }); } } catch (e) { }
+  try {
+    const s = localStorage.getItem(SAVE_KEY);
+    if (s) {
+      const d = JSON.parse(s), base = defaultState();
+      return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}), l2: Object.assign(base.l2, d.l2 || {}), pos: d.pos || {}, level: d.level || 1 });
+    }
+  } catch (e) { }
   return null;
 }
-const sketchCount = () => Object.keys(ST.sk).length;
+const sketchCount = () => PAGE_ORDER.filter(k => ST.sk[k]).length;
 
 // ---------------------------------------------------------------- tiles
 const T = { G: 0, F: 1, TREE: 2, PINE: 3, ROCK: 4, WATER: 5, SAND: 6, SNOW: 7, PATH: 8, COB: 9, HEDGE: 10, BLD: 11, FLOW: 12, ALP: 13 };
 const SOLID = new Set([T.TREE, T.PINE, T.ROCK, T.WATER, T.HEDGE, T.BLD]);
-const W = 96, H = 64;
-const map = new Uint8Array(W * H);
-const zoneOf = (tx, ty) => tx < 48 ? (ty < 32 ? 'forest' : 'baar') : (ty < 32 ? 'mount' : 'sea');
-function baseTile(tx, ty) {
-  const z = zoneOf(tx, ty);
-  if (z === 'baar') return T.G; if (z === 'forest') return T.F;
-  if (z === 'mount') return ty < 9 ? T.SNOW : T.ALP; return T.SAND;
-}
+// The current level's world. loadLevel(n) fills these from LEVELS[n] (LEVEL1 below, LEVEL2 in california.js).
+let LV = null, W = 0, H = 0, map = new Uint8Array(0);
+let BUILDINGS = [], BMAP = {}, PATHS = [], CR_SPOTS = {}, START = { x: 0, y: 0 }, SIGNS = [];
+let zoneOf = () => '', baseTile = () => T.G;
+const LEVELS = {};
+const TILE_HOOKS = [];   // extra tile painters registered by other levels, run at the end of buildTiles()
 const GROUND = {}, OVER = {};
 function mk(fn) { const c = document.createElement('canvas'); c.width = c.height = 16; fn(c.getContext('2d')); return c; }
 function buildTiles() {
@@ -513,10 +537,12 @@ function buildTiles() {
   }));
   OVER[T.HEDGE] = [0, 1, 2, 3].map(() => mk(x => { x.fillStyle = '#2f6a32'; x.fillRect(0, 0, 16, 16); for (let i = 0; i < 30; i++) { x.fillStyle = r() < .5 ? '#3f8a42' : '#245526'; x.fillRect((r() * 15) | 0, (r() * 15) | 0, 2, 2); } }));
   OVER[T.FLOW] = [0, 1, 2, 3].map(() => mk(x => { for (let i = 0; i < 4; i++) { const fx = 2 + (r() * 12) | 0, fy = 2 + (r() * 12) | 0; x.fillStyle = ['#ff6b6b', '#ffd34d', '#ffffff', '#c38bff'][(r() * 4) | 0]; x.fillRect(fx - 1, fy, 3, 1); x.fillRect(fx, fy - 1, 1, 3); x.fillStyle = '#ffef9a'; x.fillRect(fx, fy, 1, 1); } }));
+  for (const f of TILE_HOOKS) f({ r, speck, cdot });
 }
 
 // ---------------------------------------------------------------- world generation
-const BUILDINGS = [
+const L1_BUILDINGS = [
+  { id: 'hospiz', x: 88, y: 25, w: 6, h: 4, kind: 'hospiz', label: 'Enter' },
   { id: 'holz', x: 26, y: 43, w: 5, h: 4, kind: 'holz', label: 'Break in' },
   { id: 'chapel', x: 20, y: 7, w: 5, h: 5, kind: 'chapel', label: 'Door' },
   { id: 'stall', x: 58, y: 18, w: 6, h: 4, kind: 'stall', label: 'Door' },
@@ -528,17 +554,16 @@ const BUILDINGS = [
   { id: 'h2', x: 36, y: 53, w: 4, h: 3, kind: 'house', wall: '#efe7d4', roof: '#7a4b2a', label: 'Knock' },
   { id: 'h3', x: 16, y: 36, w: 4, h: 3, kind: 'house', wall: '#f5f5f0', roof: '#5b5b66', label: 'Knock' },
 ];
-const BMAP = {};
-for (const b of BUILDINGS) { BMAP[b.id] = b; b.doorX = (b.x + b.w / 2) * TS; b.doorY = (b.y + b.h) * TS + 4; }
-const PATHS = [
+const L1_PATHS = [
+  [[80, 21], [86, 21], [86, 30], [91, 30], [91, 29]],
   [[10, 49], [10, 50], [32, 50]], [[28, 50], [28, 47]], [[32, 50], [32, 40], [21, 34], [21, 26]],
   [[20, 50], [20, 57]], [[21, 26], [12, 20], [22, 14]], [[21, 28], [24, 28]],
   [[22, 14], [36, 16], [47, 16], [53, 16]], [[53, 16], [56, 16], [56, 23], [61, 23], [61, 22]], [[53, 16], [52, 20]],
   [[56, 16], [60, 12], [66, 8]], [[61, 23], [72, 24], [80, 21]], [[72, 24], [72, 34], [64, 38], [64, 47], [58, 47], [58, 46]],
   [[64, 38], [70, 39], [70, 48], [75, 48], [75, 47]],
 ];
-const CR_SPOTS = { baar: { x: 14 * 16 + 8, y: 52 * 16 + 8 }, forest: { x: 24 * 16 + 8, y: 28 * 16 + 12 }, mount: { x: 52 * 16 + 8, y: 20 * 16 + 12 }, sea: { x: 68 * 16 + 8, y: 35 * 16 + 12 } };
-const START = { x: 11 * 16 + 8, y: 51 * 16 + 10 };
+const L1_CR_SPOTS = { baar: { x: 14 * 16 + 8, y: 52 * 16 + 8 }, forest: { x: 24 * 16 + 8, y: 28 * 16 + 12 }, mount: { x: 52 * 16 + 8, y: 20 * 16 + 12 }, sea: { x: 68 * 16 + 8, y: 35 * 16 + 12 } };
+const L1_START = { x: 11 * 16 + 8, y: 51 * 16 + 10 };
 const CAT_DEFS = [
   { id: 'c1', name: 'Mochi', col: '#e08a3c', tx: 18, ty: 41 }, { id: 'c2', name: 'Luna', col: '#2a2a2e', tx: 33, ty: 56 },
   { id: 'c3', name: 'Pilzli', col: '#8a8f99', tx: 9, ty: 18 }, { id: 'c4', name: 'Biscotti', col: '#f1e6d6', tx: 36, ty: 7 },
@@ -547,27 +572,40 @@ const CAT_DEFS = [
 const LION_DEFS = [[40, 24], [63, 10], [86, 9], [70, 28]];
 const HAY_DEFS = [{ tx: 66, ty: 7, key: true }, { tx: 70, ty: 9 }, { tx: 62, ty: 6 }];
 let reach = null;
+// Level 1 terrain: what a tile is before paths/buildings are carved in
+function l1Terrain(tx, ty, r) {
+  const z = zoneOf(tx, ty); let t = baseTile(tx, ty); const k = r();
+  if (z === 'forest') { if (k < .17) t = T.TREE; else if (k < .29) t = T.PINE; }
+  else if (z === 'mount') { if (k < .07) t = T.ROCK; else if (k < .13) t = T.PINE; }
+  else if (z === 'baar') { if (k < .03) t = T.TREE; else if (k < .06) t = T.FLOW; }
+  else { if (k < .015) t = T.ROCK; if (tx >= 86 + 2 * Math.sin(ty * .5) || ty >= 57 + 1.5 * Math.sin(tx * .4)) t = T.WATER; }
+  if (z === 'baar' && ((tx - 3) / 11) ** 2 + ((ty - 61) / 9) ** 2 < 1) t = T.WATER;
+  if (tx === 0 || ty === 0 || tx === W - 1 || ty === H - 1) t = z === 'sea' ? T.WATER : z === 'mount' ? T.ROCK : (z === 'baar' && t === T.WATER ? T.WATER : T.TREE);
+  if (tx === 47 || tx === 48) t = ty < 32 ? T.PINE : T.HEDGE;
+  if ((ty === 31 || ty === 32) && !(tx === 47 || tx === 48)) t = tx < 48 ? T.TREE : T.ROCK;
+  return t;
+}
+function loadLevel(n) {
+  LV = LEVELS[n]; W = LV.W; H = LV.H; map = new Uint8Array(W * H);
+  BUILDINGS = LV.buildings; PATHS = LV.paths; CR_SPOTS = LV.crSpots; START = LV.start; SIGNS = LV.signs;
+  zoneOf = LV.zoneOf; baseTile = LV.baseTile;
+  BMAP = {};
+  for (const b of BUILDINGS) { BMAP[b.id] = b; b.doorX = (b.x + b.w / 2) * TS; b.doorY = (b.y + b.h) * TS + 4; }
+  genWorld();
+}
 function genWorld() {
-  const r = mulberry32(2024);
-  for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
-    const z = zoneOf(tx, ty); let t = baseTile(tx, ty); const k = r();
-    if (z === 'forest') { if (k < .17) t = T.TREE; else if (k < .29) t = T.PINE; }
-    else if (z === 'mount') { if (k < .07) t = T.ROCK; else if (k < .13) t = T.PINE; }
-    else if (z === 'baar') { if (k < .03) t = T.TREE; else if (k < .06) t = T.FLOW; }
-    else { if (k < .015) t = T.ROCK; if (tx >= 86 + 2 * Math.sin(ty * .5) || ty >= 57 + 1.5 * Math.sin(tx * .4)) t = T.WATER; }
-    if (z === 'baar' && ((tx - 3) / 11) ** 2 + ((ty - 61) / 9) ** 2 < 1) t = T.WATER;
-    if (tx === 0 || ty === 0 || tx === W - 1 || ty === H - 1) t = z === 'sea' ? T.WATER : z === 'mount' ? T.ROCK : (z === 'baar' && t === T.WATER ? T.WATER : T.TREE);
-    if (tx === 47 || tx === 48) t = ty < 32 ? T.PINE : T.HEDGE;
-    if ((ty === 31 || ty === 32) && !(tx === 47 || tx === 48)) t = tx < 48 ? T.TREE : T.ROCK;
-    map[ty * W + tx] = t;
-  }
-  for (const p of PATHS) for (let i = 0; i < p.length - 1; i++) {
-    const [x0, y0] = p[i], [x1, y1] = p[i + 1], n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2 + 1;
-    for (let s = 0; s <= n; s++) {
-      const cx = Math.round(x0 + (x1 - x0) * s / n), cy = Math.round(y0 + (y1 - y0) * s / n);
-      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
-        const tx = cx + ox, ty = cy + oy; if (tx < 1 || ty < 1 || tx >= W - 1 || ty >= H - 1) continue;
-        map[ty * W + tx] = zoneOf(tx, ty) === 'baar' ? T.COB : T.PATH;
+  const r = mulberry32(LV.seed || 2024);
+  for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) map[ty * W + tx] = LV.terrain(tx, ty, r);
+  for (const p of PATHS) {
+    const wide = p.wide || 1;
+    for (let i = 0; i < p.length - 1; i++) {
+      const [x0, y0] = p[i], [x1, y1] = p[i + 1], n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2 + 1;
+      for (let s = 0; s <= n; s++) {
+        const cx = Math.round(x0 + (x1 - x0) * s / n), cy = Math.round(y0 + (y1 - y0) * s / n);
+        for (let oy = -wide; oy <= wide; oy++) for (let ox = -wide; ox <= wide; ox++) {
+          const tx = cx + ox, ty = cy + oy; if (tx < 1 || ty < 1 || tx >= W - 1 || ty >= H - 1) continue;
+          map[ty * W + tx] = LV.pathTile(tx, ty, p);
+        }
       }
     }
   }
@@ -577,9 +615,9 @@ function genWorld() {
   }
   const clr = (tx, ty, rr = 1) => { for (let y = ty - rr; y <= ty + rr; y++) for (let x = tx - rr; x <= tx + rr; x++) clearTile(x, y); };
   for (const k in CR_SPOTS) clr(Math.floor(CR_SPOTS[k].x / 16), Math.floor(CR_SPOTS[k].y / 16));
-  for (const c of CAT_DEFS) clr(c.tx, c.ty);
-  for (const h of HAY_DEFS) clr(h.tx, h.ty);
+  for (const [tx, ty] of LV.clearSpots()) clr(tx, ty);
   for (const s of SIGNS) clr(Math.floor(s.x / 16), Math.floor(s.y / 16));
+  if (LV.postGen) LV.postGen();
   // flood fill reachability
   reach = new Uint8Array(W * H);
   const st = Math.floor(START.y / 16) * W + Math.floor(START.x / 16), q = [st]; reach[st] = 1;
@@ -615,15 +653,15 @@ function move(e, dx, dy, solid, hw = 4, hh = 4) {
 }
 
 // ---------------------------------------------------------------- signs & texts
-const SIGNS = [
+const L1_SIGNS = [
   { x: 21.5 * 16, y: 58 * 16 + 4, label: 'Rope skip!', act: () => say([['Sign', t('SEILSPRINGEN CLUB LUZERN — Skip {0} in a row for a reward! (C-Real is on rope duty.)', CONFIG.ropeGoal)]], startRope) },
-  { x: 15 * 16 + 8, y: 57 * 16, act: () => say([['Sign', 'VIERWALDSTÄTTERSEE. Too cold to swim today. Rumor says California is warmer... far to the east.']]) },
-  { x: 42 * 16 + 8, y: 60 * 16, kind: 'lion', act: () => say([['Sign', 'LÖWENDENKMAL — the famous dying lion of Luzern, carved right into the rock.'], ['Sarah', 'Finally. A lion I actually like.'], ['Sign', 'It does not poop.'], ['Sarah', '...perfect.']]) },
+  { x: 15 * 16 + 8, y: 57 * 16, act: () => say([['Sign', 'VIERWALDSTÄTTERSEE. Too cold to swim today. Rumor says Italy is warmer... far to the east.']]) },
+  { x: 42 * 16 + 8, y: 60 * 16, draw: s => drawLionMonument(s), act: () => say([['Sign', 'LÖWENDENKMAL — the famous dying lion of Luzern, carved right into the rock.'], ['Sarah', 'Finally. A lion I actually like.'], ['Sign', 'It does not poop.'], ['Sarah', '...perfect.']]) },
   { x: 23 * 16 + 8, y: 31 * 16 - 4, act: () => say([['Sign', 'BIREGGWALD. Pick responsibly! Brown = Steinpilz. Orange = Eierschwamm. Red with white dots = a very "interesting" afternoon.']]) },
   { x: 50 * 16 + 8, y: 14 * 16, act: () => say([['Sign', '⚠ ACHTUNG: MOUNTAIN LIONS. Do not step in their... you know.'], ['Sarah', 'Why. Why is it always the poop.']]) },
   { x: 66 * 16 + 8, y: 45 * 16, act: () => say([['Sign', 'HORTUS CONCLUSUS — a dark timber box with a secret garden inside. Strictly no visitors tonight.'], ['Sarah', '"Strictly" is such a strong word.']]) },
 ];
-const CR_TEXTS = [
+const L1_CR_TEXTS = [
   'Did you look at the ceiling? Always look at the ceiling. ✨', 'Dinner tonight? I\'m cooking. (Pasta. Again.) 🍝',
   'Zumthor would be proud. Probably. He doesn\'t text back.', 'Remember: tigers good, lions bad. 🐯 > 🦁',
   'If you get caught, just say you\'re from the Denkmalpflege.', 'Miss you! Come home soon (after the break-ins). ❤',
@@ -664,7 +702,7 @@ const INTERIORS = {
       { name: 'Lifeguard', col: '#d94b4b', hat: '#ffffff', path: [[13, 9], [13, 3]], speed: 24, line: 'Hey! Shoes are NOT allowed on the quartzite!' }],
   },
   pav: {
-    name: 'Hortus Conclusus Pavilion', style: 'pav', where: 'in California',
+    name: 'Hortus Conclusus Pavilion', style: 'pav', where: 'in Italy',
     title: 'The Hidden Garden', sub: 'Hortus Conclusus — Zumthor, Serpentine Pavilion 2011',
     fact: 'A dark black box — and at its heart, a hidden garden. You walk through darkness to find the light.',
     map: ['####################', '#..................#', '#.################.#', '#.#..............#.#', '#.#.gggggggggggg.#.#', '#...gggggggggggg...#', '#.#.gggggggggggg.#.#', '#.#......D.......#.#', '#.################.#', '#..................#', '#........P.........#', '####################'],
@@ -682,8 +720,19 @@ INTERIORS.brew = {
     { x: 17 * 16, y: 2 * 16 + 8, r: 30, label: 'Brew!', act: () => brewStation() },
   ],
 };
+// bonus building: Miller & Maranta's renovation of the old Gotthard hospice
+INTERIORS.hospiz = {
+  name: 'Altes Hospiz St. Gotthard', style: 'hospiz', where: 'in the Alps (bonus!)',
+  title: 'Wood-panelled Rooms', sub: 'Altes Hospiz St. Gotthard — Miller & Maranta, 2010',
+  fact: 'Basel architects Miller & Maranta slipped warm, wood-panelled rooms into the thick stone walls of the centuries-old Gotthard hospice, and crowned it with a striking new roof.',
+  map: ['####################', '#......#.....#....D#', '#.bb...#.bb..#.bb..#', '#......#.....#.....#', '###.####.##.####.###', '#..................#', '#..o....o....o.....#', '#..................#', '###.####.##.####.###', '#..bb..#.....#..bb.#', '#..P...#.....#.....#', '####################'],
+  guards: [
+    { name: 'Hut warden', col: '#8a3a3a', hat: '#d9d2c0', path: [[1, 5], [18, 5]], speed: 26, line: 'Grüessech! Check-in is at four. And not through the back!' },
+    { name: 'Hut warden', col: '#8a3a3a', hat: '#d9d2c0', path: [[18, 7], [1, 7]], speed: 21, line: 'Hey! Hiking boots off in the rooms!' }],
+};
 const ELIO = { x: 9.5 * 16, y: 3.5 * 16 + 4 };
-const PAGE_ORDER = ['holz', 'chapel', 'stall', 'therme', 'pav'];
+const PAGE_ORDER = ['holz', 'chapel', 'stall', 'therme', 'pav'];   // the 5 sketches Bolleblu needs
+const BOOK_PAGES = [...PAGE_ORDER, 'hospiz'];                       // + Miller & Maranta bonus page
 const STYLE = {
   holz: { floor: '#a8763f', line: '#946632', face: '#7a4f2a', faceL: '#8b5e34', top: '#3b2614' },
   chapel: { floor: '#d9bc85', line: '#c6a870', face: '#b9a37a', faceL: '#cdb88f', top: '#4a4032' },
@@ -691,6 +740,7 @@ const STYLE = {
   therme: { floor: '#8f9692', line: '#7f8682', face: '#6c7570', faceL: '#7d8681', top: '#2b302e' },
   pav: { floor: '#2a2622', line: '#221f1b', face: '#161616', faceL: '#1e1e1e', top: '#050505' },
   cellar: { floor: '#7d7368', line: '#6b625a', face: '#5a4d42', faceL: '#4a3f36', top: '#1e1813' },
+  hospiz: { floor: '#c49a62', line: '#ad8550', face: '#8b8478', faceL: '#7a7468', top: '#2c2925' },
 };
 const IOX = 32, IOY = 12;
 const iChar = (px, py) => { const tx = Math.floor(px / 16), ty = Math.floor(py / 16); const m = IN.d.map; if (ty < 0 || ty >= m.length || tx < 0 || tx >= 20) return '#'; return m[ty][tx]; };
@@ -698,10 +748,11 @@ const solidI = (px, py) => '#obhcwgEkr'.includes(iChar(px, py));
 const blockI = (px, py) => '#ohcgE'.includes(iChar(px, py));
 
 // ---------------------------------------------------------------- entities
-const P = { x: START.x, y: START.y, dir: 'down', moving: false, anim: 0, bike: false, jump: 0, inv: 0, slow: 0, trip: 0, kx: 0, ky: 0 };
+const P = { x: 0, y: 0, dir: 'down', moving: false, anim: 0, bike: false, jump: 0, inv: 0, slow: 0, trip: 0, kx: 0, ky: 0 };
 let cats = [], lions = [], poops = [], mushrooms = [], hays = [], fleeing = [];
 const tiger = { x: 0, y: 0, face: 1, moving: false, anim: 0 };
-function spawnEntities() {
+function spawnEntities() { LV.spawn(); }
+function l1Spawn() {
   cats = CAT_DEFS.map(c => { const [tx, ty] = nearReach(c.tx, c.ty); const x = tx * 16 + 8, y = ty * 16 + 10; return { ...c, x, y, hx: x, hy: y, vx: 0, vy: 0, t: 0, face: 1 }; });
   lions = LION_DEFS.map(([a, b]) => { const [tx, ty] = nearReach(a, b); const x = tx * 16 + 8, y = ty * 16 + 10; return { x, y, hx: x, hy: y, vx: 0, vy: 0, t: 0, face: 1, poopT: 4 + rnd() * 6, cool: 0, chasing: false, anim: 0 }; });
   hays = HAY_DEFS.map(h => ({ ...h, x: h.tx * 16 + 8, y: h.ty * 16 + 12 }));
@@ -755,23 +806,33 @@ const title = { sel: 0, hasSave: false };
 // ---------------------------------------------------------------- game flow
 function newGame() {
   ST = defaultState();
-  if (DEBUG) { for (const k of PAGE_ORDER) ST.sk[k] = true; ST.items = { pin: true, bike: true, key: true }; ST.mush = 20; ST.tiger = true; ST.cats = ['c1', 'c2', 'c3', 'c4', 'c5']; ST.met = { baar: 1 }; }
-  P.x = START.x; P.y = START.y; P.dir = 'up';
-  startWorld();
+  if (DEBUG) { for (const k of PAGE_ORDER) ST.sk[k] = true; ST.items = { pin: true, bike: true, key: true }; ST.mush = 20; ST.tiger = true; ST.cats = ['c1', 'c2', 'c3', 'c4', 'c5']; ST.met = { baar: 1 }; ST.flags.finished = true; }
+  enterLevel(1);
+  P.dir = 'up';
   if (!DEBUG) setTimeout(() => say([['Sarah', '*yawns* ...where is everybody?'], ['Sarah', 'Oh! C-Real is waving at me. Let\'s go talk to him (press [A] next to him).']]), 900);
 }
 function continueGame() {
   ST = loadGame() || defaultState();
-  P.x = ST.px || START.x; P.y = ST.py || START.y;
+  enterLevel(ST.level || 1);
+}
+// switch to level n and place Sarah at her saved spot there (or the level's start)
+function enterLevel(n) {
+  const first = !ST.pos[n];
+  loadLevel(n); ST.level = n;
+  const pos = ST.pos[n] || (n === 1 && ST.px ? { x: ST.px, y: ST.py } : null);
+  P.x = pos ? pos.x : START.x; P.y = pos ? pos.y : START.y;
   startWorld();
+  if (LV.onEnter) LV.onEnter(first);
 }
 function startWorld() {
   spawnEntities();
-  scene = 'world'; curZone = null; paused = false; book.open = false;
+  scene = 'world'; curZone = null; paused = false; book.open = false; book.sel = 0;
   P.bike = false; P.jump = P.inv = P.slow = P.trip = 0; P.kx = P.ky = 0;
   saveGame();
 }
-function talkCReal(spot) {
+function talkCReal(spot) { LV.talk(spot); }
+function buildingAct(b) { LV.buildingAct(b); }
+function l1Talk(spot) {
   ST.cp = spot;
   const lines = [];
   if (spot === 'baar' && !ST.met.baar) {
@@ -787,7 +848,7 @@ function talkCReal(spot) {
   } else if (!ST.met[spot]) {
     if (spot === 'forest') lines.push(['Sarah', 'Wait... how are you here before me?!'], ['C-Real', 'Shortcut. Through the mushrooms. 🍄'], ['C-Real', 'Collect the brown and the orange ones. NOT the red ones with white dots. Trust me on this one.']);
     if (spot === 'mount') lines.push(['C-Real', 'Welcome to the Alps — Caminada and Zumthor country! 🏔'], ['C-Real', 'Also... mountain lions. 🦁'], ['Sarah', 'NO.'], ['C-Real', 'I know, I know. Rope skip over their poop and use your bike if they chase you. You\'ve got this.']);
-    if (spot === 'sea') lines.push(['C-Real', 'CALIFORNIA! You made it! 🌊'], ['C-Real', 'See that Bolleblu waterslide park? It only opens for complete sketchbooks.'], ['Sarah', 'Says who?'], ['C-Real', 'Says me. My world, my rules. 😘']);
+    if (spot === 'sea') lines.push(['C-Real', 'ITALY! You made it! 🌊'], ['C-Real', 'See that Bolleblu waterslide park? It only opens for complete sketchbooks.'], ['Sarah', 'Says who?'], ['C-Real', 'Says me. My world, my rules. 😘']);
   } else lines.push(['C-Real', hint()]);
   if (ST.met[spot] && ST.hearts < ST.maxHearts && ST.mush >= 2) {
     lines.push(['C-Real', 'You look tired. Risotto ai funghi? (2 🍄)', () => { ST.mush -= 2; ST.hearts = ST.maxHearts; sfx.ding(); spawnHearts(P.x, P.y - 16, 5); }], ['Sarah', 'Mmmh. Hearts restored! ❤']);
@@ -803,15 +864,18 @@ function hint() {
   if (!ST.sk.stall) return 'You\'ve got the stable key! Mind the cows — they\'re perfect for hiding behind.';
   if (!ST.sk.therme && !ST.tiger) return t('The Therme Vals bouncer is scary. You know what\'s scarier? A snow tiger. They say one appears if you pet 5 cats. ({0}/5)', ST.cats.length);
   if (!ST.sk.therme) return 'Take your snow tiger to visit the Therme Vals bouncer. 😼';
-  if (!ST.sk.pav && !ST.flags.bribed) return t('The pavilion guard in California loves risotto. Bring him 5 mushrooms. ({0}/5)', ST.mush);
+  if (!ST.sk.pav && !ST.flags.bribed) return t('The pavilion guard in Italy loves risotto. Bring him 5 mushrooms. ({0}/5)', ST.mush);
   if (!ST.sk.pav) return 'The Hortus Conclusus pavilion: two guards, very dark. The garden is in the middle. You can do it!';
-  return 'Your sketchbook is full! The Bolleblu waterslide park in California is open. I\'ll meet you at the bottom. 💙';
+  return 'Your sketchbook is full! The Bolleblu waterslide park in Italy is open. I\'ll meet you at the bottom. 💙';
 }
-function buildingAct(b) {
+function l1BuildingAct(b) {
   P.bike = false;
   const enter = () => enterInterior(b.id, b.doorX, b.doorY + 8);
   if (ST.sk[b.id] && INTERIORS[b.id]) { say([['Sarah', t('I already sketched the "{0}" here. Still gorgeous.', t(INTERIORS[b.id].title))]]); return; }
   switch (b.id) {
+    case 'hospiz':
+      say([['Sarah', 'The old Gotthard hospice, renovated by Miller & Maranta! Quintus Miller and Paola Maranta from Basel...'], ['Sarah', 'They hid wooden rooms inside those massive stone walls. I HAVE to see one. 😍']], enter);
+      break;
     case 'holz':
       if (!ST.items.pin) say([['Sarah', 'Locked. I need something to pick it with... maybe C-Real has something.']]);
       else say([['Sarah', 'Frau Huber\'s house. Exposed timber, old joinery... I NEED to see inside.'], ['Sarah', '*click click* ...the bobby pin works! Quiet now.']], enter);
@@ -879,13 +943,12 @@ function hurt(src) {
   ST.hearts--; ST.stats.hits++; P.inv = 1.6; shake = .4; sfx.hurt();
   const a = Math.atan2(P.y - src.y, P.x - src.x); P.kx = Math.cos(a) * 240; P.ky = Math.sin(a) * 240;
   popText(P.x, P.y - 26, 'AAAAH!', '#ff6060');
-  if (ST.hearts <= 0) {
-    transition(() => {
-      const s = CR_SPOTS[ST.cp]; P.x = s.x; P.y = s.y + 18; ST.hearts = ST.maxHearts; P.bike = false;
-      for (const l of lions) { l.x = l.hx; l.y = l.hy; l.chasing = false; }
-      say([['C-Real', 'Whoa, I\'ve got you. Those lions... 😟 Sit down, I made tea.'], ['Sarah', 'I\'m fine. I\'m FINE. ...Is there poop on me?'], ['C-Real', '...let\'s not talk about it.']]);
-    });
-  }
+  if (ST.hearts <= 0) transition(() => { ST.hearts = ST.maxHearts; P.bike = false; LV.respawn(); });
+}
+function l1Respawn() {
+  const s = CR_SPOTS[ST.cp] || CR_SPOTS.baar; P.x = s.x; P.y = s.y + 18;
+  for (const l of lions) { l.x = l.hx; l.y = l.hy; l.chasing = false; }
+  say([['C-Real', 'Whoa, I\'ve got you. Those lions... 😟 Sit down, I made tea.'], ['Sarah', 'I\'m fine. I\'m FINE. ...Is there poop on me?'], ['C-Real', '...let\'s not talk about it.']]);
 }
 function doJump() { if (P.jump <= 0) { P.jump = .55; sfx.jump(); } }
 
@@ -912,8 +975,10 @@ function exitInterior() {
     saveGame();
   });
 }
+const interiorDone = () => IN.d.isDone ? IN.d.isDone() : !!ST.sk[IN.id];
 function caught(gd) {
   if (IN.caught) return;
+  if (IN.d.onCaught && IN.d.onCaught(gd)) return;   // e.g. Google: small talk instead of being thrown out
   IN.caught = true; ST.stats.caught++; sfx.alarm(); shake = .3;
   say([[gd.name, gd.line], ['Sarah', ['Oops. Wrong door?', 'I was just... admiring the craftsmanship!', 'Sorry! Huge fan of your floor plan!'][(rnd() * 3) | 0]]], () => {
     exitInterior();
@@ -926,7 +991,8 @@ function sketchDone() {
   say([['Sarah', t('Got it! "{0}" — sketched. ✏️', t(d.title))], ['Sketchbook', d.fact], ['Sarah', 'Now let\'s get out of here before anyone notices...']], () => {
     exitInterior();
     const n = sketchCount();
-    setTimeout(() => crText(n >= 5 ? 'ALL FIVE?!?! Meet me at the Bolleblu waterslide park in California!! 🌊' : t('{0}/5 sketches! You\'re a professional break-in architect. 😍', n)), 1300);
+    if (id === 'hospiz') { setTimeout(() => crText('A bonus sketch! Miller & Maranta would frame that one. 🏔'), 1300); return; }
+    setTimeout(() => crText(n >= 5 ? 'ALL FIVE?!?! Meet me at the Bolleblu waterslide park in Italy!! 🌊' : t('{0}/5 sketches! You\'re a professional break-in architect. 😍', n)), 1300);
   });
 }
 
@@ -1061,7 +1127,8 @@ function update(dt) {
   shake = Math.max(0, shake - dt);
   if (fade.dir === 1) { fade.a += dt * 4; if (fade.a >= 1) { fade.a = 1; fade.dir = -1; const c = fade.cb; fade.cb = null; c && c(); } return; }
   if (fade.dir === -1) { fade.a -= dt * 3; if (fade.a <= 0) { fade.a = 0; fade.dir = 0; } }
-  const mus = scene === 'interior' && IN && IN.d.brewery ? 'brew' : { world: 'world', interior: 'interior', rope: 'world', slide: 'slide', ending: 'ending', brewgame: 'brew' }[scene];
+  const mus = SCENES[scene] ? SCENES[scene].music : scene === 'interior' && IN && IN.d.music ? IN.d.music : scene === 'interior' && IN && IN.d.brewery ? 'brew'
+    : scene === 'world' && LV && LV.music ? LV.music : { world: 'world', interior: 'interior', rope: 'world', slide: 'slide', ending: 'ending', brewgame: 'brew' }[scene];
   if (!paused) music(dt, mus);
   if (dlg.cur) {
     const len = dlg.cur.text.length;
@@ -1070,8 +1137,12 @@ function update(dt) {
     return;
   }
   if (book.open) {
-    if (inp.left) { book.sel = (book.sel + 4) % 5; sfx.blip(); }
-    if (inp.right) { book.sel = (book.sel + 1) % 5; sfx.blip(); }
+    if (LV.bookInput) LV.bookInput();
+    else {
+      const n = BOOK_PAGES.length;
+      if (inp.left) { book.sel = (book.sel + n - 1) % n; sfx.blip(); }
+      if (inp.right) { book.sel = (book.sel + 1) % n; sfx.blip(); }
+    }
     if (inp.book || inp.pause || inp.a || inp.b) book.open = false;
     return;
   }
@@ -1084,20 +1155,32 @@ function update(dt) {
     case 'slide': updateSlide(dt); break;
     case 'ending': updateEnding(dt); break;
     case 'brewgame': updateBrew(dt); break;
+    default: if (SCENES[scene]) SCENES[scene].update(dt);
   }
 }
+// extra scenes (minigames, cutscenes) registered by levels: { update(dt), draw(), ui(), music }
+const SCENES = {};
+function titleOptions() {
+  const sv = loadGame(), o = [];
+  if (sv) o.push({ label: 'Continue', act: continueGame });
+  o.push({ label: 'New game', act: newGame });
+  if (sv && sv.flags.finished && LEVELS[2]) o.push({ label: sv.level === 2 ? '🏔 Level 1: Luzern' : '✈️ Level 2: California', act: () => { ST = loadGame(); enterLevel(ST.level === 2 ? 1 : 2); } });
+  o.push({ lang: true });
+  return o;
+}
 function updateTitle() {
-  title.hasSave = !!loadGame();
-  const n = title.hasSave ? 3 : 2;
+  title.opts = titleOptions(); title.hasSave = title.opts.length > 2;
+  const n = title.opts.length;
   if (inp.up || inp.down) { title.sel = (title.sel + (inp.up ? -1 : 1) + n) % n; sfx.blip(); }
   if (title.sel >= n) title.sel = 0;
-  if (title.sel === n - 1 && (inp.a || inp.left || inp.right)) { cycleLang(inp.left ? -1 : 1); sfx.blip(); return; }
+  const o = title.opts[title.sel];
+  if (o.lang && (inp.a || inp.left || inp.right)) { cycleLang(inp.left ? -1 : 1); sfx.blip(); return; }
   if (inp.left || inp.right) { cycleLang(inp.left ? -1 : 1); sfx.blip(); }
-  if (inp.a) { audioInit(); sfx.ding(); const cont = title.hasSave && title.sel === 0; transition(() => cont ? continueGame() : newGame()); }
+  if (inp.a) { audioInit(); sfx.ding(); transition(o.act); }
 }
 function updatePlayer(dt, solid) {
   let ax = inp.ax, ay = inp.ay; const l = Math.hypot(ax, ay); if (l > 1) { ax /= l; ay /= l; }
-  const sp = (P.bike ? 120 : 66) * (P.slow > 0 ? .45 : 1);
+  const sp = (P.bike ? (scene === 'world' && LV.vehicleSpeed ? LV.vehicleSpeed() : 120) : 66) * (P.slow > 0 ? .45 : 1);
   move(P, (ax * sp + P.kx) * dt, (ay * sp + P.ky) * dt, solid);
   const damp = Math.pow(.004, dt); P.kx *= damp; P.ky *= damp;
   P.moving = l > .1;
@@ -1106,14 +1189,17 @@ function updatePlayer(dt, solid) {
 }
 function worldInteractables() {
   const L = [];
-  for (const b of BUILDINGS) L.push({ x: b.doorX, y: b.doorY, label: b.label, act: () => buildingAct(b) });
-  const ch = BMAP.chapel; L.push({ x: ch.doorX, y: ch.y * 16 - 6, label: 'Window', act: chapelWindow });
+  for (const b of BUILDINGS) if (b.label) L.push({ x: b.doorX, y: b.doorY, label: b.label, act: () => buildingAct(b) });
   for (const k in CR_SPOTS) L.push({ x: CR_SPOTS[k].x, y: CR_SPOTS[k].y - 6, label: 'Talk', act: () => talkCReal(k) });
+  for (const s of SIGNS) L.push({ x: s.x, y: s.y - 4, label: s.label || 'Read', act: s.act, r: s.r });
+  LV.interactables(L);
+  return L;
+}
+function l1Interactables(L) {
+  const ch = BMAP.chapel; L.push({ x: ch.doorX, y: ch.y * 16 - 6, label: 'Window', act: chapelWindow });
   for (const c of cats) L.push({ x: c.x, y: c.y - 4, label: 'Pet', act: () => petCat(c) });
-  for (const s of SIGNS) L.push({ x: s.x, y: s.y - 4, label: s.label || 'Read', act: s.act });
   for (const h of hays) L.push({ x: h.x, y: h.y - 4, label: 'Search', act: () => hayAct(h) });
   L.push({ x: CELLAR.x, y: CELLAR.y - 4, label: ST.flags.cellar ? 'Cellar' : 'Search', act: cellarAct });
-  return L;
 }
 let nearObj = null;
 function findNear(list) {
@@ -1125,12 +1211,27 @@ function updateWorld(dt) {
   if (inp.pause) { paused = true; return; }
   if (inp.book) { book.open = true; return; }
   updatePlayer(dt, solidW);
-  if (inp.b) {
-    if (ST.items.bike) { P.bike = !P.bike; sfx.blip(); popText(P.x, P.y - 26, P.bike ? 'Bike on!' : 'Bike off', '#cfe'); }
-    else popText(P.x, P.y - 26, 'No bike yet!', '#fcc');
-  }
+  if (inp.b) LV.onB();
   nearObj = findNear(worldInteractables());
   if (inp.a) { if (nearObj) nearObj.act(); else doJump(); }
+  LV.update(dt);
+  // zones
+  const z = zoneOf(Math.floor(P.x / 16), Math.floor(P.y / 16));
+  if (z !== curZone) {
+    curZone = z;
+    banner = { text: LV.zoneNames[z], t: 3 };
+    const vis = ST.level === 2 ? ST.l2.visited : ST.visited;
+    if (!vis[z]) { vis[z] = 1; const m = LV.zoneTexts[z]; if (m) setTimeout(() => crText(m), 1500); }
+  }
+  textT -= dt; if (textT <= 0) { textT = 80 + rnd() * 50; crText(LV.crTexts[(rnd() * LV.crTexts.length) | 0]); }
+  saveT -= dt; if (saveT <= 0) { saveT = 5; saveGame(); }
+  cam.x = clamp(Math.round(P.x - VW / 2), 0, W * 16 - VW); cam.y = clamp(Math.round(P.y - 8 - VH / 2), 0, H * 16 - VH);
+}
+function l1OnB() {
+  if (ST.items.bike) { P.bike = !P.bike; sfx.blip(); popText(P.x, P.y - 26, P.bike ? 'Bike on!' : 'Bike off', '#cfe'); }
+  else popText(P.x, P.y - 26, 'No bike yet!', '#fcc');
+}
+function l1Update(dt) {
   // cats
   for (const c of cats) {
     c.t -= dt;
@@ -1189,22 +1290,12 @@ function updateWorld(dt) {
     }
   }
   for (let i = fleeing.length - 1; i >= 0; i--) { const f = fleeing[i]; f.x += f.vx * dt; f.y += f.vy * dt; f.t -= dt; if (f.t <= 0) fleeing.splice(i, 1); }
-  // zones
-  const z = zoneOf(Math.floor(P.x / 16), Math.floor(P.y / 16));
-  if (z !== curZone) {
-    curZone = z;
-    banner = { text: { baar: 'Luzern · Kanton Luzern', forest: 'Bireggwald', mount: 'The Alps · Lion Country', sea: 'California' }[z], t: 3 };
-    if (!ST.visited[z]) {
-      ST.visited[z] = 1;
-      const m = { forest: 'Bireggwald! Brown & orange = yum. Red with dots = NO. 🍄', mount: 'Lion country!! 🦁 Jump ([A]) over the poop, bike (B) away if they chase you!', sea: 'CALIFORNIA!! 🌊 Smell that? Freedom. And sunscreen.' }[z];
-      if (m) setTimeout(() => crText(m), 1500);
-    }
-  }
-  const gd = dist(P.x, P.y, CR_SPOTS.sea.x, CR_SPOTS.sea.y);
+  guitarNear(CR_SPOTS.sea, dt);
+}
+// soft guitar plucks when Sarah walks near a guitar-playing C-Real
+function guitarNear(s, dt) {
+  const gd = dist(P.x, P.y, s.x, s.y);
   if (gd < 130) { guitT -= dt; if (guitT <= 0) { guitT = .42; if (rnd() < .8) tone(midi([60, 62, 64, 67, 69, 72, 74][(rnd() * 7) | 0]), .6, 'triangle', .05 * (1 - gd / 130)); } }
-  textT -= dt; if (textT <= 0) { textT = 80 + rnd() * 50; crText(CR_TEXTS[(rnd() * CR_TEXTS.length) | 0]); }
-  saveT -= dt; if (saveT <= 0) { saveT = 5; saveGame(); }
-  cam.x = clamp(Math.round(P.x - VW / 2), 0, W * 16 - VW); cam.y = clamp(Math.round(P.y - 8 - VH / 2), 0, H * 16 - VH);
 }
 function guardSees(gd) {
   const ex = gd.x, ey = gd.y - 8, px = P.x, py = P.y - 6, d = dist(ex, ey, px, py);
@@ -1219,12 +1310,12 @@ function updateInterior(dt) {
   if (inp.book) { book.open = true; return; }
   if (inp.b) popText(P.x, P.y - 26, 'No bikes indoors!', '#cfe');
   updatePlayer(dt, solidI);
-  const nearD = !ST.sk[IN.id] && dist(P.x, P.y - 4, IN.dx, IN.dy) < 18;
+  const nearD = !interiorDone() && dist(P.x, P.y - 4, IN.dx, IN.dy) < 18;
   const others = [{ x: IN.ex, y: IN.ey, r: 18, label: IN.d.exitLabel || IN.exitLabel || 'Leave', act: exitInterior }].concat(IN.d.spots || []);
   nearObj = nearD ? { x: IN.dx, y: IN.dy, label: 'Hold: Sketch' } : findNear(others);
   if (nearD && inp.aHeld && !IN.caught) {
     IN.prog += dt / 2.2; IN.scribT -= dt; if (IN.scribT <= 0) { sfx.scribble(); IN.scribT = .12; }
-    if (IN.prog >= 1) { IN.prog = 1; IN.caught = true; sketchDone(); return; }
+    if (IN.prog >= 1) { IN.prog = 1; IN.caught = true; if (IN.d.onDone) IN.d.onDone(); else sketchDone(); return; }
   } else IN.prog = Math.max(0, IN.prog - dt * .5);
   if (inp.a && !nearD) { if (nearObj) nearObj.act(); else doJump(); }
   if (IN.id === 'stall') { IN.bellT -= dt; if (IN.bellT <= 0) { IN.bellT = 3 + rnd() * 4; sfx.bell(); } }
@@ -1292,8 +1383,10 @@ function updateEnding(dt) {
   if (inp.a) {
     if (EN.phase === 0 && EN.shown < msg.length) EN.shown = msg.length;
     else if (EN.phase === 0) { EN.phase = 1; sfx.ding(); }
+    else if (typeof startFlight === 'function') startFlight();
     else endToWorld();
   }
+  if (inp.b && EN.phase === 1) endToWorld();
 }
 
 // ---------------------------------------------------------------- sprites
@@ -1332,6 +1425,7 @@ function drawSarah(x, y, dir, anim, jh, bike, moving) {
     else { R(x - 4, by - 17, 3, 9, HAIR); R(x + 1, by - 14, 1, 1, '#222'); }
   }
 }
+const CR_POSE = {};   // extra C-Real poses from other levels: { behind(x, y, tm), front(x, y, tm) }
 // C-Real: long-haired hippie with a brown beard, headband, tie-dye shirt, flares & sandals.
 // pose = region: baar eats pasta, forest carries a mushroom basket, mount skis, sea plays guitar.
 function drawCReal(x0, y, tm, pose) {
@@ -1339,6 +1433,8 @@ function drawCReal(x0, y, tm, pose) {
   ell(x0, y - 9, 11, 14, `rgba(190,225,255,${.18 + .08 * Math.sin(tm * 3)})`);
   if (pose === 'mount') { ell(x0, y, 15, 4, '#eef3f8'); ell(x0 - 4, y - 1, 6, 2, '#ffffff'); }
   if (pose === 'baar') for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) R(x0 - 9 + i * 3, y - 2 + j * 2, 3, 2, (i + j) % 2 ? '#d94b4b' : '#f4f4f4');
+  const extra = CR_POSE[pose];
+  if (extra && extra.behind) extra.behind(x0, y, tm);
   shadow(x0, y);
   const x = pose === 'mount' ? x0 + Math.round(Math.sin(tm * 2.5)) : x0;   // skier sways
   if (pose === 'mount') {
@@ -1380,6 +1476,7 @@ function drawCReal(x0, y, tm, pose) {
       R(nx, ny, 1, 3, '#fff'); R(nx - 1, ny + 2, 2, 1, '#fff'); R(nx + 1, ny, 1, 1, '#fff');
     }
   }
+  if (extra && extra.front) extra.front(x, y, tm);
   // sparkling snowflakes around him
   const sa = tm * 2.2;
   for (const s of [1, -1]) { const fx = Math.round(x + s * Math.cos(sa) * 10), fy = Math.round(y - 12 + s * Math.sin(sa) * 9); R(fx - 1, fy, 3, 1, '#ffffff'); R(fx, fy - 1, 1, 3, '#ffffff'); }
@@ -1530,7 +1627,18 @@ function drawFarmhouse(x, y, w, h) {
 function drawBuilding(b) {
   const x = b.x * 16 - cam.x, y = b.y * 16 - cam.y, w = b.w * 16, h = b.h * 16, cx = x + w / 2;
   const done = ST.sk[b.id];
+  if (LV.drawBuilding && LV.drawBuilding(b, x, y, w, h)) return;   // level-specific building kinds
   if (b.kind === 'farm') drawFarmhouse(x, y, w, h);
+  if (b.kind === 'hospiz') {   // old Gotthard hospice: massive stone block, small deep windows, new sculpted roof
+    R(x + 3, y + h - 1, w, 4, 'rgba(0,0,0,.3)');
+    R(x, y + 10, w, h - 10, '#b8b2a6'); for (let i = 0; i < 40; i++) R(x + hash(i, 21) % (w - 3), y + 12 + hash(i, 22) % (h - 14), 3, 1, '#a39d91');
+    for (let row = 0; row < 3; row++) for (let i = 0; i < 6; i++) { const wx = x + 8 + i * 14, wy = y + 18 + row * 14; R(wx, wy, 6, 7, '#3a3530'); R(wx + 1, wy + 1, 4, 5, '#d9b47a'); R(wx + 3, wy + 1, 1, 5, '#3a3530'); }
+    poly([[x - 4, y + 12], [x + 10, y - 14], [x + w - 10, y - 14], [x + w + 4, y + 12]], '#5c6670');
+    for (let j = 0; j < 26; j += 3) R(x - 2 + j * .5, y - 12 + j, w + 4 - j, 1, 'rgba(255,255,255,.08)');
+    R(x + 10, y - 15, w - 20, 2, '#46505a');
+    R(x + w / 2 - 6, y + h - 16, 12, 16, '#4a2c18'); R(x + w / 2 - 6, y + h - 17, 12, 2, '#8a8478');
+    R(x + w - 8, y - 30, 1, 18, '#ddd'); R(x + w - 7, y - 30, 8, 7, '#d52b1e'); R(x + w - 4, y - 29, 2, 5, '#fff'); R(x + w - 6, y - 27, 6, 1, '#fff');
+  }
   if (b.kind === 'house') drawHouse(x, y, w, h, b.wall, b.roof, false);
   if (b.id === 'creal') { R(x + w - 6, y - 26, 1, 18, '#ddd'); R(x + w - 5, y - 26, 9, 7, '#3d6fb5'); R(x + w - 2, y - 25, 1, 5, '#fff'); R(x + w - 4, y - 23, 5, 1, '#fff'); R(x + w - 3, y - 24, 1, 1, '#fff'); R(x + w - 1, y - 24, 1, 1, '#fff'); R(x + w - 3, y - 22, 1, 1, '#fff'); R(x + w - 1, y - 22, 1, 1, '#fff'); }
   if (b.kind === 'holz') drawHouse(x, y, w, h, '#b9824b', '#6e4f3a', true);
@@ -1609,34 +1717,42 @@ function drawWorld() {
     const gid = GROUND[id] ? id : baseTile(tx, ty);
     g.drawImage(GROUND[gid][v], sx, sy);
     if (id === T.WATER) { if (((tx + ty) & 1) === 0) R(sx + 4 + Math.round(Math.sin(time * 2 + tx * .7 + ty * 1.3) * 3), sy + 5 + (tx * 3) % 6, 5, 1, 'rgba(255,255,255,.35)'); }
-    else if (OVER[id]) { const o = (id === T.PINE && zoneOf(tx, ty) === 'mount' && ty < 12) ? OVER.PINE_SNOW : OVER[id]; g.drawImage(o[v], sx, sy); }
+    else if (OVER[id]) { const o = (id === T.PINE && LV.snowyPine && LV.snowyPine(tx, ty)) ? OVER.PINE_SNOW : OVER[id]; g.drawImage(o[v], sx, sy); }
+    if (LV.tileFx) LV.tileFx(id, tx, ty, sx, sy);
   }
   const vis = (x, y, m = 40) => x > cam.x - m && x < cam.x + VW + m && y > cam.y - m && y < cam.y + VH + m + 30;
-  for (const m of mushrooms) if (vis(m.x, m.y)) { g.save(); g.translate(-cam.x, -cam.y); drawMush(m, time); g.restore(); }
-  for (const p of poops) if (vis(p.x, p.y)) { g.save(); g.translate(-cam.x, -cam.y); drawPoop(p, time); g.restore(); }
+  g.save(); g.translate(-cam.x, -cam.y); LV.drawGround(vis); g.restore();
   const D = [];
   for (const b of BUILDINGS) if (vis(b.x * 16 + b.w * 8, b.y * 16, 140)) D.push({ y: (b.y + b.h) * 16, f: () => { g.restore(); drawBuilding(b); g.save(); g.translate(-cam.x, -cam.y); } });
-  for (const s of SIGNS) if (vis(s.x, s.y)) D.push({ y: s.y, f: () => s.kind === 'lion' ? drawLionMonument(s) : drawSign(s) });
-  if (vis(CELLAR.x, CELLAR.y)) D.push({ y: CELLAR.y, f: drawWoodpile });
-  for (const h of hays) if (vis(h.x, h.y)) D.push({ y: h.y, f: () => drawHay(h) });
-  for (const c of cats) if (vis(c.x, c.y)) D.push({ y: c.y, f: () => drawCat(c, time) });
-  for (const l of lions) if (vis(l.x, l.y)) D.push({ y: l.y, f: () => drawLion(l, time) });
-  for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (vis(s.x, s.y)) D.push({ y: s.y, f: () => drawCReal(s.x, s.y, time + s.x, k) }); }
-  for (const f of fleeing) D.push({ y: f.y, f: () => drawGuard(f.x, f.y, f.col, f.hat, time, 'right') });
-  if (ST.tiger) D.push({ y: tiger.y, f: () => drawTiger(tiger.x, tiger.y, tiger.face, tiger.moving ? tiger.anim : 0, time) });
+  for (const s of SIGNS) if (vis(s.x, s.y)) D.push({ y: s.y, f: () => s.draw ? s.draw(s) : drawSign(s) });
+  for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (vis(s.x, s.y)) D.push({ y: s.y, f: () => drawCReal(s.x, s.y, time + s.x, s.pose || k) }); }
+  LV.drawables(D, vis);
   D.push({ y: P.y, f: drawPlayer });
   D.sort((a, b) => a.y - b.y);
   g.save(); g.translate(-cam.x, -cam.y);
   for (const d of D) d.f();
   g.restore();
   cam.x = cx0; cam.y = cy0;
-  if (curZone === 'forest') { g.fillStyle = 'rgba(10,30,10,.12)'; g.fillRect(0, 0, VW, VH); }
+  if (LV.overlay) LV.overlay();
+}
+function l1DrawGround(vis) {
+  for (const m of mushrooms) if (vis(m.x, m.y)) drawMush(m, time);
+  for (const p of poops) if (vis(p.x, p.y)) drawPoop(p, time);
+}
+function l1Drawables(D, vis) {
+  if (vis(CELLAR.x, CELLAR.y)) D.push({ y: CELLAR.y, f: drawWoodpile });
+  for (const h of hays) if (vis(h.x, h.y)) D.push({ y: h.y, f: () => drawHay(h) });
+  for (const c of cats) if (vis(c.x, c.y)) D.push({ y: c.y, f: () => drawCat(c, time) });
+  for (const l of lions) if (vis(l.x, l.y)) D.push({ y: l.y, f: () => drawLion(l, time) });
+  for (const f of fleeing) D.push({ y: f.y, f: () => drawGuard(f.x, f.y, f.col, f.hat, time, 'right') });
+  if (ST.tiger) D.push({ y: tiger.y, f: () => drawTiger(tiger.x, tiger.y, tiger.face, tiger.moving ? tiger.anim : 0, time) });
 }
 function drawPlayer() {
   if (P.inv > 0 && Math.floor(P.inv * 12) % 2 === 0) return;
   const jh = P.jump > 0 ? Math.sin(Math.PI * (1 - P.jump / .55)) * 10 : 0;
   const ropeBehind = P.jump > 0 && !P.bike && Math.cos((1 - P.jump / .55) * Math.PI * 2) > 0;
   if (ropeBehind) drawRopeArc();
+  if (P.bike && scene === 'world' && LV.drawVehicle) { LV.drawVehicle(jh); return; }
   drawSarah(P.x, P.y, P.dir, P.anim, jh, P.bike, P.moving);
   if (P.jump > 0 && !P.bike && !ropeBehind) drawRopeArc();
   if (P.slow > 0) for (let i = 0; i < 2; i++) R(P.x + Math.cos(time * 7 + i * 3) * 7, P.y - 20 + Math.sin(time * 9 + i) * 3, 1, 1, '#111');
@@ -1693,13 +1809,14 @@ function drawInterior() {
       for (const lx of [5, 10, 19, 24]) R(sx + lx, sy + 13, 2, 3, '#5a3a22');
     });
     if (ch === 'o') { R(sx + 5, sy + 2, 6, 14, IN.d.style === 'chapel' ? '#b8955c' : '#6a4520'); R(sx + 5, sy + 2, 2, 14, 'rgba(255,255,255,.18)'); R(sx + 4, sy + 13, 8, 3, 'rgba(0,0,0,.25)'); }
-    if (ch === 'D' && !ST.sk[IN.id]) {
+    if (ch === 'D' && !interiorDone()) {
       const p = .5 + .5 * Math.sin(time * 4);
       ell(sx + 8, sy + 8, 7 + p * 2, 5 + p, `rgba(255,211,77,${.25 + p * .25})`);
       R(sx + 7, sy + 3, 2, 8, '#ffd34d'); R(sx + 7, sy + 11, 2, 2, '#f1c6a5'); R(sx + 7, sy + 2, 2, 1, '#ff8fb1');
     }
   }
   for (const f of big) f();
+  if (IN.d.decor) IN.d.decor();   // interior-specific props (e.g. the Google office slide)
   // flashlight cones
   for (const gd of IN.guards) {
     const ex = gd.x, ey = gd.y - 8, rng = gd.range || 66;
@@ -1852,6 +1969,7 @@ function crPoseNear() {
   for (const k in CR_SPOTS) if (dist(CR_SPOTS[k].x, CR_SPOTS[k].y, P.x, P.y) < 120) return k;
 }
 function withCtx(c, fn) { const o = g; g = c; fn(); g = o; }
+const PORTRAITS = {};   // extra dialog portraits by speaker name (drawn at 0,0 feet position)
 const SPEAKER_COL = { 'Sarah': '#ff8fb1', 'C-Real': '#ffd34d', 'Braumeister Elio': '#f0a850', 'Sign': '#d9c19a', 'Sketchbook': '#9fe0a0', 'Snow tiger': '#bfe3ff', '???': '#bbb' };
 function drawPortrait(who, x, y) {
   ctx.save(); ctx.translate(x, y); ctx.scale(2, 2);
@@ -1860,6 +1978,7 @@ function drawPortrait(who, x, y) {
     else if (who === 'C-Real') drawCReal(0, 0, time, crPoseNear());
     else if (who === 'Snow tiger') drawTiger(3, 0, -1, 0, time);
     else if (who === 'Braumeister Elio') drawElio(0, 0, time);
+    else if (PORTRAITS[who]) PORTRAITS[who]();
     else if (who === 'Sketchbook') { R(-7, -18, 14, 16, '#fff7d6'); R(-6, -17, 1, 14, '#c9b98a'); R(-4, -14, 9, 1, '#888'); R(-4, -11, 7, 1, '#888'); R(-4, -8, 8, 1, '#888'); }
     else if (who === 'Sign') drawSign({ x: 0, y: -2 });
     else if (who !== '???') { const gd = IN && IN.guards.find(q => q.name === who); drawGuard(0, 0, gd ? gd.col : (who === 'Bouncer' ? '#222' : '#2f3b52'), gd ? gd.hat : '#111', 0, 'down'); }
@@ -1882,25 +2001,32 @@ function drawDialog() {
 function drawHUD() {
   rrect(3, 3, Math.max(ST.maxHearts * 11 + 6, 150), 26, 4, 'rgba(10,10,20,.45)');
   for (let i = 0; i < ST.maxHearts; i++) heart(10 + i * 11, 9, 4.2, i < ST.hearts ? '#ff4d6d' : 'rgba(255,255,255,.22)');
-  let s = `🍄 ${ST.mush}   ✏️ ${sketchCount()}/5   ${ST.tiger ? '🐯' : '🐾'} ${ST.cats.length}/5`;
+  txt(LV.hud(), 7, 17, 7.5, '#fff');
+}
+function l1Hud() {
+  let s = `🍄 ${ST.mush}   ✏️ ${sketchCount()}/5${ST.sk.hospiz ? '+1' : ''}   ${ST.tiger ? '🐯' : '🐾'} ${ST.cats.length}/5`;
   if (ST.items.key) s += '  🗝'; if (ST.items.bike) s += P.bike ? '  🚲!' : '  🚲';
-  txt(s, 7, 17, 7.5, '#fff');
+  return s;
+}
+function l1WorldLabels(ox, oy) {
+  const pk = BMAP.park; txt('BOLLEBLU', (pk.x + pk.w / 2) * 16 + ox, (pk.y + pk.h) * 16 - 21 + oy, 6.5, '#ffffff', 'center', true);
+  if (ST.tiger && dist(tiger.x, tiger.y, P.x, P.y) < 60 && !tiger.moving) txt('Schneeflocke', tiger.x + ox, tiger.y + oy - 24, 6, '#cfeaff', 'center');
 }
 function drawUI() {
   if (scene === 'title') {
     txt('SARCHITECT', VW / 2, 26, 34, '#ffffff', 'center', true);
     txt(t('Break in · Sketch · Slide'), VW / 2, 64, 10, '#3a4a6a', 'center', true, false);
-    const opts = (title.hasSave ? [t('Continue'), t('New game')] : [t('New game')]).concat('◀ ' + t('Language: {0}', LANG_NAMES[LANG]) + ' ▶');
-    opts.forEach((o, i) => { const y = 82 + i * 17, sel = i === title.sel; rrect(VW / 2 - 66, y, 132, 14, 7, sel ? 'rgba(255,111,168,.92)' : 'rgba(255,255,255,.55)'); txt((sel && i < opts.length - 1 ? '▶ ' : '') + o, VW / 2, y + 3, 8.5, sel ? '#fff' : '#334', 'center', true, false); });
-    txt(t('Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M'), VW / 2, 136, 6.5, '#334', 'center', false, false);
-    txt(t('a game by C-Real, for Sarah ♥'), VW / 2, 147, 7.5, '#b0306a', 'center', true, false);
+    const opts = (title.opts || titleOptions()).map(o => o.lang ? '◀ ' + t('Language: {0}', LANG_NAMES[LANG]) + ' ▶' : t(o.label));
+    const oy = 82 - (opts.length > 3 ? 8 : 0);
+    opts.forEach((o, i) => { const y = oy + i * 16, sel = i === title.sel; rrect(VW / 2 - 70, y, 140, 14, 7, sel ? 'rgba(255,111,168,.92)' : 'rgba(255,255,255,.55)'); txt((sel && i < opts.length - 1 ? '▶ ' : '') + o, VW / 2, y + 3, 8.5, sel ? '#fff' : '#334', 'center', true, false); });
+    txt(t('Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M'), VW / 2, 146, 6.5, '#334', 'center', false, false);
+    txt(t('a game by C-Real, for Sarah ♥'), VW / 2, 156, 7.5, '#b0306a', 'center', true, false);
     return;
   }
   if (scene === 'world' || scene === 'interior') {
     const ox = scene === 'interior' ? IOX : -cam.x, oy = scene === 'interior' ? IOY : -cam.y;
     if (scene === 'world') for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (dist(s.x, s.y, P.x, P.y) < 110) txt('C-Real', s.x + ox, s.y + oy - 32, 7, '#ffd34d', 'center', true); }
-    if (scene === 'world') { const pk = BMAP.park; txt('BOLLEBLU', (pk.x + pk.w / 2) * 16 + ox, (pk.y + pk.h) * 16 - 21 + oy, 6.5, '#ffffff', 'center', true); }
-    if (scene === 'world' && ST.tiger && dist(tiger.x, tiger.y, P.x, P.y) < 60 && !tiger.moving) txt('Schneeflocke', tiger.x + ox, tiger.y + oy - 24, 6, '#cfeaff', 'center');
+    if (scene === 'world' && LV.worldLabels) LV.worldLabels(ox, oy);
     if (nearObj && !dlg.cur && !fade.dir) {
       const label = t(nearObj.label), x = nearObj.x + ox, y = nearObj.y + oy - 26;
       ctx.font = font(6, true); const kw = Math.max(9, ctx.measureText(BTN_A).width + 5);
@@ -1948,7 +2074,7 @@ function drawUI() {
       const S = ST.stats; const rows = [t('Sketches: {0}/5', sketchCount()), t('Mushrooms found: {0}', S.mush), t('Cats petted: {0}', ST.cats.length), t('Times caught breaking in: {0}', S.caught), t('Mountain lion poop stepped in: {0}', S.poop), t('Lion scares: {0}', S.hits), t('Waterslide score: {0}', SL ? SL.score : S.slide), t('Weird beers brewed: {0}', S.beers || 0)];
       rows.forEach((r, i) => txt(r, VW / 2, 108 + i * 9, 7.5, '#eee', 'center', false, false));
       txt(t('Inspired by Peter Zumthor & Gion A. Caminada'), VW / 2, 182, 6.5, '#aaa', 'center', false, false);
-      txt(t('[A]: keep exploring'), VW / 2, 191, 7, '#ffd34d', 'center', true, false);
+      txt(t(LEVELS[2] ? '[A]: fly to California ✈️   ·   B: keep exploring' : '[A]: keep exploring'), VW / 2, 191, 7, '#ffd34d', 'center', true, false);
     }
   }
   if (scene === 'interior' && IN.d.brewery) txt('REIBBIER', IOX + 160, IOY + 5, 8, '#ffd34d', 'center', true);
@@ -1994,6 +2120,7 @@ function drawUI() {
     }
     for (const p of parts) { ctx.globalAlpha = Math.min(1, p.life / p.max * 2); txt(p.text || '', p.x, p.y, 8, p.col, 'center', true); ctx.globalAlpha = 1; }
   }
+  if (SCENES[scene] && SCENES[scene].ui) SCENES[scene].ui();
   // toasts
   toasts.forEach((t, i) => {
     const a = Math.min(1, t.t * 2, (t.max - t.t) * 4), w = Math.min(230, wrap(t.text, 220, 7.5)[0] ? 230 : 230);
@@ -2002,7 +2129,7 @@ function drawUI() {
     ctx.globalAlpha = Math.max(0, a); rrect(x, y, w, h, 6, 'rgba(250,250,255,.95)', '#ffd34d');
     lines.forEach((ln, j) => txt(ln, x + 7, y + 4 + j * 9, 7.5, '#222', 'left', false, false)); ctx.globalAlpha = 1;
   });
-  if (book.open) drawBook();
+  if (book.open) { if (LV.drawBook) LV.drawBook(); else drawBook(); }
   if (paused) drawPause();
   drawDialog();
 }
@@ -2010,7 +2137,7 @@ function drawPause() {
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, VW, VH);
   rrect(VW / 2 - 120, 30, 240, 156, 8, 'rgba(18,16,28,.95)', '#ff8fb1');
   txt(t('PAUSED'), VW / 2, 38, 14, '#fff', 'center', true, false);
-  ['Move: Arrow keys / WASD / stick', '[A]: talk · pet · rope skip', 'Hold [A] at a ✨ spot to sketch it', 'B (B, Shift): hop on / off the black bike', 'Book (Tab, Q): your sketchbook', 'M: mute · Esc / P: pause', '', 'Avoid guard flashlight cones & lions.', 'Jump over lion poop. Pet cats. ❤', t('◀ ▶ Language: {0}', LANG_NAMES[LANG]), 'Press [A] or Esc to continue']
+  (LV.pauseLines || ['Move: Arrow keys / WASD / stick', '[A]: talk · pet · rope skip', 'Hold [A] at a ✨ spot to sketch it', 'B (B, Shift): hop on / off the black bike', 'Book (Tab, Q): your sketchbook', 'M: mute · Esc / P: pause', '', 'Avoid guard flashlight cones & lions.', 'Jump over lion poop. Pet cats. ❤']).concat([t('◀ ▶ Language: {0}', LANG_NAMES[LANG]), 'Press [A] or Esc to continue'])
     .forEach((s, i) => txt(s ? t(s) : '', VW / 2, 60 + i * 10.5, 7.5, i >= 9 ? '#ffd34d' : '#ddd', 'center', i === 9, false));
 }
 function pencil(fn) { ctx.save(); ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = .7; ctx.lineCap = 'round'; fn(); ctx.restore(); }
@@ -2039,6 +2166,14 @@ function drawSketch(id, x, y, w, h) {
       ctx.save(); ctx.strokeStyle = 'rgba(230,180,40,.8)'; jline(cx - 2, y + 4, cx - 6, y + h - 6, 3); jline(cx + 2, y + 4, cx + 6, y + h - 6, 4); ctx.restore();
       ctx.beginPath(); for (let i = 0; i < 5; i++) { ctx.moveTo(x + 16 + i * 14, y + h - 10); ctx.quadraticCurveTo(x + 23 + i * 14, y + h - 13, x + 30 + i * 14, y + h - 10); } ctx.stroke();
     }
+    if (id === 'hospiz') {   // section: thick stone shell, sculpted roof, wooden room slipped inside
+      jpoly([[x + 14, y + h - 10], [x + 14, cy - 6], [cx, y + 10], [x + w - 14, cy - 6], [x + w - 14, y + h - 10]], false);
+      jline(x + 14, y + h - 10, x + w - 14, y + h - 10, 5);
+      jpoly([[x + 22, y + h - 16], [x + 22, cy + 2], [x + w - 22, cy + 2], [x + w - 22, y + h - 16]]);
+      for (let i = 0; i < 9; i++) jline(x + 25 + i * (w - 50) / 8, cy + 4, x + 25 + i * (w - 50) / 8, y + h - 18, i + 40);
+      ctx.save(); ctx.strokeStyle = 'rgba(160,110,50,.8)'; jline(x + 24, cy + 8, x + w - 24, cy + 8, 7); ctx.restore();
+      for (let j = 0; j < 4; j++) jline(x + 16, cy + j * 9, x + 20, cy + j * 9 + 3, j + 60);
+    }
     if (id === 'pav') {
       ctx.save(); ctx.fillStyle = 'rgba(30,30,30,.25)'; ctx.fillRect(x + 10, y + 8, w - 20, h - 16); ctx.restore();
       jpoly([[x + 10, y + 8], [x + w - 10, y + 8], [x + w - 10, y + h - 8], [x + 10, y + h - 8]]);
@@ -2053,8 +2188,8 @@ function drawBook() {
   const bx = 34, by = 14, bw = VW - 68, bh = VH - 28;
   rrect(bx - 4, by - 4, bw + 8, bh + 8, 8, '#5b3a22'); rrect(bx, by, bw, bh, 5, '#fbf5e4');
   for (let y = by + 8; y < by + bh - 4; y += 9) { ctx.fillStyle = '#5b3a22'; ctx.beginPath(); ctx.arc(bx + bw / 2, y, 1.6, 0, 7); ctx.fill(); }
-  const id = PAGE_ORDER[book.sel], d = INTERIORS[id], have = !!ST.sk[id];
-  txt(t('My Architectural Sketchbook — page {0}/5', book.sel + 1), bx + 10, by + 6, 7, '#8a6a48', 'left', true, false);
+  const id = BOOK_PAGES[book.sel], d = INTERIORS[id], have = !!ST.sk[id];
+  txt(t('My Architectural Sketchbook — page {0}/{1}', book.sel + 1, BOOK_PAGES.length), bx + 10, by + 6, 7, '#8a6a48', 'left', true, false);
   rrect(bx + 12, by + 22, bw / 2 - 24, bh - 54, 3, '#fffdf4', '#e3d8bb');
   if (have) drawSketch(id, bx + 12, by + 22, bw / 2 - 24, bh - 54);
   else { txt('?', bx + bw / 4, by + 60, 30, '#d8ccb0', 'center', true, false); }
@@ -2063,9 +2198,27 @@ function drawBook() {
   const tl = wrap(t(have ? d.title : '??? (not yet sketched)'), rw, 10, true).length > 1 ? 11 : 0;
   txt(have ? t(d.sub) : t('Somewhere {0}...', t(d.where)), rx, by + 36 + tl, 7, '#8a6a48', 'left', false, false);
   wrap(t(have ? d.fact : 'A locked building with a beautiful detail inside. Find a way in, avoid the guards, and hold [A] at the ✨ spot.'), rw, 7.5).forEach((ln, i) => txt(ln, rx, by + 50 + tl + i * 10, 7.5, '#3a3a3a', 'left', false, false));
-  for (let i = 0; i < 5; i++) { ctx.fillStyle = i === book.sel ? '#ff6fa8' : ST.sk[PAGE_ORDER[i]] ? '#7ec850' : '#d8ccb0'; ctx.beginPath(); ctx.arc(VW / 2 - 24 + i * 12, by + bh - 12, 3.2, 0, 7); ctx.fill(); }
+  const np = BOOK_PAGES.length;
+  for (let i = 0; i < np; i++) { ctx.fillStyle = i === book.sel ? '#ff6fa8' : ST.sk[BOOK_PAGES[i]] ? '#7ec850' : '#d8ccb0'; ctx.beginPath(); ctx.arc(VW / 2 - (np - 1) * 6 + i * 12, by + bh - 12, 3.2, 0, 7); ctx.fill(); }
   txt(t('◀ ▶ flip pages   ·   [A] / Tab: close'), VW / 2, by + bh - 26, 7, '#8a6a48', 'center', false, false);
 }
+
+// ---------------------------------------------------------------- Level 1: Luzern
+const LEVEL1 = {
+  W: 96, H: 64, seed: 2024, buildings: L1_BUILDINGS, paths: L1_PATHS, crSpots: L1_CR_SPOTS, start: L1_START, signs: L1_SIGNS,
+  zoneOf: (tx, ty) => tx < 48 ? (ty < 32 ? 'forest' : 'baar') : (ty < 32 ? 'mount' : 'sea'),
+  baseTile(tx, ty) { const z = zoneOf(tx, ty); if (z === 'baar') return T.G; if (z === 'forest') return T.F; if (z === 'mount') return ty < 9 ? T.SNOW : T.ALP; return T.SAND; },
+  terrain: l1Terrain, pathTile: (tx, ty) => zoneOf(tx, ty) === 'baar' ? T.COB : T.PATH,
+  clearSpots: () => CAT_DEFS.map(c => [c.tx, c.ty]).concat(HAY_DEFS.map(h => [h.tx, h.ty])),
+  snowyPine: (tx, ty) => zoneOf(tx, ty) === 'mount' && ty < 12,
+  spawn: l1Spawn, update: l1Update, onB: l1OnB, interactables: l1Interactables, drawGround: l1DrawGround, drawables: l1Drawables,
+  overlay() { if (curZone === 'forest') { g.fillStyle = 'rgba(10,30,10,.12)'; g.fillRect(0, 0, VW, VH); } },
+  talk: l1Talk, buildingAct: l1BuildingAct, respawn: l1Respawn, hud: l1Hud, worldLabels: l1WorldLabels,
+  zoneNames: { baar: 'Luzern · Kanton Luzern', forest: 'Bireggwald', mount: 'The Alps · Lion Country', sea: 'Italy' },
+  zoneTexts: { forest: 'Bireggwald! Brown & orange = yum. Red with dots = NO. 🍄', mount: 'Lion country!! 🦁 Jump ([A]) over the poop, bike (B) away if they chase you!', sea: 'ITALY!! 🌊 Smell that? Pizza. And sunscreen.' },
+  crTexts: L1_CR_TEXTS,
+};
+LEVELS[1] = LEVEL1;
 
 // ---------------------------------------------------------------- render & loop
 function render() {
@@ -2077,6 +2230,7 @@ function render() {
   else if (scene === 'slide') drawSlideScene();
   else if (scene === 'ending') drawEndingScene();
   else if (scene === 'brewgame') drawBrewScene();
+  else if (SCENES[scene]) SCENES[scene].draw();
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
   if (P.trip > 0 && (scene === 'world' || scene === 'interior')) {
@@ -2096,9 +2250,15 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => { });
-buildTiles(); genWorld(); spawnEntities();
-title.hasSave = !!loadGame();
-requestAnimationFrame(loop);
+// start once every script (index + california.js) has loaded
+function boot() {
+  buildTiles(); loadLevel(1);
+  title.hasSave = !!loadGame();
+  if (/debug2/.test(location.search) && LEVELS[2]) { newGame(); enterLevel(2); if (LEVELS[2].debug) LEVELS[2].debug(); }
+  requestAnimationFrame(loop);
+}
+addEventListener('DOMContentLoaded', boot);
 </script>
+<script src="california.js"></script>
 </body>
 </html>
