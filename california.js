@@ -110,6 +110,7 @@ const L2_BUILDINGS = [
   { id: 'surf', x: 12, y: 56, w: 5, h: 3, kind: 'surfshack', label: 'Surf!' },
   { id: 'camp', x: 24, y: 55, w: 5, h: 3, kind: 'camp', label: 'Campsite' },
   { id: 'sherman', x: 88, y: 68, w: 4, h: 4, kind: 'sherman', label: 'Climb' },
+  { id: 'gear', x: 66, y: 22, w: 5, h: 3, kind: 'gearshop', label: 'Gear shop' },
 ];
 const L2_CR_SPOTS = {
   busk: { x: 30 * 16 + 8, y: 42 * 16 + 8, pose: 'busk' }, forest2: { x: 24 * 16 + 8, y: 18 * 16 + 10, pose: 'forest' },
@@ -146,7 +147,7 @@ const postcardCount = () => POSTCARDS.filter(p => L2().postcards[p.id]).length;
 const lawCount = () => LAWS.filter(l => L2().laws[l.id]).length;
 function addMoney(n) { L2().money = Math.max(0, L2().money + n); }
 function l2UpdateGates() {
-  const park = !!L2().permits.park, shasta = !!L2().permits.summit && postcardCount() >= 6;
+  const park = !!L2().permits.park, shasta = !!L2().flags.finished;   // the summit is climbed in the expedition minigame
   for (let ty = 52; ty <= 53; ty++) for (let tx = 61; tx <= 63; tx++) map[ty * W + tx] = park ? T.ASPH : T.GATE;
   for (let ty = 0; ty < 26; ty++) for (let tx = 56; tx < W; tx++) {
     const sd = dist(tx, ty, SHASTA.x, SHASTA.y), i = ty * W + tx;
@@ -354,7 +355,9 @@ Object.assign(PORTRAITS, {
   'Deer': () => drawDeer({ x: 0, y: 0, face: -1 }), 'Local': () => drawPerson(0, 0, { shirt: '#e05a5a', extra: (x, y) => R(x - 3, y - 16, 6, 1, '#111') }),
   'Frog guy': () => drawPerson(0, 0, { shirt: '#3a8a3a', hat: 'cap', hatCol: '#e8e0c8', beard: '#6a4a2a' }),
   'Shrimp': () => drawShrimp(0, -6, 2),
+  'Shop clerk': () => drawPerson(0, 0, { shirt: '#c8502a', pants: '#3a4a3a', hat: 'beanie', hatCol: '#3a6ad8', beard: '#8a5a2a' }),
 });
+Object.assign(SPEAKER_COL, { 'Shop clerk': '#ff9a6a' });
 Object.assign(SPEAKER_COL, { 'Ranger Jay': '#9ccf6a', 'Officer': '#7a9ae0', 'Googler': '#6fb8ff', 'Bartender': '#e09a6a', 'Drive-thru': '#ffb347', 'Deer': '#c8a07a', 'Local': '#ff9a9a', 'Frog guy': '#8ad06a', 'Shrimp': '#ff8a7a', 'Postcard': '#9fe0a0' });
 function drawShrimp(x, y, s = 1) {
   g.save(); g.translate(x, y); g.scale(s, s);
@@ -419,6 +422,12 @@ function l2DrawBuilding(b, x, y, w, h) {
       poly([[x + 44, y + h], [x + 58, y + 14], [x + 72, y + h]], '#e8743a'); R(x + 57, y + 26, 2, 22, '#8a4a22');
       R(x + 10, y + 18, 16, 8, '#f2e4c8');
       return true;
+    case 'gearshop':   // Shasta Mountain Shop: wooden alpine shop with crossed ice axes
+      shadowB(); R(x, y + 8, w, h - 8, '#8a5a32'); for (let j = y + 8; j < y + h; j += 4) R(x, j, w, 1, '#6e4626');
+      poly([[x - 4, y + 10], [x + 10, y - 10], [x + w - 10, y - 10], [x + w + 4, y + 10]], '#3a4a5a'); R(x + 8, y - 10, w - 16, 3, '#eef3f8');
+      R(cx - 22, y + 12, 44, 9, '#f2e4c8'); g.strokeStyle = '#555'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx - 8, y + 13); g.lineTo(cx + 8, y + 21); g.moveTo(cx + 8, y + 13); g.lineTo(cx - 8, y + 21); g.stroke();
+      R(cx - 6, y + h - 14, 12, 14, '#3a2414'); R(x + 4, y + 26, 10, 8, '#cfe0ff'); R(x + w - 14, y + 26, 10, 8, '#cfe0ff');
+      return true;
     case 'sherman':   // General Sherman, the biggest tree on Earth
       ell(cx, y + h, 30, 8, 'rgba(0,0,0,.35)'); R(cx - 22, y - 50, 44, h + 50, '#a0522d'); R(cx - 18, y - 50, 8, h + 50, '#c0683a');
       for (let i = 0; i < 8; i++) R(cx - 20 + i * 6, y - 50, 1, h + 50, '#7a3a1e');
@@ -474,7 +483,7 @@ const POSTCARDS = [
   { id: 'surf', title: 'Surf\'s Up', sub: 'Big Sur coast', where: 'in Big Sur', fact: 'Cold Pacific water, kelp forests, and elephant seals who do NOT share their waves.' },
   { id: 'shrimp', title: 'Shrimp in a Sequoia', sub: 'Sequoia National Park', where: 'in Sequoia National Park', fact: 'Giant sequoias are the largest trees on Earth by volume. Why a shrimp in sunglasses lives at the top is a question for science.' },
   { id: 'fire', title: 'Big Sur Wildfire', sub: 'Highway 1 evacuation', where: 'south of Big Sur', fact: 'Wildfires are part of California life. Follow the rangers, keep the tank full, and never stop for selfies.' },
-  { id: 'shasta', title: 'Mount Shasta', sub: '14,179 ft volcano', where: 'on Mount Shasta', fact: 'A lonely giant volcano you can see from 100 miles away. Above 10,000 ft you need a summit pass. And a looper pedal, apparently.' },
+  { id: 'shasta', title: 'Mount Shasta', sub: '14,179 ft volcano', where: 'on Mount Shasta', fact: 'A lonely giant volcano you can see from 100 miles away. Climbers start at 2 AM, camp at Helen Lake, dodge rocks on the Red Banks and curse Misery Hill. Bring an ice axe. Hold on to it.' },
 ];
 const LAWS = [
   { id: 'bar', title: 'No sleeping in bars', text: 'California weird law: it\'s illegal to sleep in a bar.', fine: 25, lines: [['Bartender', 'What can I get you?'], ['Sarah', 'Honestly? Just a little nap. Jetlag...'], ['Sarah', '*zzz*'], ['Officer', 'Ma\'am! WAKE UP. Sleeping in a bar is against the law!']] },
@@ -527,6 +536,7 @@ function l2Talk(spot) {
     if (spot === 'camp2') lines.push(['C-Real', 'Big Sur! I set up camp. Wine? I just... forgot the corkscrew. 🍷'], ['C-Real', 'The official campground is right here. $20 a night, real toilets!']);
     if (spot === 'busk') lines.push(['C-Real', l2Hint()]);
   } else lines.push(['C-Real', l2Hint()]);
+  if (spot === 'shasta' && L2().permits.summit && !gear().pack) lines.push(['C-Real', 'Climbing Shasta? I packed you a backpack: water, sunscreen and three donuts. 🎒', () => { gear().pack = 1; sfx.ding(); toast('🎒 Got: Backpack'); }], ['C-Real', 'Press B on the mountain to eat a snack when you\'re out of breath.']);
   if (ST.hearts < ST.maxHearts && L2().donuts > 0) lines.push(['C-Real', 'You look tired. Donut break? 🍩', () => { L2().donuts--; ST.hearts = ST.maxHearts; sfx.ding(); spawnHearts(P.x, P.y - 16, 5); }]);
   lines.push(['C-Real', 'I\'ll keep this spot as your checkpoint. ❤']);
   L2().met[spot] = 1;
@@ -543,6 +553,7 @@ function l2Hint() {
   if (!pc.shrimp) return 'There is... a shrimp. At the top of General Sherman. In Sequoia. Don\'t ask. Go!';
   if (!pc.fire) return 'Drive south on Highway 1 to the elephant seal beach. Careful, it\'s fire season. 🔥';
   if (!pm.summit) return 'Last stop: Mt Shasta! Buy a summit pass from Ranger Jay ($25).';
+  if (gearCount() < GEAR.length) return t('Gear up for Shasta: {0}. Mountain Shop next to the trailhead, backpack from me, headlamp from Jay.', gearList());
   return 'Everything\'s ready. Meet me on top of Mt Shasta! 🏔';
 }
 const JAY_TIPS = ['Never feed the squirrels. They unionized.', 'Bears can smell a donut box from two miles away. So can I.', 'Leave no trace. Except good memories.',
@@ -563,10 +574,39 @@ function jayTalk(k) {
   if (k === 'fire') lines.push(['Ranger Jay', L2().flags.fireDone ? 'Glad you made it out. Big Sur will grow back. It always does.' : 'Fire season\'s no joke. If you head south on Highway 1, keep your tank full.']);
   else if (k === 'station' && !L2().permits.park) buyPermit('park', L2_MONEY.park, lines);
   else if (!L2().permits.summit) buyPermit('summit', L2_MONEY.summit, lines);
-  else if (k === 'trailhead' && postcardCount() < 6) lines.push(['Ranger Jay', t('The summit trail opens once you\'ve seen the rest of California. Postcards: {0}/6.', postcardCount())]);
-  else if (k === 'trailhead') lines.push(['Ranger Jay', 'The trail to the summit is open. Go get that view! 🏔', () => l2UpdateGates()]);
+  else if (k === 'trailhead') { trailheadCheck(lines); return; }
   else lines.push(['Ranger Jay', JAY_TIPS[(rnd() * JAY_TIPS.length) | 0]]);
   say(lines, saveGame);
+}
+// ---------------------------------------------------------------- Mt Shasta gear
+const GEAR = [
+  { id: 'helmet', icon: '⛑️', name: 'Helmet', cost: 20 }, { id: 'crampons', icon: '🥾', name: 'Crampons', cost: 30 }, { id: 'axe', icon: '⛏️', name: 'Ice axe', cost: 25 },
+  { id: 'pack', icon: '🎒', name: 'Backpack' }, { id: 'lamp', icon: '🔦', name: 'Headlamp' },
+];
+const gear = () => (L2().gear = L2().gear || {});
+const gearCount = () => GEAR.filter(q => gear()[q.id]).length;
+const gearList = () => GEAR.map(q => (gear()[q.id] ? '✓ ' : '✗ ') + t(q.name)).join('  ·  ');
+function trailheadCheck(lines) {
+  if (L2().flags.finished) lines.push(['Ranger Jay', 'Back for more? Avalanche Gulch is waiting. Same rules: helmet on, axe ready.']);
+  if (!gear().lamp) lines.push(['Ranger Jay', 'Climbers start at 2 AM, when the snow is still frozen. Here, take my spare headlamp. 🔦', () => { gear().lamp = 1; sfx.ding(); toast('🔦 Got: Headlamp'); }]);
+  if (postcardCount() < 6) { lines.push(['Ranger Jay', t('The summit trail opens once you\'ve seen the rest of California. Postcards: {0}/6.', postcardCount())]); say(lines, saveGame); return; }
+  const missing = GEAR.filter(q => !gear()[q.id] && q.id !== 'lamp');
+  if (missing.length) {
+    lines.push(['Ranger Jay', 'Hold on. Nobody goes up Avalanche Gulch without the right gear.'], ['Ranger Jay', gearList()]);
+    if (missing.some(q => q.cost)) lines.push(['Ranger Jay', 'The Mountain Shop next door has helmets, crampons and ice axes.']);
+    if (!gear().pack) lines.push(['Ranger Jay', 'And a backpack with snacks. Your friend with the skis looked prepared.']);
+    say(lines, saveGame); return;
+  }
+  lines.push(['Ranger Jay', 'Helmet, crampons, ice axe, pack, headlamp. You\'re ready.'], ['Ranger Jay', 'If you slip, roll onto the axe and dig it in. Mash [A]! Don\'t let go of it.'],
+    ['Ranger Jay', 'Avalanche Gulch, Red Banks, Misery Hill, summit. Good luck! 🏔']);
+  say(lines, startShasta);
+}
+function gearShop() {
+  const next = GEAR.find(q => q.cost && !gear()[q.id]);
+  if (!next) { say([['Shop clerk', 'You\'ve got everything we sell! Go climb that mountain. 🏔']]); return; }
+  if (L2().money < next.cost) { say([['Shop clerk', t('{0} for {1}. You have ${2}.', t(next.name), '$' + next.cost, L2().money)], ['Sarah', 'Back to busking, then. 🎸']]); return; }
+  say([['Shop clerk', t('One {0}, coming up! That\'s ${1}.', t(next.name), next.cost), () => { addMoney(-next.cost); gear()[next.id] = 1; sfx.ding(); toast(t('{0} Got: {1}', next.icon, t(next.name))); }],
+    ['Shop clerk', { helmet: 'Helmets: because the Red Banks throw rocks.', crampons: 'Our crampons have climbed Shasta 400 times. Without anyone in them.', axe: 'Pointy end down. Always. And don\'t let go of it.' }[next.id]]], saveGame);
 }
 function l2BuildingAct(b) {
   if (b.id !== 'bk') exitCar();
@@ -605,6 +645,7 @@ function l2BuildingAct(b) {
     case 'sherman':
       say([['Sarah', 'General Sherman: the biggest tree on Earth. And at the very top... is that a SHRIMP? 🦐'], ['Sarah', 'I have to know.']], startClimb);
       break;
+    case 'gear': gearShop(); break;
   }
 }
 function driveThru() {
@@ -629,10 +670,7 @@ function l2Interactables(L) {
   if (P.bike) L.push({ x: DRIVE_THRU.x, y: DRIVE_THRU.y, r: 30, label: 'Order', act: driveThru });
   L.push({ x: SUMMIT.x, y: SUMMIT.y - 6, r: 30, label: 'Summit!', act: summitAct });
 }
-function summitAct() {
-  exitCar();
-  say([['Sarah', 'The summit of Mount Shasta. 14,179 feet. I can see... everything.'], ['C-Real', 'And I brought the amp. 🎸 One last loop?']], () => { givePostcardSilent('shasta'); startEnding2(); });
-}
+function summitAct() { exitCar(); say([['Sarah', 'The summit of Mount Shasta again. Still worth every step.']]); }
 function givePostcardSilent(id) { L2().postcards[id] = 1; saveGame(); }
 
 // ---------------------------------------------------------------- Big Sur wildfire (world event)
@@ -672,7 +710,7 @@ function l2Respawn() {
 function l2Hud() {
   const pm = L2().permits;
   let s = `💵 $${L2().money}   📮 ${postcardCount()}/7   ⚖️ ${lawCount()}/8   🍩 ${L2().donuts}`;
-  if (pm.park) s += '  🎫'; if (pm.summit) s += '  🏔';
+  if (pm.park) s += '  🎫'; if (pm.summit) s += `  🏔 🧗${gearCount()}/${GEAR.length}`;
   if (L2().flags.keys) s += P.bike ? '  🚙!' : '  🚙';
   return s;
 }
@@ -1277,7 +1315,7 @@ SCENES.ending2 = {
     if (inp.a) {
       if (EN2.phase === 0 && EN2.shown < msg.length) EN2.shown = msg.length;
       else if (EN2.phase === 0) { EN2.phase = 1; sfx.ding(); }
-      else backToWorld(() => { P.x = SUMMIT.x; P.y = SUMMIT.y + 24; });
+      else startGlissade();
     }
   },
   draw() {
@@ -1304,13 +1342,238 @@ SCENES.ending2 = {
       txt('SARCHITECT 2: CALIFORNIA', VW / 2, 20, 13, '#fff', 'center', true, false);
       txt(t('a road trip by C-Real & Sarah'), VW / 2, 37, 7.5, '#ff8fb1', 'center', false, false);
       [t('Postcards: {0}/7', postcardCount()), t('Weird laws broken: {0}/8', lawCount()), t('Busking tips earned: ${0}', S.tips || 0), t('Eggs benedict stacked: {0}', S.benedict || 0),
-        t('Banana slugs stepped on: {0}', S.slugs || 0), t('Small talks survived: {0}', S.talk || 0), t('Bottles opened with a shoe: {0}', S.wine || 0)]
-        .forEach((r, i) => txt(r, VW / 2, 50 + i * 10, 7.5, '#eee', 'center', false, false));
+        t('Banana slugs stepped on: {0}', S.slugs || 0), t('Small talks survived: {0}', S.talk || 0), t('Bottles opened with a shoe: {0}', S.wine || 0), t('Slides down Mt Shasta: {0}  ·  Ice axes lost: {1}', S.falls || 0, S.axesLost || 0)]
+        .forEach((r, i) => txt(r, VW / 2, 48 + i * 9.3, 7.5, '#eee', 'center', false, false));
       txt(t('Thanks to Ranger Jay. And the shrimp. 🦐'), VW / 2, 124, 7, '#aaa', 'center', false, false);
       txt(t('[A]: keep exploring'), VW / 2, 138, 7, '#ffd34d', 'center', true, false);
     }
   },
 };
+// ---------------------------------------------------------------- the Mt Shasta expedition (Avalanche Gulch)
+// Vertical climb from Bunny Flat (6,950 ft) to the summit (14,179 ft). Stamina drops with altitude, blue ice
+// makes you slip, the Red Banks throw rocks, Misery Hill throws wind. A slip = sliding down the snow until
+// you self-arrest with the ice axe (mash A). Too fast and the axe can be ripped away; then go get it.
+const SH_LEN = 3400, SH_CAMP = 2300, SH_RED = 1500, SH_MISERY = 650;
+const shC = y => 192 + 34 * Math.sin(y / 380) + 14 * Math.sin(y / 150);
+const shHW = y => y > SH_CAMP ? 140 : y > SH_RED ? 66 + 14 * Math.sin(y / 90) : y > SH_MISERY ? 118 : 100;
+const shFt = y => Math.round(6950 + (1 - clamp(y, 0, SH_LEN) / SH_LEN) * (14179 - 6950));
+const shSection = y => y > SH_CAMP ? 'Avalanche Gulch' : y > SH_RED ? 'Red Banks' : y > SH_MISERY ? 'Misery Hill' : 'Summit plateau';
+let SH = null;
+function startShasta() {
+  transition(() => {
+    scene = 'shasta'; musI = 0;
+    const r = mulberry32(14179), ice = [], fum = [];
+    for (let y = 250; y < SH_LEN - 220; y += 70 + r() * 50) if (r() < (y < SH_CAMP ? .7 : .45)) { const hw = shHW(y) - 30; ice.push({ x: shC(y) + (r() * 2 - 1) * hw, y, rx: 14 + r() * 16, ry: 6 + r() * 5 }); }
+    for (let i = 0; i < 6; i++) fum.push({ x: shC(300) + (r() * 2 - 1) * 70, y: 260 + r() * 300, r: 18 + r() * 10 });
+    SH = { x: 192, y: SH_LEN - 40, cp: SH_LEN - 40, stam: 100, slide: null, axe: true, axeItem: null, arrest: 0, rocks: [], rockT: 2, ice, fum, gustT: 4, gust: 0, warn: 0, gustDir: 1,
+      t: 0, snacks: 3, camp: false, sec: 'Avalanche Gulch', done: false, rescue: false, falseSummit: false, dir: 'up', anim: 0, inv: 0 };
+    banner = null; popText(VW / 2, 60, t('2:00 AM. Alpine start. 🔦'), '#ffe9a0', 'screen');
+  });
+}
+function shSlip(v0, why) {
+  if (SH.slide) return;
+  SH.slide = { v: v0, t: 0, risk: false, slam: false }; SH.arrest = 0; statAdd('falls'); sfx.hurt(); shake = .2;
+  popText(VW / 2, 70, t(why) + ' ' + t('SLIDING!'), '#ff8a8a', 'screen');
+}
+function shLoseAxe() {
+  SH.axe = false; statAdd('axesLost'); sfx.eww();
+  SH.axeItem = { x: shC(SH.y + 260) + (rnd() * 2 - 1) * (shHW(SH.y + 260) - 24), y: Math.min(SH_LEN - 30, SH.y + 160 + rnd() * 220) };
+  popText(VW / 2, 90, t('The ice axe got ripped out of your hands! 🪓💨'), '#ffcf6b', 'screen');
+}
+function onIce(x, y) { return SH.ice.some(i => ((x - i.x) / i.rx) ** 2 + ((y - i.y) / i.ry) ** 2 < 1); }
+SCENES.shasta = {
+  music: 'interior',
+  update(dt) {
+    const S = SH;
+    if (S.done) { if (inp.a) { S.done = false; say([['Sarah', 'The summit of Mount Shasta. 14,179 feet. I can see... everything.'], ['C-Real', 'You made it!! I came up the other side with the amp. Don\'t ask. 🎸'], ['C-Real', 'One last loop?']], () => { givePostcardSilent('shasta'); startEnding2(); }); } return; }
+    if (S.rescue) {
+      if (inp.a) { S.rescue = false; S.y = S.cp; S.x = shC(S.y); S.slide = null; S.rocks = []; S.stam = 100; ST.hearts = ST.maxHearts; if (!S.axe) { S.axe = true; S.axeItem = null; } }
+      return;
+    }
+    if (inp.pause) { backToWorld(() => { const j = JAY_SPOTS.trailhead; P.x = j.x; P.y = j.y + 18; }); return; }
+    S.t += dt; S.inv = Math.max(0, S.inv - dt);
+    const c = shC(S.y), hw = shHW(S.y), minX = c - hw + 8, maxX = c + hw - 8;
+    const sec = shSection(S.y);
+    if (sec !== S.sec) { S.sec = sec; popText(VW / 2, 50, t(sec), '#ffffff', 'screen'); sfx.bell(); }
+    if (!S.camp && S.y < SH_CAMP) { S.camp = true; S.cp = SH_CAMP; S.stam = 100; sfx.ding(); popText(VW / 2, 70, t('Helen Lake camp (10,443 ft): checkpoint ⛺'), '#9fe0a0', 'screen'); }
+    if (!S.falseSummit && S.y < 900) { S.falseSummit = true; popText(VW / 2, 70, t('That was NOT the summit. Misery Hill strikes again. 😩'), '#ffffff', 'screen'); }
+    if (S.slide) {   // sliding down the snow
+      const s = S.slide; s.t += dt;
+      if (S.axe) s.v = Math.min(320, s.v + 260 * dt); else s.v = s.t < 1.6 ? Math.min(320, s.v + 260 * dt) : Math.max(0, s.v - 380 * dt);
+      S.y = Math.min(SH_LEN - 30, S.y + s.v * dt); S.x = clamp(S.x + inp.ax * 40 * dt + Math.sin(s.t * 7) * 30 * dt, minX, maxX);
+      if ((S.x <= minX + .5 || S.x >= maxX - .5) && s.v > 200 && !s.slam) { s.slam = true; ST.hearts--; sfx.bonk(); popText(VW / 2, 110, t('Ouch! Rocks! 🪨'), '#ff8a8a', 'screen'); }
+      if (S.axe && inp.a) {
+        sfx.scribble();
+        if (s.v > 240 && !s.risk) { s.risk = true; if (rnd() < .45) shLoseAxe(); else S.arrest += .2; }
+        else S.arrest += .2;
+      }
+      S.arrest = Math.max(0, S.arrest - .35 * dt);
+      if (S.axe && S.arrest >= 1) { S.slide = null; S.arrest = 0; sfx.ding(); popText(VW / 2, 70, t('Self-arrest! 🪓 Phew.'), '#9fe0a0', 'screen'); }
+      else if (s.v <= 0 || S.y >= SH_LEN - 30) { S.slide = null; popText(VW / 2, 70, t('...finally stopped.'), '#ffffff', 'screen'); }
+    } else {   // climbing
+      let ax = inp.ax, ay = inp.ay;
+      const thin = 1 + (1 - S.y / SH_LEN) * 1.2, steep = S.y <= SH_CAMP && S.y > SH_RED ? 1.6 : 1;
+      if (ay < 0 && S.stam <= 0) ay = 0;
+      const upSp = (steep > 1 ? 26 : 34) * (S.axe ? 1 : .55);
+      let vx = ax * 46, vy = ay < 0 ? ay * upSp : ay * 58;
+      if (S.gust > 0) { S.gust -= dt; if (!(S.axe && inp.aHeld)) vx += S.gustDir * 85; }   // holding A plants the axe
+      S.x += vx * dt; S.y = Math.min(SH_LEN - 30, S.y + vy * dt);
+      if (S.gust > 0 && (S.x <= minX || S.x >= maxX) && !(S.axe && inp.aHeld)) shSlip(140, 'Blown off your feet!');
+      S.x = clamp(S.x, minX, maxX);
+      const moving = Math.abs(vx) + Math.abs(vy) > 1;
+      if (moving) { S.anim += dt; S.dir = Math.abs(vx) > Math.abs(vy) ? (vx < 0 ? 'left' : 'right') : vy < 0 ? 'up' : 'down'; }
+      if (ay < 0) S.stam = Math.max(0, S.stam - dt * 6 * steep * thin); else S.stam = Math.min(100, S.stam + dt * 16 / thin);
+      if (ay < 0 && S.stam <= 0 && Math.floor(S.t * 2) % 4 === 0) popText(VW / 2, 120, t('*gasping* ...need a break...'), '#cfe', 'screen');
+      if (moving && onIce(S.x, S.y)) shSlip(100, 'Blue ice!');
+      if (inp.b) {
+        if (S.snacks > 0 && S.stam < 95) { S.snacks--; S.stam = Math.min(100, S.stam + 55); sfx.pick(); popText(VW / 2, 120, t('🍩 Snack break! +stamina'), '#ffe08a', 'screen'); }
+        else if (!S.snacks) popText(VW / 2, 120, t('No snacks left! 🎒'), '#fcc', 'screen');
+      }
+      S.fumT = (S.fumT || 0) - dt;
+      if (S.fum.some(f => dist(f.x, f.y, S.x, S.y) < f.r)) {   // sulfur fumaroles near the summit
+        S.stam = Math.max(0, S.stam - dt * 14);
+        if (S.fumT <= 0) { S.fumT = 4; popText(VW / 2, 130, t('Sulfur! Smells like Hilton eggs. 🥚'), '#e8e0a0', 'screen'); }
+      }
+      if (S.y <= SH_MISERY + 900) {   // wind on Misery Hill and the summit plateau
+        S.gustT -= dt;
+        if (S.gustT <= 0 && S.warn <= 0 && S.gust <= 0) { S.warn = 1; S.gustDir = rnd() < .5 ? -1 : 1; popText(VW / 2, 100, t('💨 GUST INCOMING! Hold [A] to plant your axe!'), '#bfe3ff', 'screen'); }
+        if (S.warn > 0) { S.warn -= dt; if (S.warn <= 0) { S.gust = 1.3; S.gustT = 3.5 + rnd() * 3; noise(1.2, .15, 400); } }
+      }
+      if (S.axeItem && dist(S.x, S.y, S.axeItem.x, S.axeItem.y) < 16) { S.axe = true; S.axeItem = null; sfx.ding(); popText(VW / 2, 90, t('Got the ice axe back! 🪓 Leash it next time.'), '#9fe0a0', 'screen'); }
+      if (S.y < 45) { S.done = true; sfx.ding(); }
+    }
+    // rockfall
+    S.rockT -= dt;
+    if (S.rockT <= 0) {
+      S.rockT = S.y <= SH_CAMP + 250 && S.y > SH_RED - 150 ? .9 + rnd() * .5 : 3.5 + rnd() * 2;
+      const top = clamp(S.y - 130, 0, SH_LEN - VH) - 20;
+      S.rocks.push({ x: shC(top) + (rnd() * 2 - 1) * (shHW(top) - 12), y: top, vy: 150 + rnd() * 90, vx: (rnd() - .5) * 40, r: 4 + rnd() * 3, rot: 0 });
+      if (rnd() < .5) popText(VW / 2, 30, t('ROCK! 🪨'), '#ffb070', 'screen');
+    }
+    for (const k of S.rocks) {
+      k.y += k.vy * dt; k.x += k.vx * dt; k.rot += dt * 8;
+      if (!k.hit && S.inv <= 0 && dist(k.x, k.y, S.x, S.y - 8) < k.r + 6) { k.hit = true; S.inv = 1; sfx.bonk(); popText(VW / 2, 110, t('CLONK! Good thing you wear a helmet. ⛑️'), '#ffcf6b', 'screen'); shSlip(130, ''); }
+    }
+    S.rocks = S.rocks.filter(k => k.y < S.y + 260 && !k.hit);
+    if (ST.hearts <= 0) { S.rescue = true; S.slide = null; sfx.alarm(); }
+  },
+  draw() {
+    const S = SH, camY = clamp(S.y - 130, 0, SH_LEN - VH);
+    g.fillStyle = '#e8eef6'; g.fillRect(0, 0, VW, VH);
+    for (let sy = 0; sy < VH; sy += 2) {
+      const y = camY + sy, c = shC(y), hw = shHW(y), red = y <= SH_CAMP && y > SH_RED;
+      const rock = red ? ((y >> 3) % 2 ? '#a0503a' : '#b25e44') : ((y >> 3) % 2 ? '#5a5048' : '#665a50');
+      R(0, sy, c - hw, 2, rock); R(c + hw, sy, VW - c - hw, 2, rock);
+      R(c - hw, sy, hw * 2, 2, (y >> 4) % 2 ? '#f4f8fc' : '#eef3f9');
+      if (hash(y >> 1, 5) % 7 === 0) R(c - hw + hash(y, 9) % (hw * 2), sy, 4, 1, '#dde7f2');
+    }
+    g.save(); g.translate(0, -camY);
+    for (const i of S.ice) if (i.y > camY - 30 && i.y < camY + VH + 30) { ell(i.x, i.y, i.rx, i.ry, '#bfe4ff'); ell(i.x - i.rx * .3, i.y - i.ry * .3, i.rx * .4, i.ry * .3, '#e8f6ff'); }
+    for (const f of S.fum) { const a = .35 + .15 * Math.sin(time * 2 + f.x); ell(f.x, f.y - 6, f.r, f.r * .6, `rgba(232,224,150,${a})`); }
+    if (SH_CAMP > camY - 40 && SH_CAMP < camY + VH + 40) { poly([[150, SH_CAMP + 6], [162, SH_CAMP - 8], [174, SH_CAMP + 6]], '#e8743a'); poly([[214, SH_CAMP + 6], [226, SH_CAMP - 8], [238, SH_CAMP + 6]], '#3a8ad8'); ell(192, SH_CAMP + 14, 22, 5, '#9ac8e8'); }
+    if (900 > camY - 40 && 900 < camY + VH) { R(shC(900) + 40, 880, 2, 20, '#6b4a2a'); R(shC(900) + 30, 874, 24, 10, '#c4955a'); }
+    if (camY < 80) { R(shC(30) - 1, 14, 2, 22, '#ddd'); R(shC(30) + 1, 14, 12, 8, '#d52b1e'); R(shC(30) + 5, 15, 3, 6, '#fff'); R(shC(30) + 3, 17, 7, 2, '#fff'); R(shC(30) - 10, 30, 8, 6, '#8a8a8a'); }
+    if (S.axeItem) { const a = S.axeItem, bl = Math.floor(time * 4) % 2; R(a.x - 1, a.y - 10, 2, 12, '#8a5a2a'); R(a.x - 5, a.y - 11, 10, 2, '#b8b8c0'); if (bl) ell(a.x, a.y - 4, 10, 10, 'rgba(255,220,80,.25)'); }
+    for (const k of S.rocks) { ell(k.x, k.y + 4, k.r, 2, 'rgba(0,0,0,.2)'); circ(k.x, k.y, k.r, '#6a625a'); circ(k.x - 1, k.y - 1, k.r * .5, '#8a827a'); }
+    // Sarah with helmet & backpack (or sliding on her back)
+    if (S.slide) {
+      g.save(); g.translate(S.x, S.y - 6); g.rotate(Math.PI); drawSarah(0, 8, 'down', 0, 0, false, false); g.restore();
+      for (let i = 0; i < 6; i++) R(S.x - 8 + hash(i, (time * 30) | 0) % 16, S.y - 18 - hash(i + 9, (time * 30) | 0) % 14, 2, 2, '#ffffff');
+      if (S.axe) { R(S.x + 5, S.y - 4, 1, 9, '#8a5a2a'); R(S.x + 3, S.y + 4, 5, 1, '#b8b8c0'); }
+    } else {
+      if (S.inv > 0 && Math.floor(S.inv * 12) % 2) { /* blink */ } else {
+        drawSarah(S.x, S.y, S.dir, S.anim, 0, false, inp.ax !== 0 || inp.ay !== 0);
+        if (S.dir === 'up') R(S.x - 4, S.y - 12, 8, 7, '#3a6a3a'); else R(S.x + (S.dir === 'left' ? 2 : -6), S.y - 11, 3, 6, '#3a6a3a');
+        R(S.x - 4, S.y - 20, 8, 3, '#f2b632'); R(S.x - 3, S.y - 21, 6, 1, '#f2b632');
+        if (S.axe) { const hold = S.gust > 0 && inp.aHeld; R(S.x + 5, S.y - 10 + (hold ? 4 : 0), 1, 9, '#8a5a2a'); R(S.x + 3, S.y - 11 + (hold ? 4 : 0), 5, 1, '#b8b8c0'); }
+        if (S.gust > 0) for (let i = 0; i < 8; i++) R(((hash(i, 3) + time * 300 * S.gustDir) % VW + VW) % VW, camY + 20 + hash(i, 4) % 180, 14, 1, 'rgba(255,255,255,.7)');
+      }
+    }
+    g.restore();
+    // pre-dawn darkness with a headlamp cone (the alpine start), brightening towards sunrise
+    const dark = clamp((S.y - 1700) / 1700, 0, .8);
+    if (dark > 0) { const sx = S.x, sy = S.y - camY - 10, gr = g.createRadialGradient(sx, sy - 20, 10, sx, sy - 20, 120); gr.addColorStop(0, 'rgba(10,15,40,0)'); gr.addColorStop(1, `rgba(10,15,40,${dark})`); g.fillStyle = gr; g.fillRect(0, 0, VW, VH); }
+    else if (S.y < 1700) { g.fillStyle = `rgba(255,170,120,${clamp((S.y - 600) / 3000, 0, .12)})`; g.fillRect(0, 0, VW, VH); }
+  },
+  ui() {
+    const S = SH;
+    rrect(4, 4, 150, 46, 5, 'rgba(10,10,20,.55)');
+    txt(t('{0} ft', shFt(S.y).toLocaleString('en-US')) + '  ·  ' + t(S.sec), 9, 7, 7.5, '#fff', 'left', true);
+    rrect(9, 19, 100, 6, 3, 'rgba(255,255,255,.25)'); rrect(9, 19, S.stam, 6, 3, S.stam < 25 ? '#ff6a6a' : '#7ee081'); txt(t('stamina'), 112, 18, 6, '#ddd', 'left', false);
+    let s = ''; for (let i = 0; i < ST.maxHearts; i++) s += i < ST.hearts ? '❤' : '·';
+    txt(s + `   🍩 x${S.snacks}   ` + (S.axe ? '⛏️' : '⛏️❌'), 9, 30, 7.5, '#ffb3c8', 'left', true);
+    if (S.t < 6 && !S.slide) txt(t('▲ climb · ◀ ▶ traverse · B: snack · avoid blue ice & rocks · Esc: retreat'), VW / 2, 202, 7, '#fff', 'center', true);
+    if (S.slide) {
+      txt(S.axe ? t('SLIDING! Mash [A] to self-arrest!') : t('No ice axe... just slide. 😱'), VW / 2, 150, 11, '#ff6a6a', 'center', true);
+      if (S.axe) { rrect(VW / 2 - 50, 166, 100, 6, 3, 'rgba(0,0,0,.35)'); rrect(VW / 2 - 50, 166, 100 * Math.min(1, S.arrest), 6, 3, '#7ee081'); }
+    } else if (!S.axe) txt(t('Your ice axe is somewhere below you ↓  (climbing is slow without it)'), VW / 2, 190, 7.5, '#ffcf6b', 'center', true);
+    if (S.warn > 0) txt('💨 ' + t('GUST!'), VW / 2, 60, 14, '#bfe3ff', 'center', true);
+    if (S.rescue) { panelUI(50, 90); txt(t('Rescued by Ranger Jay! 🚁'), VW / 2, 60, 12, '#ffd34d', 'center', true, false); txt(t('He found your ice axe, too. Back to your last camp.'), VW / 2, 84, 7.5, '#fff', 'center', false, false); txt(t('[A]: try again'), VW / 2, 118, 8, '#ffd34d', 'center', true, false); }
+    if (S.done) { panelUI(50, 80); txt(t('SUMMIT! 14,179 ft 🏔'), VW / 2, 60, 14, '#ffd34d', 'center', true, false); txt(t('[A]: continue'), VW / 2, 104, 8, '#ffd34d', 'center', true, false); }
+    screenParts();
+  },
+};
+
+// ---------------------------------------------------------------- glissading down (the fun part)
+const GL_LEN = 4200;
+const glC = d => 192 + 60 * Math.sin(d / 300) + 25 * Math.sin(d / 110 + 2);
+let GL = null;
+function startGlissade() {
+  transition(() => {
+    scene = 'glissade'; musI = 0;
+    const r = mulberry32(6950), rocks = [];
+    for (let d = 400; d < GL_LEN - 200; d += 70 + r() * 90) rocks.push({ d, off: (r() * 2 - 1) * 55, r: 5 + r() * 4 });
+    GL = { d: 0, v: 90, x: glC(0), t: 0, fast: 0, tumble: 0, rocks, axe: !SH || SH.axe, done: false, hits: 0 };
+  });
+}
+SCENES.glissade = {
+  music: 'slide',
+  update(dt) {
+    const G = GL;
+    if (G.done) { if (inp.a) backToWorld(() => { const j = JAY_SPOTS.trailhead; P.x = j.x; P.y = j.y + 18; say([['C-Real', 'Glissading is the BEST part. Best day ever? Best day ever. ❤'], ['Sarah', G.axe ? 'And I still have my ice axe!' : 'We\'ll find the ice axe in spring. Probably.']], saveGame); }); return; }
+    G.t += dt; G.tumble = Math.max(0, G.tumble - dt);
+    G.v = Math.min(360, G.v + 150 * dt);
+    if (inp.aHeld && G.axe && G.tumble <= 0) {
+      G.v = Math.max(40, G.v - 330 * dt); if (Math.floor(G.t * 10) % 2) sfx.scribble();
+      if (G.v > 270 && rnd() < dt * 1.4) { G.axe = false; statAdd('axesLost'); sfx.eww(); popText(VW / 2, 80, t('Your ice axe! 🪓💨 Bye bye...'), '#ffcf6b', 'screen'); }
+    }
+    G.fast = G.v > 330 ? G.fast + dt : 0;
+    if (G.fast > 1.1) { G.fast = 0; G.tumble = 1; G.v = 110; G.hits++; sfx.bonk(); shake = .3; popText(VW / 2, 80, t('TOO FAST! Tumble! ❄️'), '#ff8a8a', 'screen'); }
+    if (G.tumble <= 0) G.x += inp.ax * 150 * dt;
+    const c = glC(G.d); G.x = clamp(G.x, c - 72, c + 72);
+    G.d += G.v * dt;
+    for (const k of G.rocks) if (!k.hit && Math.abs(k.d - G.d) < 8 && Math.abs(glC(k.d) + k.off - G.x) < k.r + 6) { k.hit = true; G.tumble = .8; G.v *= .5; G.hits++; sfx.bonk(); popText(VW / 2, 80, t('Rock! Ouch! 🪨'), '#ff8a8a', 'screen'); }
+    if (G.d >= GL_LEN) { G.done = true; sfx.ding(); }
+  },
+  draw() {
+    const G = GL, py = 60;
+    g.fillStyle = '#5a5048'; g.fillRect(0, 0, VW, VH);
+    for (let sy = 0; sy < VH; sy += 2) {
+      const d = G.d + (sy - py), c = glC(d);
+      R(c - 80, sy, 160, 2, (Math.floor(d / 16) % 2) ? '#f4f8fc' : '#eaf0f7');
+      R(c - 84, sy, 4, 2, '#cfdcea'); R(c + 80, sy, 4, 2, '#cfdcea');
+      if (d > GL_LEN * .75 && hash(Math.floor(d / 40), 2) % 3 === 0 && sy % 40 === 0) { g.drawImage(OVER[T.PINE][0], c - 110, sy - 8); g.drawImage(OVER[T.PINE][1], c + 94, sy - 8); }
+    }
+    for (const k of G.rocks) { if (k.hit) continue; const sy = py + (k.d - G.d); if (sy > -10 && sy < VH + 10) { const x = glC(k.d) + k.off; circ(x, sy, k.r, '#6a625a'); circ(x - 1, sy - 1, k.r * .5, '#8a827a'); } }
+    g.save(); g.translate(Math.round(G.x), py); if (G.tumble > 0) g.rotate(G.t * 14);
+    drawSarah(0, 6, 'down', 0, 0, false, false); R(-4, -14, 8, 3, '#f2b632');
+    if (G.axe && inp.aHeld) { R(6, -2, 1, 9, '#8a5a2a'); R(4, 6, 5, 1, '#b8b8c0'); }
+    g.restore();
+    for (let i = 0; i < 5; i++) R(G.x - 8 + hash(i, (time * 25) | 0) % 16, py - 14 - hash(i + 4, (time * 25) | 0) % (6 + G.v / 30), 2, 2, '#ffffff');
+  },
+  ui() {
+    const G = GL;
+    rrect(4, 4, 150, 34, 5, 'rgba(10,10,20,.55)');
+    txt(t('{0} ft', shFt((1 - G.d / GL_LEN) * SH_LEN).toLocaleString('en-US')) + '   ' + Math.round(G.v / 8) + ' mph', 9, 7, 8, '#fff', 'left', true);
+    rrect(9, 21, 140, 5, 2, 'rgba(255,255,255,.25)'); rrect(9, 21, 140 * Math.min(1, G.d / GL_LEN), 5, 2, '#ff6fa8');
+    txt(G.axe ? '⛏️' : '⛏️❌', VW - 10, 8, 10, '#fff', 'right');
+    if (G.t < 4) txt(t('GLISSADE! ← → steer · hold [A] to brake with the axe (not too hard at full speed!)'), VW / 2, 200, 7, '#fff', 'center', true);
+    if (G.fast > .3) txt(t('Too fast! Brake!'), VW / 2, 150, 11, '#ff6a6a', 'center', true);
+    if (G.done) { panelUI(50, 80); txt(t('Bunny Flat! What a ride. ❄️'), VW / 2, 62, 12, '#ffd34d', 'center', true, false); txt(t('[A]: continue'), VW / 2, 104, 8, '#ffd34d', 'center', true, false); }
+    screenParts();
+  },
+};
+
 // ================================================================ translations [English, Deutsch, Schwiizerdütsch]
 addTR([
   // signs & zones
@@ -1532,6 +1795,58 @@ addTR([
   ["a road trip by C-Real & Sarah", "ein Roadtrip von C-Real & Sarah", "en Roadtrip vom C-Real & de Sarah"], ["Postcards: {0}/7", "Postkarten: {0}/7", "Poschtcharte: {0}/7"], ["Weird laws broken: {0}/8", "Gebrochene verrückte Gesetze: {0}/8", "Broche verruckti Gsetz: {0}/8"],
   ["Busking tips earned: ${0}", "Strassenmusik-Trinkgeld: ${0}", "Strassemusig-Trinkgäld: ${0}"], ["Eggs benedict stacked: {0}", "Gestapelte Eggs Benedict: {0}", "Gstapleti Eggs Benedict: {0}"], ["Banana slugs stepped on: {0}", "Auf Bananenschnecken getreten: {0}", "Uf Bananeschnägge tschalpet: {0}"],
   ["Small talks survived: {0}", "Überlebte Smalltalks: {0}", "Überläbti Smalltalks: {0}"], ["Bottles opened with a shoe: {0}", "Mit dem Schuh geöffnete Flaschen: {0}", "Mit em Schue göffneti Flasche: {0}"], ["Thanks to Ranger Jay. And the shrimp. 🦐", "Danke an Ranger Jay. Und die Crevette. 🦐", "Merci am Ranger Jay. Und de Crevette. 🦐"],
+  // Mt Shasta expedition: gear
+  ["Gear shop", "Bergsportladen", "Bergsportlade"], ["Shop clerk", "Verkäufer", "Verchäufer"],
+  ["Helmet", "Helm", "Helm"], ["Crampons", "Steigeisen", "Stiigiise"], ["Ice axe", "Pickel", "Pickel"], ["Backpack", "Rucksack", "Rucksack"], ["Headlamp", "Stirnlampe", "Stirnlampe"],
+  ["Back for more? Avalanche Gulch is waiting. Same rules: helmet on, axe ready.", "Noch nicht genug? Avalanche Gulch wartet. Gleiche Regeln: Helm auf, Pickel bereit.", "No nöd gnueg? Avalanche Gulch wartet. Glychi Regle: Helm uf, Pickel parat."],
+  ["Climbers start at 2 AM, when the snow is still frozen. Here, take my spare headlamp. 🔦", "Bergsteiger starten um 2 Uhr nachts, wenn der Schnee noch gefroren ist. Hier, nimm meine Ersatz-Stirnlampe. 🔦", "Bergsteiger started am 2i znacht, wenn de Schnee no gfrore isch. Da, nimm mini Ersatz-Stirnlampe. 🔦"],
+  ["🔦 Got: Headlamp", "🔦 Erhalten: Stirnlampe", "🔦 Übercho: Stirnlampe"],
+  ["Hold on. Nobody goes up Avalanche Gulch without the right gear.", "Moment. Niemand geht ohne die richtige Ausrüstung durch die Avalanche Gulch.", "Momänt. Niemer gaht ohni di richtig Usrüschtig dur d Avalanche Gulch."],
+  ["The Mountain Shop next door has helmets, crampons and ice axes.", "Der Bergsportladen nebenan hat Helme, Steigeisen und Pickel.", "De Bergsportlade näbedra het Helm, Stiigiise und Pickel."],
+  ["And a backpack with snacks. Your friend with the skis looked prepared.", "Und einen Rucksack mit Snacks. Dein Freund mit den Skis sah vorbereitet aus.", "Und en Rucksack mit Snacks. Din Fründ mit de Ski het parat usgseh."],
+  ["Helmet, crampons, ice axe, pack, headlamp. You're ready.", "Helm, Steigeisen, Pickel, Rucksack, Stirnlampe. Du bist bereit.", "Helm, Stiigiise, Pickel, Rucksack, Stirnlampe. Du bisch parat."],
+  ["If you slip, roll onto the axe and dig it in. Mash [A]! Don't let go of it.", "Wenn du ausrutschst: auf den Pickel rollen und reinrammen. Hämmer auf [A]! Und lass ihn nicht los.", "Wenn d usrutschsch: uf de Pickel rolle und ineramme. Hämmer uf [A]! Und lah ne nöd los."],
+  ["Avalanche Gulch, Red Banks, Misery Hill, summit. Good luck! 🏔", "Avalanche Gulch, Red Banks, Misery Hill, Gipfel. Viel Glück! 🏔", "Avalanche Gulch, Red Banks, Misery Hill, Gipfel. Vill Glück! 🏔"],
+  ["You've got everything we sell! Go climb that mountain. 🏔", "Du hast alles, was wir verkaufen! Ab auf den Berg. 🏔", "Du hesch alles, wo mir verchaufed! Ab uf de Berg. 🏔"],
+  ["{0} for {1}. You have ${2}.", "{0} für {1}. Du hast ${2}.", "{0} für {1}. Du hesch ${2}."], ["Back to busking, then. 🎸", "Dann zurück zur Strassenmusik. 🎸", "Denn halt zrugg zur Strassemusig. 🎸"],
+  ["One {0}, coming up! That's ${1}.", "Ein(e) {0}, kommt sofort! Das macht ${1}.", "Eis {0}, chunnt grad! Das macht ${1}."], ["{0} Got: {1}", "{0} Erhalten: {1}", "{0} Übercho: {1}"],
+  ["Helmets: because the Red Banks throw rocks.", "Helme: weil die Red Banks mit Steinen werfen.", "Helm: will d Red Banks mit Stei schüssed."],
+  ["Our crampons have climbed Shasta 400 times. Without anyone in them.", "Unsere Steigeisen waren schon 400 Mal auf dem Shasta. Ohne jemanden drin.", "Üsi Stiigiise sind scho 400 Mal uf em Shasta gsi. Ohni öpper drin."],
+  ["Pointy end down. Always. And don't let go of it.", "Spitzes Ende nach unten. Immer. Und nicht loslassen.", "Spitzigs Änd nach unde. Immer. Und nöd loslah."],
+  ["Climbing Shasta? I packed you a backpack: water, sunscreen and three donuts. 🎒", "Du willst auf den Shasta? Ich hab dir einen Rucksack gepackt: Wasser, Sonnencreme und drei Donuts. 🎒", "Du wotsch uf de Shasta? Ich ha dir en Rucksack packt: Wasser, Sunnecreme und drü Donuts. 🎒"],
+  ["🎒 Got: Backpack", "🎒 Erhalten: Rucksack", "🎒 Übercho: Rucksack"],
+  ["Press B on the mountain to eat a snack when you're out of breath.", "Drück am Berg B für einen Snack, wenn dir die Puste ausgeht.", "Drück am Berg B für en Snack, wenn dir de Schnuuf usgaht."],
+  ["Gear up for Shasta: {0}. Mountain Shop next to the trailhead, backpack from me, headlamp from Jay.", "Ausrüstung für den Shasta: {0}. Bergsportladen beim Wanderweg, Rucksack von mir, Stirnlampe von Jay.", "Usrüschtig für de Shasta: {0}. Bergsportlade bim Wanderwäg, Rucksack vo mir, Stirnlampe vom Jay."],
+  ["The summit of Mount Shasta again. Still worth every step.", "Wieder auf dem Gipfel des Mount Shasta. Jeder Schritt hat sich gelohnt.", "Wieder uf em Gipfel vom Mount Shasta. Jede Schritt het sich glohnt."],
+  ["A lonely giant volcano you can see from 100 miles away. Climbers start at 2 AM, camp at Helen Lake, dodge rocks on the Red Banks and curse Misery Hill. Bring an ice axe. Hold on to it.", "Ein einsamer Riesenvulkan, den man aus 160 km sieht. Bergsteiger starten um 2 Uhr, zelten am Helen Lake, weichen Steinen an den Red Banks aus und verfluchen den Misery Hill. Nimm einen Pickel mit. Und halt ihn fest.", "En einsame Riesevulkan, wo me us 160 km gseht. Bergsteiger started am 2i, zälted am Helen Lake, wiiched de Stei a de Red Banks us und verfluechet de Misery Hill. Nimm en Pickel mit. Und heb ne fescht."],
+  ["Slides down Mt Shasta: {0}  ·  Ice axes lost: {1}", "Rutschpartien am Mt Shasta: {0}  ·  Verlorene Pickel: {1}", "Rutschpartie am Mt Shasta: {0}  ·  Verloreni Pickel: {1}"],
+  // Mt Shasta expedition: the climb
+  ["2:00 AM. Alpine start. 🔦", "2 Uhr nachts. Alpinstart. 🔦", "2i znacht. Alpinstart. 🔦"], ["SLIDING!", "RUTSCHEN!", "RUTSCHE!"],
+  ["The ice axe got ripped out of your hands! 🪓💨", "Der Pickel wurde dir aus den Händen gerissen! 🪓💨", "De Pickel isch dir us de Händ grisse worde! 🪓💨"],
+  ["You made it!! I came up the other side with the amp. Don't ask. 🎸", "Du hast es geschafft!! Ich bin mit dem Verstärker auf der anderen Seite hoch. Frag nicht. 🎸", "Du hesch es gschafft!! Ich bi mit em Verstärker uf de andere Siite ufe. Frog nöd. 🎸"],
+  ["One last loop?", "Ein letzter Loop?", "En letschte Loop?"], ["Summit plateau", "Gipfelplateau", "Gipfelplateau"],
+  ["Helen Lake camp (10,443 ft): checkpoint ⛺", "Lager Helen Lake (3183 m): Checkpoint ⛺", "Lager Helen Lake (3183 m): Checkpoint ⛺"],
+  ["That was NOT the summit. Misery Hill strikes again. 😩", "Das war NICHT der Gipfel. Misery Hill schlägt wieder zu. 😩", "Das isch NÖD de Gipfel gsi. De Misery Hill schlaht wieder zue. 😩"],
+  ["Blown off your feet!", "Vom Wind umgeweht!", "Vom Wind umgheit!"], ["Ouch! Rocks! 🪨", "Autsch! Felsen! 🪨", "Au! Felse! 🪨"], ["Self-arrest! 🪓 Phew.", "Gestoppt! 🪓 Puh.", "Gstoppt! 🪓 Puh."], ["...finally stopped.", "...endlich gestoppt.", "...ändlich gstoppt."],
+  ["*gasping* ...need a break...", "*keucht* ...brauche eine Pause...", "*schnuufet* ...bruuch e Pause..."], ["Blue ice!", "Blankes Eis!", "Blankis Iis!"],
+  ["🍩 Snack break! +stamina", "🍩 Snackpause! +Ausdauer", "🍩 Snackpause! +Uusduur"], ["No snacks left! 🎒", "Keine Snacks mehr! 🎒", "Kei Snacks meh! 🎒"],
+  ["Sulfur! Smells like Hilton eggs. 🥚", "Schwefel! Riecht wie Hilton-Eier. 🥚", "Schwefel! Schmöckt wie Hilton-Eier. 🥚"],
+  ["💨 GUST INCOMING! Hold [A] to plant your axe!", "💨 WINDBÖE! Halte [A], um den Pickel einzurammen!", "💨 WINDBÖE! Heb [A], zum de Pickel iiramme!"],
+  ["Got the ice axe back! 🪓 Leash it next time.", "Pickel wieder da! 🪓 Nächstes Mal mit Schlaufe.", "Pickel wieder da! 🪓 S nächscht Mal mit Schlaufe."],
+  ["ROCK! 🪨", "STEIN! 🪨", "STEI! 🪨"], ["CLONK! Good thing you wear a helmet. ⛑️", "KLONK! Zum Glück trägst du einen Helm. ⛑️", "KLONK! Zum Glück treisch en Helm. ⛑️"],
+  ["{0} ft", "{0} ft", "{0} ft"], ["stamina", "Ausdauer", "Uusduur"],
+  ["▲ climb · ◀ ▶ traverse · B: snack · avoid blue ice & rocks · Esc: retreat", "▲ steigen · ◀ ▶ queren · B: Snack · Blankeis & Steine meiden · Esc: Rückzug", "▲ stiige · ◀ ▶ quere · B: Snack · Blankiis & Stei meide · Esc: Rückzug"],
+  ["SLIDING! Mash [A] to self-arrest!", "RUTSCHEN! Hämmer auf [A] zum Bremsen!", "RUTSCHE! Hämmer uf [A] zum Bremse!"], ["No ice axe... just slide. 😱", "Kein Pickel... einfach rutschen. 😱", "Kei Pickel... eifach rutsche. 😱"],
+  ["Your ice axe is somewhere below you ↓  (climbing is slow without it)", "Dein Pickel liegt irgendwo unter dir ↓  (ohne ihn kommst du nur langsam voran)", "Din Pickel liit irgendwo under dir ↓  (ohni ne gahts nur langsam)"],
+  ["GUST!", "BÖE!", "BÖE!"], ["Rescued by Ranger Jay! 🚁", "Gerettet von Ranger Jay! 🚁", "Grettet vom Ranger Jay! 🚁"],
+  ["He found your ice axe, too. Back to your last camp.", "Er hat auch deinen Pickel gefunden. Zurück zum letzten Lager.", "Er het au din Pickel gfunde. Zrugg zum letschte Lager."], ["[A]: try again", "[A]: nochmal", "[A]: nomal"],
+  ["SUMMIT! 14,179 ft 🏔", "GIPFEL! 4322 m 🏔", "GIPFEL! 4322 m 🏔"],
+  // glissade
+  ["Glissading is the BEST part. Best day ever? Best day ever. ❤", "Abfahren auf dem Hosenboden ist das BESTE. Bester Tag überhaupt? Bester Tag überhaupt. ❤", "Uf em Füdli abe isch s BESCHTE. Beschte Tag überhaupt? Beschte Tag überhaupt. ❤"],
+  ["And I still have my ice axe!", "Und ich hab meinen Pickel noch!", "Und ich ha min Pickel no!"], ["We'll find the ice axe in spring. Probably.", "Den Pickel finden wir im Frühling. Wahrscheinlich.", "De Pickel finde mer im Früehlig. Wahrschiinlich."],
+  ["Your ice axe! 🪓💨 Bye bye...", "Dein Pickel! 🪓💨 Tschüss...", "Din Pickel! 🪓💨 Tschüss..."], ["TOO FAST! Tumble! ❄️", "ZU SCHNELL! Überschlag! ❄️", "Z SCHNÄLL! Überschlag! ❄️"], ["Rock! Ouch! 🪨", "Stein! Autsch! 🪨", "Stei! Au! 🪨"],
+  ["GLISSADE! ← → steer · hold [A] to brake with the axe (not too hard at full speed!)", "ABFAHRT! ← → lenken · [A] halten = mit dem Pickel bremsen (bei Vollgas nicht zu fest!)", "ABFAHRT! ← → stüüre · [A] hebe = mit em Pickel bremse (bi Vollgas nöd z fescht!)"],
+  ["Too fast! Brake!", "Zu schnell! Bremsen!", "Z schnäll! Bremse!"], ["Bunny Flat! What a ride. ❄️", "Bunny Flat! Was für eine Fahrt. ❄️", "Bunny Flat! Was für e Fahrt. ❄️"],
   // speakers
   ["Postcard", "Postkarte", "Poschtcharte"], ["Officer", "Polizist", "Polizischt"], ["Bartender", "Barkeeper", "Barkeeper"], ["Deer", "Reh", "Reh"], ["Local", "Einheimischer", "Iiheimische"], ["Frog guy", "Frosch-Typ", "Frosch-Typ"], ["Shrimp", "Crevette", "Crevette"],
 ]);
