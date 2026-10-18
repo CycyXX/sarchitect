@@ -1,0 +1,1749 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sarchitect">
+<title>Sarchitect</title>
+<link rel="icon" type="image/png" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="manifest" href="./manifest.webmanifest">
+<style>
+html,body{margin:0;height:100%;background:#0d1117;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#c{position:absolute;image-rendering:pixelated}
+#touch{display:none}
+.touch #touch{display:block}
+#stick{position:absolute;left:18px;bottom:18px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.10);border:2px solid rgba(255,255,255,.25);touch-action:none}
+#knob{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.35);pointer-events:none}
+.btn{position:absolute;border-radius:50%;background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.35);color:#fff;font:bold 20px sans-serif;display:flex;align-items:center;justify-content:center;touch-action:none}
+#bA{right:22px;bottom:64px;width:72px;height:72px;background:rgba(255,120,160,.3)}
+#bB{right:104px;bottom:22px;width:58px;height:58px;font-size:17px}
+#bBook{right:12px;top:12px;width:44px;height:44px;font-size:20px;border-radius:10px}
+#bPause{right:64px;top:12px;width:44px;height:44px;font-size:18px;border-radius:10px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="touch">
+  <div id="stick"><div id="knob"></div></div>
+  <div class="btn" id="bA">A</div>
+  <div class="btn" id="bB">B</div>
+  <div class="btn" id="bBook">📖</div>
+  <div class="btn" id="bPause">II</div>
+</div>
+<script>
+'use strict';
+// =====================================================================
+//  SARCHITECT — a game by C-Real, for Sarah
+//  Edit FINAL_MESSAGE below to write your own personal message
+//  (one version per language: en = English, de = Deutsch, gsw = Schwiizerdütsch).
+// =====================================================================
+const FINAL_MESSAGE = {
+  en: "Sarah,\n" +
+    "you broke into five buildings, outsmarted every guard, survived mountain lions (and their poop) and sketched every detail.\n" +
+    "But the most beautiful piece of architecture I know is the life we are building together.\n" +
+    "I love you. — C-Real ♥",
+  de: "Sarah,\n" +
+    "du bist in fünf Gebäude eingebrochen, hast jeden Wächter überlistet, Berglöwen (und ihren Kot) überlebt und jedes Detail skizziert.\n" +
+    "Aber das schönste Stück Architektur, das ich kenne, ist das Leben, das wir zusammen bauen.\n" +
+    "Ich liebe dich. — C-Real ♥",
+  gsw: "Sarah,\n" +
+    "du bisch i föif Gebäud iibroche, hesch jede Wächter überlischtet, Berglöie (und ihre Gaggi) überläbt und jedes Detail skizziert.\n" +
+    "Aber s schönschte Stück Architektur, won ich kenne, isch s Läbe, wo mir zäme baued.\n" +
+    "Ich ha di mega gern. — C-Real ♥",
+};
+
+const CONFIG = { startHearts: 3, ropeGoal: 12, slideLength: 6000 };
+const DEBUG = /debug/.test(location.search);
+
+// ---------------------------------------------------------------- language
+const LANGS = ['en', 'de', 'gsw'];
+const LANG_NAMES = { en: 'English', de: 'Deutsch', gsw: 'Schwiizerdütsch' };
+let LANG = 'en';
+try { const l = localStorage.getItem('sarchitect_lang'); if (LANGS.includes(l)) LANG = l; } catch (e) { }
+function cycleLang(dir = 1) {
+  LANG = LANGS[(LANGS.indexOf(LANG) + dir + LANGS.length) % LANGS.length];
+  try { localStorage.setItem('sarchitect_lang', LANG); } catch (e) { }
+}
+// [English, Deutsch, Schwiizerdütsch] — English text is the lookup key, {0} {1} are placeholders.
+const TR_LIST = [
+  // signs
+  ["SEILSPRINGEN CLUB BAAR — Skip {0} in a row for a reward! (C-Real is on rope duty.)", "SEILSPRINGEN CLUB BAAR — Spring {0} Mal am Stück für eine Belohnung! (C-Real dreht das Seil.)", "SEILSPRINGEN CLUB BAAR — Gump {0} Mal am Stück und überchum e Belohnig! (De C-Real drüllt s Seil.)"],
+  ["ZUGERSEE. Too cold to swim today. Rumor says the sea is warmer... far to the east.", "ZUGERSEE. Heute zu kalt zum Baden. Man munkelt, das Meer sei wärmer... weit im Osten.", "ZUGERSEE. Hüt z chalt zum Bade. Me seit, s Meer sig wärmer... wiit im Oschte."],
+  ["HÖLLGROTTEN BAAR — magical caves full of stalactites. Closed.", "HÖLLGROTTEN BAAR — magische Höhlen voller Tropfsteine. Geschlossen.", "HÖLLGROTTE BAAR — magischi Höhle volle Tropfstei. Zue."],
+  ["Hmm, is there a window?", "Hmm, gibt es ein Fenster?", "Hmm, hets äch es Fänschter?"],
+  ["It is a cave. There are no windows.", "Es ist eine Höhle. Es gibt keine Fenster.", "Es isch e Höhli. Da hets kei Fänschter."],
+  ["...respect.", "...Respekt.", "...Respekt."],
+  ["PILZWALD. Pick responsibly! Brown = Steinpilz. Orange = Eierschwamm. Red with white dots = a very \"interesting\" afternoon.", "PILZWALD. Verantwortungsvoll sammeln! Braun = Steinpilz. Orange = Eierschwamm. Rot mit weissen Punkten = ein sehr \"interessanter\" Nachmittag.", "PILZWALD. Mit Verstand sammle! Bruun = Steipilz. Orange = Eierschwamm. Rot mit wisse Pünkt = en sehr \"intressante\" Namittag."],
+  ["⚠ ACHTUNG: MOUNTAIN LIONS. Do not step in their... you know.", "⚠ ACHTUNG: BERGLÖWEN. Bitte nicht in ihren... na, du weisst schon.", "⚠ ACHTUNG: BERGLÖIE. Bitte nöd i ihre... du weisch scho."],
+  ["Why. Why is it always the poop.", "Warum. Warum ist es immer der Kot.", "Wieso. Wieso isch es immer de Gaggi."],
+  ["HORTUS CONCLUSUS — a dark timber box with a secret garden inside. Strictly no visitors tonight.", "HORTUS CONCLUSUS — eine dunkle Holzkiste mit einem geheimen Garten darin. Heute Abend strikt keine Besucher.", "HORTUS CONCLUSUS — e dunkli Holzchischte mit emne gheime Garte drin. Hüt am Abig strikt kei Bsuecher."],
+  ["\"Strictly\" is such a strong word.", "\"Strikt\" ist so ein starkes Wort.", "\"Strikt\" isch es starchs Wort."],
+  ["Rope skip!", "Seilspringen!", "Seilgumpe!"], ["Read", "Lesen", "Läse"],
+  // C-Real texts
+  ["Did you look at the ceiling? Always look at the ceiling. ✨", "Hast du an die Decke geschaut? Immer an die Decke schauen. ✨", "Hesch a d Decki gluegt? Immer a d Decki luege. ✨"],
+  ["Dinner tonight? I'm cooking. (Pasta. Again.) 🍝", "Abendessen heute? Ich koche. (Pasta. Schon wieder.) 🍝", "Znacht hüt? Ich choche. (Pasta. Scho wieder.) 🍝"],
+  ["Zumthor would be proud. Probably. He doesn't text back.", "Zumthor wäre stolz. Wahrscheinlich. Er antwortet nie.", "De Zumthor wär stolz. Wahrschiinlich. Er schribt nie zrugg."],
+  ["Remember: tigers good, lions bad. 🐯 > 🦁", "Merke: Tiger gut, Löwen böse. 🐯 > 🦁", "Merk dr: Tiger guet, Löie bös. 🐯 > 🦁"],
+  ["If you get caught, just say you're from the Denkmalpflege.", "Falls du erwischt wirst: Sag einfach, du bist von der Denkmalpflege.", "Wenn s di verwütsched: Säg eifach, du bisch vo de Denkmalpfleg."],
+  ["Miss you! Come home soon (after the break-ins). ❤", "Vermisse dich! Komm bald heim (nach den Einbrüchen). ❤", "Vermiss di! Chumm bald hei (nach de Ibrüch). ❤"],
+  ["Saw a black bike that looked like yours. It WAS yours. I'm kidding. Mostly.", "Hab ein schwarzes Velo gesehen, das aussah wie deins. Es WAR deins. Spass. Meistens.", "Han es schwarzes Velo gseh, wo usgseh het wie dis. Es ISCH dis gsi. Spass. Meistens."],
+  ["Fun fact: I love you more than Caminada loves larch. 🌲", "Fun Fact: Ich liebe dich mehr als Caminada Lärchenholz liebt. 🌲", "Fun Fact: Ich ha di no lieber als de Caminada s Lärchehoz. 🌲"],
+  // interiors
+  ["Holzhaus Huber, Baar", "Holzhaus Huber, Baar", "Holzhuus Huber, Baar"], ["Dovetail Joint", "Schwalbenschwanz-Verbindung", "Schwalbeschwanz-Verbindig"], ["Holzhaus in Baar", "Holzhaus in Baar", "Holzhuus z Baar"],
+  ["Schwalbenschwanz! A dovetail joint locks two timbers together without a single nail — the wood simply holds itself.", "Schwalbenschwanz! Diese Verbindung hält zwei Hölzer ohne einen einzigen Nagel zusammen — das Holz hält sich einfach selbst.", "Schwalbeschwanz! Die Verbindig hebt zwei Hölzer ohni en einzige Nagel zäme — s Holz hebt sich eifach sälber."],
+  ["in Baar", "in Baar", "z Baar"], ["in the Mushroom Forest", "im Pilzwald", "im Pilzwald"], ["in Graubünden (find the key!)", "in Graubünden (finde den Schlüssel!)", "im Bündnerland (find de Schlüssel!)"], ["in Graubünden (bouncer!)", "in Graubünden (Türsteher!)", "im Bündnerland (Türsteher!)"], ["by the Sea", "am Meer", "am Meer"],
+  ["Shingles & Timber Ribs", "Schindeln & Holzrippen", "Schindle & Holzrippe"],
+  ["A leaf-shaped plan clad in larch shingles that silver with age. Inside, a ring of slender timber columns stands free of the wall, like the ribs of a boat.", "Ein blattförmiger Grundriss mit Lärchenschindeln, die mit der Zeit silbern werden. Innen steht ein Ring schlanker Holzstützen frei von der Wand, wie die Rippen eines Boots.", "En blattförmige Grundriss mit Lärcheschindle, wo mit de Ziit silbrig wärded. Dinne stoht en Ring vo schlanke Holzstütze frei vo de Wand, wie d Rippe vomene Boot."],
+  ["Stall in Vrin", "Stall in Vrin", "Stall z Vrin"], ["Strickbau Corner", "Strickbau-Ecke", "Strickbau-Egge"], ["Stall in Vrin — Gion A. Caminada", "Stall in Vrin — Gion A. Caminada", "Stall z Vrin — Gion A. Caminada"],
+  ["Strickbau: logs stacked and interlocked at the corners. Caminada keeps this old Graubünden craft alive in Vrin — and the cows approve.", "Strickbau: Balken gestapelt und an den Ecken verkämmt. Caminada hält dieses alte Bündner Handwerk in Vrin lebendig — und die Kühe sind einverstanden.", "Strickbau: Balke ufenand gstaplet und a de Egge verchämmt. De Caminada bhaltet das alte Bündner Handwerk z Vrin am Läbe — und d Chüe sind iiverstande."],
+  ["Layered Quartzite", "Geschichteter Quarzit", "Gschichtete Quarzit"],
+  ["Built from thin layers of local Valser quartzite. Narrow slits in the roof let blades of light fall into the warm water.", "Gebaut aus dünnen Schichten von Valser Quarzit aus der Gegend. Schmale Schlitze im Dach lassen Lichtklingen ins warme Wasser fallen.", "Baut us dünne Schichte vo Valser Quarzit us de Gäged. Schmali Schlitz im Dach lönd Liechtstreife is warme Wasser falle."],
+  ["Hortus Conclusus Pavilion", "Hortus-Conclusus-Pavillon", "Hortus-Conclusus-Pavillon"], ["The Hidden Garden", "Der verborgene Garten", "De verborgni Garte"],
+  ["A dark black box — and at its heart, a hidden garden. You walk through darkness to find the light.", "Eine dunkle, schwarze Kiste — und in ihrem Herzen ein verborgener Garten. Man geht durch die Dunkelheit, um das Licht zu finden.", "E dunkli, schwarzi Chischte — und i ihrem Härz en verborgne Garte. Mer lauft dur d Dunkelheit, zum s Liecht finde."],
+  ["Grüezi?! What are you doing in my living room?!", "Grüezi?! Was machen Sie in meinem Wohnzimmer?!", "Grüezi?! Was machsch du i minere Stube?!"],
+  ["Excuse me! The chapel is closed! ...nice glasses, though.", "Entschuldigung! Die Kapelle ist geschlossen! ...schöne Brille übrigens.", "Äxgüsi! D Kapelle isch zue! ...schöni Brülle übrigens."],
+  ["Hoi! This is a stable, not a museum! Out you go!", "Hoi! Das ist ein Stall, kein Museum! Raus hier!", "Hoi! Das isch en Stall, kei Museum! Use mit dir!"],
+  ["No towel, no entry! OUT!", "Kein Handtuch, kein Eintritt! RAUS!", "Kei Badtuech, kein Iitritt! USE!"],
+  ["Hey! Shoes are NOT allowed on the quartzite!", "Hey! Schuhe sind auf dem Quarzit VERBOTEN!", "Hey! Schue sind uf em Quarzit VERBOTE!"],
+  ["Hey! The pavilion is closed for a private garden party!", "Hey! Der Pavillon ist wegen einer privaten Gartenparty geschlossen!", "Hey! De Pavillon isch zue wäg ere private Gartepartie!"],
+  ["Stop! You're trampling my perennials!", "Halt! Sie zertrampeln meine Stauden!", "Halt! Du vertrampsch mini Staude!"],
+  // speakers
+  ["Sign", "Schild", "Schild"], ["Sketchbook", "Skizzenbuch", "Skizzebuech"], ["Snow tiger", "Schneetiger", "Schneetiger"], ["Bouncer", "Türsteher", "Türsteher"], ["Guard", "Wächter", "Wächter"],
+  ["Sacristan", "Sigrist", "Sigrist"], ["Farmer Luzi", "Bauer Luzi", "Puur Luzi"], ["Lifeguard", "Bademeister", "Bademeischter"], ["Night guard", "Nachtwächter", "Nachtwächter"], ["Gardener", "Gärtner", "Gärtner"],
+  // intro & C-Real
+  ["*yawns* ...where is everybody?", "*gähnt* ...wo sind denn alle?", "*gähnt* ...wo sind denn alli?"],
+  ["Oh! C-Real is waving at me. Let's go talk to him (press [A] next to him).", "Oh! C-Real winkt mir zu. Ich geh mal zu ihm (drück [A] neben ihm).", "Oh! De C-Real winkt mir. Ich gang mal zu ihm (drück [A] näb ihm)."],
+  ["Sarah! There you are. I built you a little world. Welcome to SARCHITECT!", "Sarah! Da bist du ja. Ich habe dir eine kleine Welt gebaut. Willkommen bei SARCHITECT!", "Sarah! Da bisch ja. Ich ha dir e chliini Wält baut. Willkomme bi SARCHITECT!"],
+  ["Your Architectural Sketchbook has 5 empty pages. Five buildings, five beautiful details.", "Dein Architektur-Skizzenbuch hat 5 leere Seiten. Fünf Gebäude, fünf schöne Details.", "Dis Architektur-Skizzebuech het 5 läri Siite. Föif Gebäud, föif schöni Details."],
+  ["Problem: they are all closed to the public. Luckily, that has never stopped you. 😏", "Problem: Sie sind alle nicht öffentlich zugänglich. Zum Glück hat dich das noch nie aufgehalten. 😏", "Problem: Si sind alli nöd öffentlich. Zum Glück het di das no nie ufghalte. 😏"],
+  ["Here, take my bobby pin. Please don't ask why I have it.", "Hier, nimm meine Haarklammer. Bitte frag nicht, warum ich eine habe.", "Da, nimm mini Haarchlammere. Bitte frog nöd, wieso ich eini ha."],
+  ["🧷 Got: Bobby pin", "🧷 Erhalten: Haarklammer", "🧷 Übercho: Haarchlammere"],
+  ["And I fixed your black bicycle! Press B to hop on and off.", "Und ich habe dein schwarzes Velo geflickt! Drück B zum Auf- und Absteigen.", "Und ich ha dis schwarze Velo gflickt! Drück B zum Uf- und Abstiige."],
+  ["🚲 Got: Black bicycle", "🚲 Erhalten: Schwarzes Velo", "🚲 Übercho: Schwarzes Velo"],
+  ["Press [A] on its own to rope skip. Very handy for jumping over... things. Mountain lion things.", "Drück einfach [A] zum Seilspringen. Sehr praktisch, um über... Dinge zu springen. Berglöwen-Dinge.", "Drück eifach [A] zum Seilgumpe. Mega praktisch zum über... Sache gumpe. Berglöie-Sache."],
+  ["Pet cats, find mushrooms, and press TAB (or 📖) to open your sketchbook.", "Streichle Katzen, finde Pilze und drück TAB (oder 📖) für dein Skizzenbuch.", "Strichle Chatze, find Pilz und drück TAB (oder 📖) für dis Skizzebuech."],
+  ["Start with Frau Huber's wooden house right over there. Come to me any time for hints — or risotto.", "Fang mit Frau Hubers Holzhaus gleich dort drüben an. Komm jederzeit zu mir für Tipps — oder Risotto.", "Fang mit em Frau Huber ihrem Holzhuus det äne aa. Chumm jederziit zu mir für Tipps — oder Risotto."],
+  ["Let's break in. Architecturally.", "Dann brechen wir mal ein. Architektonisch.", "Denn bräche mer mal ii. Architektonisch."],
+  ["Wait... how are you here before me?!", "Moment... wieso bist du vor mir hier?!", "Momänt... wieso bisch du vor mir da?!"],
+  ["Shortcut. Through the mushrooms. 🍄", "Abkürzung. Durch die Pilze. 🍄", "Abchürzig. Dur d Pilz. 🍄"],
+  ["Collect the brown and the orange ones. NOT the red ones with white dots. Trust me on this one.", "Sammle die braunen und die orangen. NICHT die roten mit weissen Punkten. Vertrau mir.", "Sammle di bruune und di orange. NÖD di rote mit wisse Pünkt. Vertrau mer."],
+  ["Welcome to Graubünden — Caminada and Zumthor country! 🏔", "Willkommen in Graubünden — im Land von Caminada und Zumthor! 🏔", "Willkomme im Bündnerland — im Land vom Caminada und vom Zumthor! 🏔"],
+  ["Also... mountain lions. 🦁", "Ausserdem... Berglöwen. 🦁", "Und... Berglöie. 🦁"], ["NO.", "NEIN.", "NEI."],
+  ["I know, I know. Rope skip over their poop and use your bike if they chase you. You've got this.", "Ich weiss, ich weiss. Spring mit dem Seil über ihren Kot und nimm das Velo, wenn sie dich jagen. Du schaffst das.", "Ich weiss, ich weiss. Gump mit em Seil über ihre Gaggi und nimm s Velo, wenn s di jaged. Du schaffsch das."],
+  ["THE SEA! You made it! 🌊", "DAS MEER! Du hast es geschafft! 🌊", "S MEER! Du hesch es gschafft! 🌊"],
+  ["See that waterslide park? It only opens for complete sketchbooks.", "Siehst du den Rutschbahn-Park? Er öffnet nur für volle Skizzenbücher.", "Gsehsch de Rutschbahn-Park? Dä gaht nur für volli Skizzebüecher uf."],
+  ["Says who?", "Sagt wer?", "Seit wer?"], ["Says me. My world, my rules. 😘", "Sag ich. Meine Welt, meine Regeln. 😘", "Säg ich. Mini Wält, mini Regle. 😘"],
+  ["You look tired. Risotto ai funghi? (2 🍄)", "Du siehst müde aus. Risotto ai funghi? (2 🍄)", "Du gsehsch müed us. Risotto ai funghi? (2 🍄)"],
+  ["Mmmh. Hearts restored! ❤", "Mmmh. Herzen aufgefüllt! ❤", "Mmmh. Härzli wieder volle! ❤"],
+  ["Bring me 2 good mushrooms and I'll cook you a risotto that heals everything.", "Bring mir 2 gute Pilze und ich koche dir ein Risotto, das alles heilt.", "Bring mer 2 gueti Pilz und ich choch dir es Risotto, wo alles heilt."],
+  ["I'll keep this spot as your checkpoint. ❤", "Ich merke mir diesen Ort als deinen Checkpoint. ❤", "Ich merk mer dä Ort als dis Checkpoint. ❤"],
+  // hints
+  ["Frau Huber's wooden house in Baar. Use the bobby pin, and stay out of her line of sight. 👀", "Frau Hubers Holzhaus in Baar. Nimm die Haarklammer und bleib aus ihrem Blickfeld. 👀", "Em Frau Huber ihres Holzhuus z Baar. Nimm d Haarchlammere und blib usem Blickfäld. 👀"],
+  ["Head north into the forest. Sogn Benedetg's front door is locked — but chapels have windows... around the back.", "Geh nach Norden in den Wald. Die Tür von Sogn Benedetg ist verschlossen — aber Kapellen haben Fenster... hinten herum.", "Gang nach Norde in Wald. D Tür vo Sogn Benedetg isch bschlosse — aber Kapelle händ Fänschter... hinedure."],
+  ["Caminada's stable in the Alps is locked. The farmer always \"hides\" the key in a hay bale up north in the snow. Very Swiss.", "Caminadas Stall in den Alpen ist verschlossen. Der Bauer \"versteckt\" den Schlüssel immer in einem Heuballen oben im Schnee. Sehr schweizerisch.", "Em Caminada sin Stall i de Alpe isch bschlosse. De Puur \"versteckt\" de Schlüssel immer imene Heuballe obe im Schnee. Typisch Schwiiz."],
+  ["You've got the stable key! Mind the cows — they're perfect for hiding behind.", "Du hast den Stallschlüssel! Achte auf die Kühe — hinter ihnen kann man sich perfekt verstecken.", "Du hesch de Stallschlüssel! Lueg uf d Chüe — hinder dene chasch di perfekt verstecke."],
+  ["The Therme Vals bouncer is scary. You know what's scarier? A snow tiger. They say one appears if you pet 5 cats. ({0}/5)", "Der Türsteher der Therme Vals ist furchteinflössend. Weisst du, was noch furchteinflössender ist? Ein Schneetiger. Angeblich erscheint einer, wenn du 5 Katzen streichelst. ({0}/5)", "De Türsteher vo de Therme Vals isch gfürchig. Weisch, was no gfürchiger isch? En Schneetiger. Me seit, es chunnt eine, wenn du 5 Chatze strichlisch. ({0}/5)"],
+  ["Take your snow tiger to visit the Therme Vals bouncer. 😼", "Besuch mit deinem Schneetiger den Türsteher der Therme Vals. 😼", "Gang mit dim Schneetiger de Türsteher vo de Therme Vals go bsueche. 😼"],
+  ["The pavilion guard by the sea loves risotto. Bring him 5 mushrooms. ({0}/5)", "Der Wächter am Pavillon beim Meer liebt Risotto. Bring ihm 5 Pilze. ({0}/5)", "De Wächter vom Pavillon am Meer liebt Risotto. Bring ihm 5 Pilz. ({0}/5)"],
+  ["The Hortus Conclusus pavilion: two guards, very dark. The garden is in the middle. You can do it!", "Der Hortus-Conclusus-Pavillon: zwei Wächter, sehr dunkel. Der Garten ist in der Mitte. Du schaffst das!", "De Hortus-Conclusus-Pavillon: zwei Wächter, mega dunkel. De Garte isch i de Mitti. Du schaffsch das!"],
+  ["Your sketchbook is full! The waterslide park by the sea is open. I'll meet you at the bottom. 💙", "Dein Skizzenbuch ist voll! Der Rutschbahn-Park am Meer ist offen. Wir sehen uns unten. 💙", "Dis Skizzebuech isch voll! De Rutschbahn-Park am Meer isch offe. Mer gsehnd üs dunne. 💙"],
+  // buildings
+  ["I already sketched the \"{0}\" here. Still gorgeous.", "Hier habe ich \"{0}\" schon skizziert. Immer noch wunderschön.", "Da han ich \"{0}\" scho skizziert. Immer no wunderschön."],
+  ["Locked. I need something to pick it with... maybe C-Real has something.", "Verschlossen. Ich brauche etwas zum Knacken... vielleicht hat C-Real etwas.", "Bschlosse. Ich bruuch öppis zum Knacke... vilicht het de C-Real öppis."],
+  ["Frau Huber's house. Exposed timber, old joinery... I NEED to see inside.", "Frau Hubers Haus. Sichtbares Holz, alte Verbindungen... Ich MUSS da rein.", "Em Frau Huber ihres Huus. Sichtbars Holz, alti Verbindige... Ich MUESS da ine."],
+  ["*click click* ...the bobby pin works! Quiet now.", "*klick klick* ...die Haarklammer funktioniert! Jetzt leise.", "*klick klick* ...d Haarchlammere funktioniert! Jetzt liislig."],
+  ["\"Kapelle heute geschlossen.\" The door is locked tight.", "\"Kapelle heute geschlossen.\" Die Tür ist fest verschlossen.", "\"Kapelle heute geschlossen.\" D Tür isch fescht bschlosse."],
+  ["Hmm... I bet there's a window around the back. 😏", "Hmm... ich wette, hinten gibt es ein Fenster. 😏", "Hmm... ich wett, hine hets es Fänschter. 😏"],
+  ["\"Stall — Please do not disturb the cows.\"", "\"Stall — Bitte die Kühe nicht stören.\"", "\"Stall — Bitte d Chüe nöd störe.\""],
+  ["Locked. The farmer must keep the key somewhere... farmers love hay bales.", "Verschlossen. Der Bauer muss den Schlüssel irgendwo haben... Bauern lieben Heuballen.", "Bschlosse. De Puur het de Schlüssel sicher irgendwo... Pure liebed Heuballe."],
+  ["The key fits! *click* Hello, Strickbau. 😍", "Der Schlüssel passt! *klick* Hallo, Strickbau. 😍", "De Schlüssel passt! *klick* Hoi, Strickbau. 😍"],
+  ["The bouncer is gone. Time for a \"swim\".", "Der Türsteher ist weg. Zeit für eine \"Runde Schwimmen\".", "De Türsteher isch weg. Ziit für e \"Rundi Schwümme\"."],
+  ["Hotel guests only, lady. And— is that... a SNOW TIGER?!", "Nur für Hotelgäste, junge Frau. Und— ist das... ein SCHNEETIGER?!", "Nur für Hotelgäscht, Fräulein. Und— isch das... en SCHNEETIGER?!"],
+  ["*purrrrRRRRRR*", "*schnurrrrRRRRRR*", "*schnurrrrRRRRRR*"], ["I'm on my break. A LONG break. Bye!", "Ich mache Pause. Eine LANGE Pause. Tschüss!", "Ich mach Pause. E LANGI Pause. Tschüss!"], ["Good kitty. 🐯", "Braves Kätzchen. 🐯", "Bravs Büsi. 🐯"],
+  ["Hotel guests only.", "Nur für Hotelgäste.", "Nur für Hotelgäscht."], ["I'm an architect.", "Ich bin Architektin.", "Ich bi Architektin."], ["That's not a room number.", "Das ist keine Zimmernummer.", "Das isch kei Zimmernummere."],
+  ["(He's scary. I need someone even scarier on my side...)", "(Er ist furchteinflössend. Ich brauche jemanden, der noch furchteinflössender ist...)", "(Dä isch gfürchig. Ich bruuch öpper, wo no gfürchiger isch...)"],
+  ["The guard is busy with his risotto. In we go.", "Der Wächter ist mit seinem Risotto beschäftigt. Rein da.", "De Wächter isch mit sim Risotto beschäftigt. Ine mit üs."],
+  ["Closed tonight. Unless... are those Steinpilze?!", "Heute Abend geschlossen. Ausser... sind das Steinpilze?!", "Hüt am Abig zue. Ussert... sind das Steipilz?!"],
+  ["Five beautiful mushrooms. For your risotto.", "Fünf wunderschöne Pilze. Für dein Risotto.", "Föif wunderschöni Pilz. Für dis Risotto."],
+  ["...I didn't see anything. Mind the night guard inside, though.", "...Ich habe nichts gesehen. Pass aber drinnen auf den Nachtwächter auf.", "...Ich ha nüt gseh. Pass aber dinne uf de Nachtwächter uf."],
+  ["Closed tonight. Private garden party.", "Heute Abend geschlossen. Private Gartenparty.", "Hüt am Abig zue. Privati Gartepartie."],
+  ["Although... I'd look the other way for a proper risotto. Bring me 5 mushrooms.", "Obwohl... für ein richtiges Risotto würde ich wegschauen. Bring mir 5 Pilze.", "Obwohl... für es rächts Risotto würd ich wegluege. Bring mer 5 Pilz."],
+  ["(I have {0}. To the forest!)", "(Ich habe {0}. Ab in den Wald!)", "(Ich ha {0}. Ab in Wald!)"],
+  ["RUTSCHBAHN PARADISE — \"Opens for complete sketchbooks only.\" ({0}/5)", "RUTSCHBAHN PARADIES — \"Öffnet nur für volle Skizzenbücher.\" ({0}/5)", "RUTSCHBAHN PARADIES — \"Gaht nur für volli Skizzebüecher uf.\" ({0}/5)"],
+  ["...that is oddly specific. C-Real.", "...das ist verdächtig spezifisch. C-Real.", "...das isch verdächtig spezifisch. C-Real."],
+  ["❄️ Five sketches?! You did it!! The tallest waterslide in the world is yours. See you at the bottom! 💙", "❄️ Fünf Skizzen?! Du hast es geschafft!! Die höchste Wasserrutsche der Welt gehört dir. Wir sehen uns unten! 💙", "❄️ Föif Skizze?! Du hesch es gschafft!! Di höchscht Rutschbahn vo de Wält ghört dir. Mer gsehnd üs dunne! 💙"],
+  ["WATERSLIDE!!! 🌊", "WASSERRUTSCHE!!! 🌊", "RUTSCHBAHN!!! 🌊"],
+  ["Our home. ❤ The plants need water. That's C-Real's job. (They're doomed.)", "Unser Zuhause. ❤ Die Pflanzen brauchen Wasser. Das ist C-Reals Job. (Sie sind verloren.)", "Üses Dihei. ❤ D Pflanze bruuched Wasser. Das isch em C-Real sin Job. (Die sind verlore.)"],
+  ["Peeking through the window: beige everything. Not worth a break-in.", "Blick durchs Fenster: alles beige. Keinen Einbruch wert.", "Durs Fänschter gluegt: alles beige. Kei Ibruch wärt."],
+  ["A 70s chalet with an exquisite wooden ceiling... oh wait, that's a water stain.", "Ein 70er-Chalet mit einer exquisiten Holzdecke... ach nein, das ist ein Wasserfleck.", "Es 70er-Chalet mit ere exquisite Holzdecki... ah nei, das isch en Wasserfläck."],
+  ["They have a Wagenfeld lamp. Respect. But no.", "Die haben eine Wagenfeld-Lampe. Respekt. Aber nein.", "Die händ e Wagenfeld-Lampe. Respekt. Aber nei."],
+  ["The window's still open. Zumthor would not approve of the draft.", "Das Fenster ist noch offen. Zumthor wäre mit dem Durchzug nicht einverstanden.", "S Fänschter isch no offe. De Zumthor hät kei Freud am Durzug."],
+  ["A window, slightly open. Architect's privilege! *climbs in*", "Ein Fenster, leicht geöffnet. Architektinnen-Privileg! *klettert hinein*", "Es Fänschter, chli offe. Architektinne-Privileg! *chlätteret ine*"],
+  ["You dig through the hay... a key! Labelled \"Stall Vrin\". 🗝", "Du wühlst im Heu... ein Schlüssel! Beschriftet mit \"Stall Vrin\". 🗝", "Du nuuschisch im Heu... en Schlüssel! Aagschribe: \"Stall Vrin\". 🗝"],
+  ["Very secure, Swiss farmers. Very secure.", "Sehr sicher, liebe Schweizer Bauern. Sehr sicher.", "Mega sicher, ihr Schwiizer Pure. Mega sicher."],
+  ["🗝 Got: Stable key", "🗝 Erhalten: Stallschlüssel", "🗝 Übercho: Stallschlüssel"],
+  ["Just hay now. The key is safely in my pocket.", "Jetzt nur noch Heu. Der Schlüssel ist sicher in meiner Tasche.", "Jetzt nur no Heu. De Schlüssel isch sicher i minere Täsche."],
+  ["Just hay. And one very confused mouse.", "Nur Heu. Und eine sehr verwirrte Maus.", "Nur Heu. Und e sehr verwirrti Muus."], ["Hay. Itchy hay. No key.", "Heu. Kratziges Heu. Kein Schlüssel.", "Heu. Chratzigs Heu. Kei Schlüssel."],
+  // cats, lions, events
+  ["{0} purrs ♥", "{0} schnurrt ♥", "{0} schnurrt ♥"], ["{0} wants more pets", "{0} will mehr Streicheleinheiten", "{0} wott meh gstrichlet wärde"],
+  ["*A deep, soft purr rumbles from the trees...*", "*Ein tiefes, sanftes Schnurren grollt aus den Bäumen...*", "*Es tüüfs, weichs Schnurre chunnt us de Bäum...*"],
+  ["...is that a SNOW TIGER?! 😍", "...ist das ein SCHNEETIGER?! 😍", "...isch das en SCHNEETIGER?! 😍"],
+  ["*rrrrRRRR* (The cats told me about you. I'm Schneeflocke.)", "*rrrrRRRR* (Die Katzen haben mir von dir erzählt. Ich bin Schneeflocke.)", "*rrrrRRRR* (D Chatze händ mer vo dir verzellt. Ich bi d Schneeflocke.)"],
+  ["You can come with me! Mountain lions will think twice now.", "Du darfst mitkommen! Jetzt überlegen es sich die Berglöwen zweimal.", "Du chasch mitcho! Jetzt überleged sich d Berglöie das zweimal."],
+  ["Word travels fast in the cat community. 🐯 Lions will flee from your new friend!", "In der Katzen-Community spricht sich alles schnell herum. 🐯 Die Löwen flüchten vor deiner neuen Freundin!", "I de Chatze-Community redt sich alles schnell ume. 🐯 D Löie flüchted vor dinere neue Fründin!"],
+  ["Whoa, I've got you. Those lions... 😟 Sit down, I made tea.", "Hoppla, ich hab dich. Diese Löwen... 😟 Setz dich, ich habe Tee gemacht.", "Hoppla, ich ha di. Die Löie... 😟 Hock ab, ich ha Tee gmacht."],
+  ["I'm fine. I'm FINE. ...Is there poop on me?", "Mir geht's gut. Mir geht's GUT. ...Hab ich Kot an mir?", "Mir gahts guet. Mir gahts GUET. ...Han ich Gaggi a mir?"],
+  ["...let's not talk about it.", "...reden wir nicht darüber.", "...mer redet nöd drüber."],
+  ["Oops. Wrong door?", "Ups. Falsche Tür?", "Hoppla. Falschi Tür?"], ["I was just... admiring the craftsmanship!", "Ich habe nur... die Handwerkskunst bewundert!", "Ich ha nur... d Handwerkskunscht bewunderet!"], ["Sorry! Huge fan of your floor plan!", "Entschuldigung! Riesiger Fan von Ihrem Grundriss!", "Sorry! Riisige Fan vo Ihrem Grundriss!"],
+  ["Caught? 😂 Watch their flashlight cones. Try again!", "Erwischt? 😂 Achte auf die Lichtkegel. Nochmal!", "Verwütscht? 😂 Lueg uf d Liechtchegel. Nomal!"],
+  ["Got it! \"{0}\" — sketched. ✏️", "Geschafft! \"{0}\" — skizziert. ✏️", "Gschafft! \"{0}\" — skizziert. ✏️"],
+  ["Now let's get out of here before anyone notices...", "Jetzt nichts wie raus, bevor es jemand merkt...", "Jetzt aber nüt wie use, bevor s öpper merkt..."],
+  ["ALL FIVE?!?! Meet me at the waterslide park by the sea!! 🌊", "ALLE FÜNF?!?! Wir treffen uns beim Rutschbahn-Park am Meer!! 🌊", "ALLI FÖIF?!?! Mer träffed üs bim Rutschbahn-Park am Meer!! 🌊"],
+  ["{0}/5 sketches! You're a professional break-in architect. 😍", "{0}/5 Skizzen! Du bist eine professionelle Einbruchs-Architektin. 😍", "{0}/5 Skizze! Du bisch e professionelli Ibruch-Architektin. 😍"],
+  ["Bike on!", "Aufs Velo!", "Ufs Velo!"], ["Bike off", "Vom Velo", "Vom Velo abe"], ["No bike yet!", "Noch kein Velo!", "No kei Velo!"],
+  ["EWW! It's in the tire treads!", "IGITT! Es klebt im Reifenprofil!", "GRUSIG! Es chläbt im Pneu!"], ["EWWW! Lion poop!", "IGITT! Löwenkot!", "GRUSIG! Löiegaggi!"],
+  ["Did you just... 🤢 Press [A] to rope skip OVER it next time!", "Bist du gerade... 🤢 Drück nächstes Mal [A] und spring DARÜBER!", "Bisch du grad... 🤢 Drück s nächscht Mal [A] und gump DRÜBER!"],
+  ["Whoa... the buildings are breathing...", "Whoa... die Gebäude atmen...", "Whoa... d Hüser schnuufed..."],
+  ["Red with white dots?! I SAID NOT THOSE. 😂 It wears off soon.", "Rot mit weissen Punkten?! ICH SAGTE NICHT DIE. 😂 Das vergeht bald.", "Rot mit wisse Pünkt?! ICH HA GSEIT NÖD DIE. 😂 Das gaht bald verbii."],
+  ["Pilzwald · The Mushroom Forest", "Pilzwald", "Pilzwald"], ["Graubünden · Lion Country", "Graubünden · Löwenland", "Bündnerland · Löieland"], ["The Sea", "Das Meer", "S Meer"],
+  ["Mushroom forest! Brown & orange = yum. Red with dots = NO. 🍄", "Pilzwald! Braun & orange = lecker. Rot mit Punkten = NEIN. 🍄", "Pilzwald! Bruun & orange = fein. Rot mit Pünkt = NEI. 🍄"],
+  ["Lion country!! 🦁 Jump ([A]) over the poop, bike (B) away if they chase you!", "Löwenland!! 🦁 Spring ([A]) über den Kot, fahr (B) weg, wenn sie dich jagen!", "Löieland!! 🦁 Gump ([A]) über de Gaggi, fahr (B) devo, wenn s di jaged!"],
+  ["THE SEA!! 🌊 Smell that? Freedom. And sunscreen.", "DAS MEER!! 🌊 Riechst du das? Freiheit. Und Sonnencreme.", "S MEER!! 🌊 Schmöcksch das? Freiheit. Und Sunnecreme."],
+  ["No bikes indoors!", "Keine Velos drinnen!", "Kei Velos dinne!"], ["❤ Rope skipping champion! +1 max heart", "❤ Seilspring-Champion! +1 Herz", "❤ Seilgump-Champion! +1 Härzli"], ["EWW! -15", "IGITT! -15", "GRUSIG! -15"],
+  ["🔇 Sound off", "🔇 Ton aus", "🔇 Ton us"], ["🔊 Sound on", "🔊 Ton an", "🔊 Ton aa"],
+  // prompt labels
+  ["Window", "Fenster", "Fänschter"], ["Talk", "Reden", "Rede"], ["Pet", "Streicheln", "Strichle"], ["Search", "Durchsuchen", "Durenuusche"], ["Break in", "Einbrechen", "Ibräche"], ["Door", "Tür", "Tür"],
+  ["Enter", "Eintreten", "Ine"], ["Gate", "Tor", "Tor"], ["Knock", "Klopfen", "Chlopfe"], ["Hold: Sketch", "Halten: Skizzieren", "Hebe: Skizziere"], ["Leave", "Gehen", "Gah"],
+  // UI
+  ["Break in · Sketch · Slide", "Einbrechen · Skizzieren · Rutschen", "Ibräche · Skizziere · Rutsche"], ["Continue", "Weiterspielen", "Wiiterspiele"], ["New game", "Neues Spiel", "Neus Spiel"], ["Language: {0}", "Sprache: {0}", "Sprach: {0}"],
+  ["Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M", "Laufen: Pfeile/WASD · Aktion: Enter/Leertaste/E · Velo: B · Buch: Tab · Pause: Esc · Ton: M", "Laufe: Pfiil/WASD · Aktion: Enter/Läärtaschte/E · Velo: B · Buech: Tab · Pause: Esc · Ton: M"],
+  ["a game by C-Real, for Sarah ♥", "ein Spiel von C-Real, für Sarah ♥", "es Spiel vom C-Real, für d Sarah ♥"], ["sketching...", "skizziere...", "am skizziere..."],
+  ["Goal: {0}   ·   Best: {1}", "Ziel: {0}   ·   Rekord: {1}", "Ziel: {0}   ·   Rekord: {1}"],
+  ["Press [A] to jump when the rope reaches your feet!   (B = leave)", "Drück [A] zum Springen, wenn das Seil deine Füsse erreicht!   (B = gehen)", "Drück [A] zum Gumpe, wenn s Seil bi dine Füess isch!   (B = gah)"],
+  ["Amazing! {0} skips!", "Fantastisch! {0} Sprünge!", "Wahnsinn! {0} Gümp!"], ["Tripped after {0}!", "Gestolpert nach {0}!", "Gstolperet nach {0}!"], ["[A] = try again   ·   B = leave", "[A] = nochmal   ·   B = gehen", "[A] = nomal   ·   B = gah"],
+  ["Score: {0}", "Punkte: {0}", "Pünkt: {0}"], ["Steer ← → · catch hearts · dodge the lion-poop floaties!", "Lenken ← → · Herzen fangen · den Löwenkot-Schwimmringen ausweichen!", "Stüüre ← → · Härzli fange · em Löiegaggi-Schwümmring uswiiche!"],
+  ["GO SARAH!!", "LOS SARAH!!", "HOPP SARAH!!"], ["WOOOO! 🌊", "JUHUUU! 🌊", "JUHUUU! 🌊"], ["ALMOST THERE! ❤", "FAST GESCHAFFT! ❤", "FASCHT GSCHAFFT! ❤"],
+  ["a game by C-Real, made with love for Sarah", "ein Spiel von C-Real, mit Liebe gemacht für Sarah", "es Spiel vom C-Real, mit Liebi gmacht für d Sarah"],
+  ["Sketches: {0}/5", "Skizzen: {0}/5", "Skizze: {0}/5"], ["Mushrooms found: {0}", "Gefundene Pilze: {0}", "Gfundeni Pilz: {0}"], ["Cats petted: {0}", "Gestreichelte Katzen: {0}", "Gstrichleti Chatze: {0}"],
+  ["Times caught breaking in: {0}", "Beim Einbrechen erwischt: {0}", "Bim Ibräche verwütscht: {0}"], ["Mountain lion poop stepped in: {0}", "In Berglöwenkot getreten: {0}", "In Berglöiegaggi tschalpet: {0}"],
+  ["Lion scares: {0}", "Löwen-Schrecken: {0}", "Löie-Schreck: {0}"], ["Waterslide score: {0}", "Rutschbahn-Punkte: {0}", "Rutschbahn-Pünkt: {0}"],
+  ["Inspired by Peter Zumthor & Gion A. Caminada", "Inspiriert von Peter Zumthor & Gion A. Caminada", "Inspiriert vom Peter Zumthor & vom Gion A. Caminada"], ["[A]: keep exploring", "[A]: weiter erkunden", "[A]: wiiter erkunde"],
+  ["PAUSED", "PAUSE", "PAUSE"], ["Move: Arrow keys / WASD / stick", "Laufen: Pfeiltasten / WASD / Stick", "Laufe: Pfiiltaschte / WASD / Stick"],
+  ["[A]: talk · pet · rope skip", "[A]: reden · streicheln · seilspringen", "[A]: rede · strichle · seilgumpe"],
+  ["Hold [A] at a ✨ spot to sketch it", "Halte [A] an einem ✨-Ort, um ihn zu skizzieren", "Heb [A] amene ✨-Ort zum en skizziere"], ["B (B, Shift): hop on / off the black bike", "B (B, Shift): aufs / vom schwarzen Velo", "B (B, Shift): ufs / vom schwarze Velo"],
+  ["Book (Tab, Q): your sketchbook", "Buch (Tab, Q): dein Skizzenbuch", "Buech (Tab, Q): dis Skizzebuech"], ["M: mute · Esc / P: pause", "M: Ton aus · Esc / P: Pause", "M: Ton us · Esc / P: Pause"],
+  ["Avoid guard flashlight cones & lions.", "Meide die Lichtkegel der Wächter & die Löwen.", "Gang de Liechtchegel vo de Wächter & de Löie us em Wäg."], ["Jump over lion poop. Pet cats. ❤", "Spring über Löwenkot. Streichle Katzen. ❤", "Gump über Löiegaggi. Strichle Chatze. ❤"],
+  ["Press [A] or Esc to continue", "Drück [A] oder Esc zum Weiterspielen", "Drück [A] oder Esc zum Wiiterspiele"], ["◀ ▶ Language: {0}", "◀ ▶ Sprache: {0}", "◀ ▶ Sprach: {0}"],
+  ["My Architectural Sketchbook — page {0}/5", "Mein Architektur-Skizzenbuch — Seite {0}/5", "Mis Architektur-Skizzebuech — Siite {0}/5"], ["??? (not yet sketched)", "??? (noch nicht skizziert)", "??? (no nöd skizziert)"], ["Somewhere {0}...", "Irgendwo {0}...", "Irgendwo {0}..."],
+  ["A locked building with a beautiful detail inside. Find a way in, avoid the guards, and hold [A] at the ✨ spot.", "Ein verschlossenes Gebäude mit einem schönen Detail im Innern. Finde einen Weg hinein, meide die Wächter und halte [A] am ✨-Ort.", "Es bschlossnigs Gebäud mit emne schöne Detail drin. Find en Wäg ine, gang de Wächter us em Wäg und heb [A] am ✨-Ort."],
+  ["◀ ▶ flip pages   ·   [A] / Tab: close", "◀ ▶ blättern   ·   [A] / Tab: schliessen", "◀ ▶ blättere   ·   [A] / Tab: zuetue"],
+];
+const TR = { de: {}, gsw: {} };
+for (const [en, de, gsw] of TR_LIST) { TR.de[en] = de; TR.gsw[en] = gsw; }
+const trMiss = new Set();
+// the action button: "A" on touch screens, the Enter key on keyboards ([A] in texts)
+const IS_TOUCH = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+const BTN_A = IS_TOUCH ? 'A' : 'Enter';
+function t(s, ...a) {
+  let r = s;
+  if (LANG !== 'en') { if (TR[LANG][s] !== undefined) r = TR[LANG][s]; else trMiss.add(s); }
+  if (a.length) r = r.replace(/\{(\d)\}/g, (m, i) => a[i]);
+  return r.replace(/\[A\]/g, BTN_A);
+}
+
+// ---------------------------------------------------------------- setup
+const VW = 384, VH = 216, TS = 16;
+const FONT = '"Trebuchet MS","Segoe UI",Verdana,sans-serif';
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const low = document.createElement('canvas'); low.width = VW; low.height = VH;
+const lowCtx = low.getContext('2d');
+let g = lowCtx;
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  const s = Math.min(innerWidth / VW, innerHeight / VH);
+  const w = Math.floor(VW * s), h = Math.floor(VH * s);
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  cv.style.left = ((innerWidth - w) / 2) + 'px'; cv.style.top = ((innerHeight - h) / 2) + 'px';
+  cv.width = Math.floor(w * dpr); cv.height = Math.floor(h * dpr);
+}
+addEventListener('resize', resize); resize();
+
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const rnd = mulberry32(Date.now() & 0xffff);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const dist = (a, b, c, d) => Math.hypot(a - c, b - d);
+function hash(x, y) { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return (h ^ (h >>> 16)) >>> 0; }
+function normA(a) { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; }
+function R(x, y, w, h, c) { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); }
+function circ(x, y, r, c) { g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+function ell(x, y, rx, ry, c) { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
+function poly(pts, c) { g.fillStyle = c; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (const p of pts) g.lineTo(p[0], p[1]); g.closePath(); g.fill(); }
+const font = (s, b) => `${b ? 'bold ' : ''}${s}px ${FONT}`;
+
+// ---------------------------------------------------------------- input
+const keys = {}, pressed = {};
+const touch = { ax: 0, ay: 0 };
+const inp = {};
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (!keys[k]) pressed[k] = true;
+  keys[k] = true;
+  if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'tab'].includes(k)) e.preventDefault();
+  audioInit();
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+function anyK(list, set) { return list.some(k => set[k]); }
+function pollInput() {
+  let ax = 0, ay = 0;
+  if (anyK(['arrowleft', 'a'], keys)) ax -= 1;
+  if (anyK(['arrowright', 'd'], keys)) ax += 1;
+  if (anyK(['arrowup', 'w'], keys)) ay -= 1;
+  if (anyK(['arrowdown', 's'], keys)) ay += 1;
+  inp.ax = clamp(ax + touch.ax, -1, 1); inp.ay = clamp(ay + touch.ay, -1, 1);
+  const A = [' ', 'e', 'enter', 'j'];
+  inp.a = anyK(A, pressed) || touch.aP;
+  inp.aHeld = anyK(A, keys) || touch.aHeld;
+  inp.b = anyK(['b', 'shift', 'k'], pressed) || touch.bP;
+  inp.book = anyK(['tab', 'q', 'i'], pressed) || touch.bookP;
+  inp.pause = anyK(['escape', 'p'], pressed) || touch.pauseP;
+  inp.mute = !!pressed['m'];
+  inp.up = anyK(['arrowup', 'w'], pressed) || touch.upP;
+  inp.down = anyK(['arrowdown', 's'], pressed) || touch.downP;
+  inp.left = anyK(['arrowleft', 'a'], pressed) || touch.leftP;
+  inp.right = anyK(['arrowright', 'd'], pressed) || touch.rightP;
+}
+function clearPressed() {
+  for (const k in pressed) delete pressed[k];
+  touch.aP = touch.bP = touch.bookP = touch.pauseP = false;
+  touch.upP = touch.downP = touch.leftP = touch.rightP = false;
+}
+// touch controls
+if (IS_TOUCH) document.body.classList.add('touch');
+(function () {
+  const stick = document.getElementById('stick'), knob = document.getElementById('knob');
+  let sid = null;
+  function mv(e) {
+    const r = stick.getBoundingClientRect();
+    let dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2), dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+    const l = Math.hypot(dx, dy); if (l > 1) { dx /= l; dy /= l; }
+    touch.ax = Math.abs(dx) > .2 ? dx : 0; touch.ay = Math.abs(dy) > .2 ? dy : 0;
+    knob.style.transform = `translate(${dx * 40}px,${dy * 40}px)`;
+    let d = null;
+    if (l > .5) d = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : (dy < 0 ? 'up' : 'down');
+    if (d && d !== touch.last) touch[d + 'P'] = true;
+    touch.last = d;
+  }
+  stick.addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); sid = e.pointerId; stick.setPointerCapture(sid); mv(e); });
+  stick.addEventListener('pointermove', e => { if (e.pointerId === sid) mv(e); });
+  const end = e => { if (e.pointerId === sid) { sid = null; touch.ax = touch.ay = 0; touch.last = null; knob.style.transform = ''; } };
+  stick.addEventListener('pointerup', end); stick.addEventListener('pointercancel', end);
+  function bind(id, n) {
+    const el = document.getElementById(id);
+    el.addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); touch[n + 'P'] = true; touch[n + 'Held'] = true; el.setPointerCapture(e.pointerId); });
+    const up = () => { touch[n + 'Held'] = false; };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+  }
+  bind('bA', 'a'); bind('bB', 'b'); bind('bBook', 'book'); bind('bPause', 'pause');
+  cv.addEventListener('pointerdown', () => { audioInit(); if (scene === 'title' || scene === 'ending') touch.aP = true; });
+})();
+
+// ---------------------------------------------------------------- audio
+let AC = null, master = null, muted = false;
+function audioInit() {
+  if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+  try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = .5; master.connect(AC.destination); } catch (e) { AC = null; }
+}
+function tone(f, d = .1, type = 'square', v = .12, slide = 0, delay = 0) {
+  if (!AC || muted) return;
+  const t = AC.currentTime + delay, o = AC.createOscillator(), gn = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + d);
+  gn.gain.setValueAtTime(v, t); gn.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(gn); gn.connect(master); o.start(t); o.stop(t + d + .02);
+}
+function noise(d = .2, v = .2, freq = 1000) {
+  if (!AC || muted) return;
+  const len = Math.floor(AC.sampleRate * d), buf = AC.createBuffer(1, len, AC.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), gn = AC.createGain();
+  s.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; gn.gain.value = v;
+  s.connect(f); f.connect(gn); gn.connect(master); s.start();
+}
+const sfx = {
+  pick() { tone(880, .07, 'square', .08); tone(1320, .1, 'square', .08, 0, .06); },
+  meow() { tone(950, .28, 'triangle', .14, -450); },
+  hurt() { tone(320, .3, 'sawtooth', .16, -220); },
+  jump() { tone(380, .12, 'square', .06, 300); },
+  ding() { [523, 659, 784, 1046].forEach((f, i) => tone(f, .18, 'triangle', .12, 0, i * .08)); },
+  alarm() { tone(880, .14, 'square', .12); tone(660, .14, 'square', .12, 0, .15); tone(880, .14, 'square', .12, 0, .3); },
+  scribble() { noise(.07, .06, 3200); },
+  eww() { tone(220, .45, 'sawtooth', .12, -130); },
+  splash() { noise(.5, .3, 700); },
+  blip() { tone(700, .03, 'square', .03); },
+  roar() { noise(.45, .22, 280); tone(110, .45, 'sawtooth', .14, -50); },
+  bell() { tone(1480, .25, 'triangle', .04); tone(2220, .2, 'triangle', .02, 0, .02); },
+  bonk() { tone(160, .08, 'square', .08); },
+};
+const MUSIC = {
+  world: { step: .24, n: [72, 0, 76, 79, 77, 0, 76, 72, 74, 0, 71, 67, 69, 0, 72, 0, 72, 0, 76, 79, 81, 79, 77, 76, 74, 72, 71, 74, 72, 0, 0, 0], bass: [48, 45, 41, 43], type: 'triangle', v: .035 },
+  interior: { step: .27, n: [57, 0, 0, 60, 0, 0, 59, 0, 57, 0, 0, 55, 0, 0, 56, 0], bass: [45, 45, 44, 44], type: 'square', v: .018 },
+  slide: { step: .14, n: [72, 76, 79, 76, 74, 77, 81, 77, 72, 76, 79, 84, 83, 79, 74, 71], bass: [48, 53, 55, 48], type: 'square', v: .025 },
+  ending: { step: .3, n: [76, 0, 79, 84, 83, 0, 79, 76, 77, 0, 81, 79, 76, 0, 0, 0], bass: [48, 45, 41, 43], type: 'triangle', v: .04 },
+};
+let musT = 0, musI = 0;
+const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+function music(dt, which) {
+  if (!AC || muted || !which) return;
+  musT -= dt;
+  if (musT <= 0) {
+    const m = MUSIC[which]; musT = m.step;
+    const n = m.n[musI % m.n.length];
+    if (n) tone(midi(n), m.step * .9, m.type, m.v);
+    if (musI % 8 === 0) tone(midi(m.bass[(musI / 8 | 0) % m.bass.length]), m.step * 7, 'sine', m.v * 1.6);
+    musI++;
+  }
+}
+
+// ---------------------------------------------------------------- save state
+const SAVE_KEY = 'sarchitect_v1';
+function defaultState() {
+  return { sk: {}, items: { pin: false, bike: false, key: false }, cats: [], mush: 0, mushTaken: [], maxHearts: CONFIG.startHearts, hearts: CONFIG.startHearts,
+    flags: {}, cp: 'baar', met: {}, visited: {}, tiger: false, px: null, py: null, stats: { poop: 0, caught: 0, hits: 0, mush: 0, slide: 0 } };
+}
+let ST = defaultState();
+function saveGame() { try { if (scene === 'world') { ST.px = P.x; ST.py = P.y; } localStorage.setItem(SAVE_KEY, JSON.stringify(ST)); } catch (e) { } }
+function loadGame() {
+  try { const s = localStorage.getItem(SAVE_KEY); if (s) { const d = JSON.parse(s), base = defaultState(); return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}) }); } } catch (e) { }
+  return null;
+}
+const sketchCount = () => Object.keys(ST.sk).length;
+
+// ---------------------------------------------------------------- tiles
+const T = { G: 0, F: 1, TREE: 2, PINE: 3, ROCK: 4, WATER: 5, SAND: 6, SNOW: 7, PATH: 8, COB: 9, HEDGE: 10, BLD: 11, FLOW: 12, ALP: 13 };
+const SOLID = new Set([T.TREE, T.PINE, T.ROCK, T.WATER, T.HEDGE, T.BLD]);
+const W = 96, H = 64;
+const map = new Uint8Array(W * H);
+const zoneOf = (tx, ty) => tx < 48 ? (ty < 32 ? 'forest' : 'baar') : (ty < 32 ? 'mount' : 'sea');
+function baseTile(tx, ty) {
+  const z = zoneOf(tx, ty);
+  if (z === 'baar') return T.G; if (z === 'forest') return T.F;
+  if (z === 'mount') return ty < 9 ? T.SNOW : T.ALP; return T.SAND;
+}
+const GROUND = {}, OVER = {};
+function mk(fn) { const c = document.createElement('canvas'); c.width = c.height = 16; fn(c.getContext('2d')); return c; }
+function buildTiles() {
+  const r = mulberry32(99);
+  const speck = (x, base, cols, n) => { x.fillStyle = base; x.fillRect(0, 0, 16, 16); for (let i = 0; i < n; i++) { x.fillStyle = cols[(r() * cols.length) | 0]; x.fillRect((r() * 16) | 0, (r() * 16) | 0, r() < .3 ? 2 : 1, 1); } };
+  const cdot = (x, cx, cy, rr, c) => { x.fillStyle = c; x.beginPath(); x.arc(cx, cy, rr, 0, 7); x.fill(); };
+  const defs = {
+    [T.G]: x => speck(x, '#6aa84f', ['#5d9a45', '#78b85a', '#5f9f48'], 22),
+    [T.ALP]: x => { speck(x, '#86b25a', ['#79a54f', '#94c066', '#7aa34e'], 20); x.fillStyle = r() < .5 ? '#fff' : '#b48be0'; x.fillRect((r() * 14) | 0, (r() * 14) | 0, 1, 1); },
+    [T.F]: x => speck(x, '#3e6a34', ['#35602d', '#4a7a3c', '#5a5530'], 26),
+    [T.SAND]: x => speck(x, '#e6d39f', ['#d8c38c', '#f0dfb0', '#cdb67e'], 20),
+    [T.SNOW]: x => speck(x, '#eef3f8', ['#dde7f0', '#ffffff', '#d2deea'], 14),
+    [T.PATH]: x => speck(x, '#b8935f', ['#a8844f', '#c6a370', '#9c7a4a'], 24),
+    [T.WATER]: x => speck(x, '#2f6fb3', ['#2a64a3', '#3a7cc0'], 12),
+    [T.COB]: x => { x.fillStyle = '#bdb6a8'; x.fillRect(0, 0, 16, 16); x.fillStyle = '#a39c8e'; for (let j = 0; j < 16; j += 4) { x.fillRect(0, j, 16, 1); for (let i = (j / 4 % 2) * 3; i < 16; i += 6) x.fillRect(i, j, 1, 4); } x.fillStyle = '#cdc7ba'; x.fillRect((r() * 14) | 0, (r() * 14) | 0, 2, 1); },
+  };
+  for (const id in defs) GROUND[id] = [0, 1, 2, 3].map(() => mk(defs[id]));
+  OVER[T.TREE] = [0, 1, 2, 3].map(() => mk(x => {
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.beginPath(); x.ellipse(8, 14, 6, 2, 0, 0, 7); x.fill();
+    x.fillStyle = '#5a3b1f'; x.fillRect(7, 10, 2, 5);
+    const o = r() * 2 - 1;
+    cdot(x, 8 + o, 7, 6.5, '#2f6b2c'); cdot(x, 6.5 + o, 5.5, 4, '#3e8a38'); cdot(x, 5.5 + o, 4.5, 1.8, '#57a346');
+  }));
+  const pine = snow => [0, 1, 2, 3].map(() => mk(x => {
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.beginPath(); x.ellipse(8, 15, 5, 1.5, 0, 0, 7); x.fill();
+    x.fillStyle = '#4a2f18'; x.fillRect(7, 12, 2, 4);
+    const tri = (a, b, c, col) => { x.fillStyle = col; x.beginPath(); x.moveTo(...a); x.lineTo(...b); x.lineTo(...c); x.fill(); };
+    tri([8, 4], [1, 14], [15, 14], '#1f4f2e'); tri([8, 0], [3, 9], [13, 9], '#255a35'); tri([8, 4], [6, 11], [8, 11], '#2f6b3d');
+    if (snow) { tri([8, 0], [5.5, 4], [10.5, 4], '#fff'); x.fillStyle = '#fff'; x.fillRect(3, 9, 3, 1); x.fillRect(10, 13, 4, 1); }
+  }));
+  OVER[T.PINE] = pine(false); OVER.PINE_SNOW = pine(true);
+  OVER[T.ROCK] = [0, 1, 2, 3].map(() => mk(x => {
+    x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.ellipse(8, 13, 7, 2.5, 0, 0, 7); x.fill();
+    cdot(x, 8, 9, 6, '#7d7d80'); cdot(x, 6, 7, 3.5, '#9a9a9e'); cdot(x, 5, 6, 1.5, '#b8b8bc'); x.fillStyle = '#5f5f63'; x.fillRect(9, 11, 4, 1);
+  }));
+  OVER[T.HEDGE] = [0, 1, 2, 3].map(() => mk(x => { x.fillStyle = '#2f6a32'; x.fillRect(0, 0, 16, 16); for (let i = 0; i < 30; i++) { x.fillStyle = r() < .5 ? '#3f8a42' : '#245526'; x.fillRect((r() * 15) | 0, (r() * 15) | 0, 2, 2); } }));
+  OVER[T.FLOW] = [0, 1, 2, 3].map(() => mk(x => { for (let i = 0; i < 4; i++) { const fx = 2 + (r() * 12) | 0, fy = 2 + (r() * 12) | 0; x.fillStyle = ['#ff6b6b', '#ffd34d', '#ffffff', '#c38bff'][(r() * 4) | 0]; x.fillRect(fx - 1, fy, 3, 1); x.fillRect(fx, fy - 1, 1, 3); x.fillStyle = '#ffef9a'; x.fillRect(fx, fy, 1, 1); } }));
+}
+
+// ---------------------------------------------------------------- world generation
+const BUILDINGS = [
+  { id: 'holz', x: 26, y: 43, w: 5, h: 4, kind: 'holz', label: 'Break in' },
+  { id: 'chapel', x: 20, y: 7, w: 5, h: 5, kind: 'chapel', label: 'Door' },
+  { id: 'stall', x: 58, y: 18, w: 6, h: 4, kind: 'stall', label: 'Door' },
+  { id: 'therme', x: 76, y: 15, w: 9, h: 5, kind: 'therme', label: 'Enter' },
+  { id: 'pav', x: 55, y: 40, w: 7, h: 5, kind: 'pav', label: 'Enter' },
+  { id: 'park', x: 72, y: 41, w: 7, h: 6, kind: 'park', label: 'Gate' },
+  { id: 'creal', x: 8, y: 44, w: 5, h: 4, kind: 'house', wall: '#ece4d2', roof: '#3d6fb5', label: 'Door' },
+  { id: 'h1', x: 36, y: 36, w: 4, h: 3, kind: 'house', wall: '#f3efe6', roof: '#a8432f', label: 'Knock' },
+  { id: 'h2', x: 36, y: 53, w: 4, h: 3, kind: 'house', wall: '#efe7d4', roof: '#7a4b2a', label: 'Knock' },
+  { id: 'h3', x: 16, y: 36, w: 4, h: 3, kind: 'house', wall: '#f5f5f0', roof: '#5b5b66', label: 'Knock' },
+];
+const BMAP = {};
+for (const b of BUILDINGS) { BMAP[b.id] = b; b.doorX = (b.x + b.w / 2) * TS; b.doorY = (b.y + b.h) * TS + 4; }
+const PATHS = [
+  [[10, 49], [10, 50], [32, 50]], [[28, 50], [28, 47]], [[32, 50], [32, 40], [21, 34], [21, 26]],
+  [[20, 50], [20, 57]], [[21, 26], [12, 20], [22, 14]], [[21, 28], [24, 28]],
+  [[22, 14], [36, 16], [47, 16], [53, 16]], [[53, 16], [56, 16], [56, 23], [61, 23], [61, 22]], [[53, 16], [52, 20]],
+  [[56, 16], [60, 12], [66, 8]], [[61, 23], [72, 24], [80, 21]], [[72, 24], [72, 34], [64, 38], [64, 47], [58, 47], [58, 46]],
+  [[64, 38], [70, 39], [70, 48], [75, 48], [75, 47]],
+];
+const CR_SPOTS = { baar: { x: 14 * 16 + 8, y: 52 * 16 + 8 }, forest: { x: 24 * 16 + 8, y: 28 * 16 + 12 }, mount: { x: 52 * 16 + 8, y: 20 * 16 + 12 }, sea: { x: 68 * 16 + 8, y: 35 * 16 + 12 } };
+const START = { x: 11 * 16 + 8, y: 51 * 16 + 10 };
+const CAT_DEFS = [
+  { id: 'c1', name: 'Mochi', col: '#e08a3c', tx: 18, ty: 41 }, { id: 'c2', name: 'Luna', col: '#2a2a2e', tx: 33, ty: 56 },
+  { id: 'c3', name: 'Pilzli', col: '#8a8f99', tx: 9, ty: 18 }, { id: 'c4', name: 'Biscotti', col: '#f1e6d6', tx: 36, ty: 7 },
+  { id: 'c5', name: 'Gion', col: '#9a6a3a', tx: 66, ty: 27 }, { id: 'c6', name: 'Sandy', col: '#eeeeee', tx: 63, ty: 52 },
+];
+const LION_DEFS = [[40, 24], [63, 10], [86, 9], [70, 28]];
+const HAY_DEFS = [{ tx: 66, ty: 7, key: true }, { tx: 70, ty: 9 }, { tx: 62, ty: 6 }];
+let reach = null;
+function genWorld() {
+  const r = mulberry32(2024);
+  for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
+    const z = zoneOf(tx, ty); let t = baseTile(tx, ty); const k = r();
+    if (z === 'forest') { if (k < .17) t = T.TREE; else if (k < .29) t = T.PINE; }
+    else if (z === 'mount') { if (k < .07) t = T.ROCK; else if (k < .13) t = T.PINE; }
+    else if (z === 'baar') { if (k < .03) t = T.TREE; else if (k < .06) t = T.FLOW; }
+    else { if (k < .015) t = T.ROCK; if (tx >= 86 + 2 * Math.sin(ty * .5) || ty >= 57 + 1.5 * Math.sin(tx * .4)) t = T.WATER; }
+    if (z === 'baar' && ((tx - 3) / 11) ** 2 + ((ty - 61) / 9) ** 2 < 1) t = T.WATER;
+    if (tx === 0 || ty === 0 || tx === W - 1 || ty === H - 1) t = z === 'sea' ? T.WATER : z === 'mount' ? T.ROCK : (z === 'baar' && t === T.WATER ? T.WATER : T.TREE);
+    if (tx === 47 || tx === 48) t = ty < 32 ? T.PINE : T.HEDGE;
+    if ((ty === 31 || ty === 32) && !(tx === 47 || tx === 48)) t = tx < 48 ? T.TREE : T.ROCK;
+    map[ty * W + tx] = t;
+  }
+  for (const p of PATHS) for (let i = 0; i < p.length - 1; i++) {
+    const [x0, y0] = p[i], [x1, y1] = p[i + 1], n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)) * 2 + 1;
+    for (let s = 0; s <= n; s++) {
+      const cx = Math.round(x0 + (x1 - x0) * s / n), cy = Math.round(y0 + (y1 - y0) * s / n);
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        const tx = cx + ox, ty = cy + oy; if (tx < 1 || ty < 1 || tx >= W - 1 || ty >= H - 1) continue;
+        map[ty * W + tx] = zoneOf(tx, ty) === 'baar' ? T.COB : T.PATH;
+      }
+    }
+  }
+  for (const b of BUILDINGS) {
+    for (let ty = b.y - 2; ty <= b.y + b.h + 1; ty++) for (let tx = b.x - 2; tx <= b.x + b.w + 1; tx++) clearTile(tx, ty);
+    for (let ty = b.y; ty < b.y + b.h; ty++) for (let tx = b.x; tx < b.x + b.w; tx++) map[ty * W + tx] = T.BLD;
+  }
+  const clr = (tx, ty, rr = 1) => { for (let y = ty - rr; y <= ty + rr; y++) for (let x = tx - rr; x <= tx + rr; x++) clearTile(x, y); };
+  for (const k in CR_SPOTS) clr(Math.floor(CR_SPOTS[k].x / 16), Math.floor(CR_SPOTS[k].y / 16));
+  for (const c of CAT_DEFS) clr(c.tx, c.ty);
+  for (const h of HAY_DEFS) clr(h.tx, h.ty);
+  for (const s of SIGNS) clr(Math.floor(s.x / 16), Math.floor(s.y / 16));
+  // flood fill reachability
+  reach = new Uint8Array(W * H);
+  const st = Math.floor(START.y / 16) * W + Math.floor(START.x / 16), q = [st]; reach[st] = 1;
+  while (q.length) {
+    const i = q.pop(), x = i % W, y = (i / W) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = x + dx, ny = y + dy; if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+      const j = ny * W + nx; if (!reach[j] && !SOLID.has(map[j])) { reach[j] = 1; q.push(j); }
+    }
+  }
+}
+function clearTile(tx, ty) {
+  if (tx < 1 || ty < 1 || tx >= W - 1 || ty >= H - 1) return;
+  const i = ty * W + tx; if (SOLID.has(map[i]) && map[i] !== T.BLD) map[i] = baseTile(tx, ty);
+}
+function nearReach(tx, ty) {
+  for (let rr = 0; rr < 14; rr++) for (let dy = -rr; dy <= rr; dy++) for (let dx = -rr; dx <= rr; dx++) {
+    const x = tx + dx, y = ty + dy; if (x > 0 && y > 0 && x < W && y < H && reach[y * W + x]) return [x, y];
+  }
+  return [tx, ty];
+}
+function solidW(px, py) {
+  const tx = Math.floor(px / 16), ty = Math.floor(py / 16);
+  if (tx < 0 || ty < 0 || tx >= W || ty >= H) return true;
+  return SOLID.has(map[ty * W + tx]);
+}
+function boxHit(x, y, hw, hh, solid) { return solid(x - hw, y - hh) || solid(x + hw - .01, y - hh) || solid(x - hw, y - .01) || solid(x + hw - .01, y - .01); }
+function move(e, dx, dy, solid, hw = 4, hh = 4) {
+  let hit = false;
+  if (dx) { if (!boxHit(e.x + dx, e.y, hw, hh, solid)) e.x += dx; else hit = true; }
+  if (dy) { if (!boxHit(e.x, e.y + dy, hw, hh, solid)) e.y += dy; else hit = true; }
+  return hit;
+}
+
+// ---------------------------------------------------------------- signs & texts
+const SIGNS = [
+  { x: 21.5 * 16, y: 58 * 16 + 4, label: 'Rope skip!', act: () => say([['Sign', t('SEILSPRINGEN CLUB BAAR — Skip {0} in a row for a reward! (C-Real is on rope duty.)', CONFIG.ropeGoal)]], startRope) },
+  { x: 15 * 16 + 8, y: 57 * 16, act: () => say([['Sign', 'ZUGERSEE. Too cold to swim today. Rumor says the sea is warmer... far to the east.']]) },
+  { x: 42 * 16 + 8, y: 60 * 16, act: () => say([['Sign', 'HÖLLGROTTEN BAAR — magical caves full of stalactites. Closed.'], ['Sarah', 'Hmm, is there a window?'], ['Sign', 'It is a cave. There are no windows.'], ['Sarah', '...respect.']]) },
+  { x: 23 * 16 + 8, y: 31 * 16 - 4, act: () => say([['Sign', 'PILZWALD. Pick responsibly! Brown = Steinpilz. Orange = Eierschwamm. Red with white dots = a very "interesting" afternoon.']]) },
+  { x: 50 * 16 + 8, y: 14 * 16, act: () => say([['Sign', '⚠ ACHTUNG: MOUNTAIN LIONS. Do not step in their... you know.'], ['Sarah', 'Why. Why is it always the poop.']]) },
+  { x: 66 * 16 + 8, y: 45 * 16, act: () => say([['Sign', 'HORTUS CONCLUSUS — a dark timber box with a secret garden inside. Strictly no visitors tonight.'], ['Sarah', '"Strictly" is such a strong word.']]) },
+];
+const CR_TEXTS = [
+  'Did you look at the ceiling? Always look at the ceiling. ✨', 'Dinner tonight? I\'m cooking. (Pasta. Again.) 🍝',
+  'Zumthor would be proud. Probably. He doesn\'t text back.', 'Remember: tigers good, lions bad. 🐯 > 🦁',
+  'If you get caught, just say you\'re from the Denkmalpflege.', 'Miss you! Come home soon (after the break-ins). ❤',
+  'Saw a black bike that looked like yours. It WAS yours. I\'m kidding. Mostly.', 'Fun fact: I love you more than Caminada loves larch. 🌲',
+];
+
+// ---------------------------------------------------------------- interiors
+const INTERIORS = {
+  holz: {
+    name: 'Holzhaus Huber, Baar', style: 'holz', where: 'in Baar',
+    title: 'Dovetail Joint', sub: 'Holzhaus in Baar',
+    fact: 'Schwalbenschwanz! A dovetail joint locks two timbers together without a single nail — the wood simply holds itself.',
+    map: ['####################', '#....b.....#......D#', '#....b.....#.......#', '#..........#..bb...#', '#..bb..............#', '#..bb.......o......#', '#...........o..bb..#', '#.....###.......b..#', '#.......#..........#', '#.......#...bb.....#', '#....P.............#', '#####E##############'],
+    guards: [{ name: 'Frau Huber', col: '#b44a7a', hat: '#e8d9a0', path: [[13, 8], [13, 4], [17, 4], [17, 8]], speed: 26, line: 'Grüezi?! What are you doing in my living room?!' }],
+  },
+  chapel: {
+    name: 'Sogn Benedetg, Sumvitg', style: 'chapel', where: 'in the Mushroom Forest',
+    title: 'Shingles & Timber Ribs', sub: 'Sogn Benedetg — Peter Zumthor, 1988',
+    fact: 'A leaf-shaped plan clad in larch shingles that silver with age. Inside, a ring of slender timber columns stands free of the wall, like the ribs of a boat.',
+    map: ['####################', '#####....P.....#####', '###..o........o..###', '##..o..........o..##', '#..o...bbbbbb...o..#', '#..o............o..#', '#..o...bbbbbb...o..#', '#..o............o..#', '##..o..........o..##', '###..o...D....o..###', '#####..........#####', '####################'],
+    guards: [{ name: 'Sacristan', col: '#3b3b55', hat: '#222', path: [[5, 3], [14, 3], [14, 8], [5, 8]], speed: 28, line: 'Excuse me! The chapel is closed! ...nice glasses, though.' }],
+  },
+  stall: {
+    name: 'Stall in Vrin', style: 'stall', where: 'in Graubünden (find the key!)',
+    title: 'Strickbau Corner', sub: 'Stall in Vrin — Gion A. Caminada',
+    fact: 'Strickbau: logs stacked and interlocked at the corners. Caminada keeps this old Graubünden craft alive in Vrin — and the cows approve.',
+    map: ['####################', '#hhh....#.....D....#', '#hhh....#..........#', '#.......#...cc..cc.#', '#..cc..............#', '#..cc...#..........#', '#.......#...cc..cc.#', '####.####..........#', '#..................#', '#..hh.......hh.....#', '#.P................#', '####################'],
+    guards: [{ name: 'Farmer Luzi', col: '#3d6b3a', hat: '#6b4a2a', path: [[10, 4], [18, 4], [18, 8], [10, 8]], speed: 30, line: 'Hoi! This is a stable, not a museum! Out you go!' }],
+  },
+  therme: {
+    name: 'Therme Vals', style: 'therme', where: 'in Graubünden (bouncer!)',
+    title: 'Layered Quartzite', sub: 'Therme Vals — Peter Zumthor, 1996',
+    fact: 'Built from thin layers of local Valser quartzite. Narrow slits in the roof let blades of light fall into the warm water.',
+    map: ['####################', '#wwww.....#....wwww#', '#wwww.....#....wwww#', '#.........#........#', '#...##.........##..#', '#...##...ww....##..#', '#........ww........#', '#...##.........##.D#', '#...##...ww....##..#', '#........ww........#', '#.P................#', '####################'],
+    guards: [
+      { name: 'Lifeguard', col: '#d94b4b', hat: '#ffffff', path: [[7, 3], [7, 9]], speed: 30, line: 'No towel, no entry! OUT!' },
+      { name: 'Lifeguard', col: '#d94b4b', hat: '#ffffff', path: [[13, 9], [13, 3]], speed: 24, line: 'Hey! Shoes are NOT allowed on the quartzite!' }],
+  },
+  pav: {
+    name: 'Hortus Conclusus Pavilion', style: 'pav', where: 'by the Sea',
+    title: 'The Hidden Garden', sub: 'Hortus Conclusus — Zumthor, Serpentine Pavilion 2011',
+    fact: 'A dark black box — and at its heart, a hidden garden. You walk through darkness to find the light.',
+    map: ['####################', '#..................#', '#.################.#', '#.#..............#.#', '#.#.gggggggggggg.#.#', '#...gggggggggggg...#', '#.#.gggggggggggg.#.#', '#.#......D.......#.#', '#.################.#', '#..................#', '#........P.........#', '####################'],
+    guards: [
+      { name: 'Night guard', col: '#2f3b52', hat: '#111', path: [[1, 1], [18, 1], [18, 9], [1, 9]], speed: 34, line: 'Hey! The pavilion is closed for a private garden party!' },
+      { name: 'Gardener', col: '#5a7a3a', hat: '#d9c27a', path: [[3, 3], [16, 3], [16, 7], [3, 7]], speed: 20, line: 'Stop! You\'re trampling my perennials!' }],
+  },
+};
+const PAGE_ORDER = ['holz', 'chapel', 'stall', 'therme', 'pav'];
+const STYLE = {
+  holz: { floor: '#a8763f', line: '#946632', face: '#7a4f2a', faceL: '#8b5e34', top: '#3b2614' },
+  chapel: { floor: '#d9bc85', line: '#c6a870', face: '#b9a37a', faceL: '#cdb88f', top: '#4a4032' },
+  stall: { floor: '#a88a4a', line: '#c9ab5f', face: '#6a3d1d', faceL: '#7b4a26', top: '#2e1a0b' },
+  therme: { floor: '#8f9692', line: '#7f8682', face: '#6c7570', faceL: '#7d8681', top: '#2b302e' },
+  pav: { floor: '#2a2622', line: '#221f1b', face: '#161616', faceL: '#1e1e1e', top: '#050505' },
+};
+const IOX = 32, IOY = 12;
+const iChar = (px, py) => { const tx = Math.floor(px / 16), ty = Math.floor(py / 16); const m = IN.d.map; if (ty < 0 || ty >= m.length || tx < 0 || tx >= 20) return '#'; return m[ty][tx]; };
+const solidI = (px, py) => '#obhcwgE'.includes(iChar(px, py));
+const blockI = (px, py) => '#ohcgE'.includes(iChar(px, py));
+
+// ---------------------------------------------------------------- entities
+const P = { x: START.x, y: START.y, dir: 'down', moving: false, anim: 0, bike: false, jump: 0, inv: 0, slow: 0, trip: 0, kx: 0, ky: 0 };
+let cats = [], lions = [], poops = [], mushrooms = [], hays = [], fleeing = [];
+const tiger = { x: 0, y: 0, face: 1, moving: false, anim: 0 };
+function spawnEntities() {
+  cats = CAT_DEFS.map(c => { const [tx, ty] = nearReach(c.tx, c.ty); const x = tx * 16 + 8, y = ty * 16 + 10; return { ...c, x, y, hx: x, hy: y, vx: 0, vy: 0, t: 0, face: 1 }; });
+  lions = LION_DEFS.map(([a, b]) => { const [tx, ty] = nearReach(a, b); const x = tx * 16 + 8, y = ty * 16 + 10; return { x, y, hx: x, hy: y, vx: 0, vy: 0, t: 0, face: 1, poopT: 4 + rnd() * 6, cool: 0, chasing: false, anim: 0 }; });
+  hays = HAY_DEFS.map(h => ({ ...h, x: h.tx * 16 + 8, y: h.ty * 16 + 12 }));
+  const r = mulberry32(777); mushrooms = []; poops = [];
+  const place = (zone, x0, y0, x1, y1, n, ground) => {
+    let tries = 0, k = 0;
+    while (k < n && tries++ < 5000) {
+      const tx = x0 + ((r() * (x1 - x0)) | 0), ty = y0 + ((r() * (y1 - y0)) | 0);
+      if (!reach[ty * W + tx] || !ground.includes(map[ty * W + tx])) continue;
+      const id = zone + k, rr = r(), type = rr < .42 ? 'stein' : rr < .78 ? 'eier' : 'fliegen';
+      if (!ST.mushTaken.includes(id)) mushrooms.push({ id, x: tx * 16 + 4 + r() * 8, y: ty * 16 + 6 + r() * 6, type });
+      k++;
+    }
+  };
+  place('f', 2, 2, 46, 30, 30, [T.F]); place('m', 50, 4, 94, 30, 9, [T.ALP]);
+  let k = 0, tries = 0;
+  while (k < 12 && tries++ < 3000) {
+    const tx = 50 + ((r() * 44) | 0), ty = 3 + ((r() * 27) | 0);
+    if (!reach[ty * W + tx] || map[ty * W + tx] === T.PATH) continue;
+    poops.push({ x: tx * 16 + 8, y: ty * 16 + 8 }); k++;
+  }
+  if (ST.tiger) { tiger.x = P.x - 14; tiger.y = P.y; }
+}
+
+// ---------------------------------------------------------------- UI helpers: dialog, toasts, particles, fade
+const dlg = { q: [], cur: null, shown: 0, busy: false, blipT: 0 };
+function nextLine() {
+  dlg.busy = true; dlg.cur = null;
+  while (dlg.q.length) { const l = dlg.q.shift(); if (l.cb) { l.cb(); continue; } if (l.fn) l.fn(); dlg.cur = l; dlg.shown = 0; break; }
+  dlg.busy = false;
+}
+function say(lines, cb) {
+  for (const l of lines) dlg.q.push({ who: l[0], text: t(l[1]), fn: l[2] });
+  if (cb) dlg.q.push({ cb });
+  if (!dlg.cur && !dlg.busy) nextLine();
+}
+const toasts = [];
+function toast(text, dur = 4.5) { toasts.push({ text: t(text), t: dur, max: dur }); if (toasts.length > 3) toasts.shift(); sfx.bell(); }
+const crText = m => toast('❄️ C-Real: ' + t(m), 5.5);
+let banner = null;
+const parts = [];
+function popText(x, y, text, col = '#fff', space = 'auto') { parts.push({ x, y, vx: 0, vy: -16, life: 1.4, max: 1.4, text: t(text), col, space: space === 'auto' ? (scene === 'interior' ? 'interior' : 'world') : space }); }
+function spawnHearts(x, y, n = 3) { for (let i = 0; i < n; i++) parts.push({ x: x + (rnd() - .5) * 8, y, vx: (rnd() - .5) * 30, vy: -20 - rnd() * 20, life: 1.1, max: 1.1, heart: true, space: scene === 'interior' ? 'interior' : 'world' }); }
+const fade = { a: 0, dir: 0, cb: null };
+function transition(cb) { if (fade.dir === 1) return; fade.dir = 1; fade.cb = cb; }
+let scene = 'title', time = 0, paused = false, shake = 0, cam = { x: 0, y: 0 }, curZone = null;
+let saveT = 0, textT = 60, IN = null, RP = null, SL = null, EN = null;
+const book = { open: false, sel: 0 };
+const title = { sel: 0, hasSave: false };
+
+// ---------------------------------------------------------------- game flow
+function newGame() {
+  ST = defaultState();
+  if (DEBUG) { for (const k of PAGE_ORDER) ST.sk[k] = true; ST.items = { pin: true, bike: true, key: true }; ST.mush = 20; ST.tiger = true; ST.cats = ['c1', 'c2', 'c3', 'c4', 'c5']; ST.met = { baar: 1 }; }
+  P.x = START.x; P.y = START.y; P.dir = 'up';
+  startWorld();
+  if (!DEBUG) setTimeout(() => say([['Sarah', '*yawns* ...where is everybody?'], ['Sarah', 'Oh! C-Real is waving at me. Let\'s go talk to him (press [A] next to him).']]), 900);
+}
+function continueGame() {
+  ST = loadGame() || defaultState();
+  P.x = ST.px || START.x; P.y = ST.py || START.y;
+  startWorld();
+}
+function startWorld() {
+  spawnEntities();
+  scene = 'world'; curZone = null; paused = false; book.open = false;
+  P.bike = false; P.jump = P.inv = P.slow = P.trip = 0; P.kx = P.ky = 0;
+  saveGame();
+}
+function talkCReal(spot) {
+  ST.cp = spot;
+  const lines = [];
+  if (spot === 'baar' && !ST.met.baar) {
+    lines.push(['C-Real', 'Sarah! There you are. I built you a little world. Welcome to SARCHITECT!'],
+      ['C-Real', 'Your Architectural Sketchbook has 5 empty pages. Five buildings, five beautiful details.'],
+      ['C-Real', 'Problem: they are all closed to the public. Luckily, that has never stopped you. 😏'],
+      ['C-Real', 'Here, take my bobby pin. Please don\'t ask why I have it.', () => { ST.items.pin = true; sfx.ding(); toast('🧷 Got: Bobby pin'); }],
+      ['C-Real', 'And I fixed your black bicycle! Press B to hop on and off.', () => { ST.items.bike = true; sfx.ding(); toast('🚲 Got: Black bicycle'); }],
+      ['C-Real', 'Press [A] on its own to rope skip. Very handy for jumping over... things. Mountain lion things.'],
+      ['C-Real', 'Pet cats, find mushrooms, and press TAB (or 📖) to open your sketchbook.'],
+      ['C-Real', 'Start with Frau Huber\'s wooden house right over there. Come to me any time for hints — or risotto.'],
+      ['Sarah', 'Let\'s break in. Architecturally.']);
+  } else if (!ST.met[spot]) {
+    if (spot === 'forest') lines.push(['Sarah', 'Wait... how are you here before me?!'], ['C-Real', 'Shortcut. Through the mushrooms. 🍄'], ['C-Real', 'Collect the brown and the orange ones. NOT the red ones with white dots. Trust me on this one.']);
+    if (spot === 'mount') lines.push(['C-Real', 'Welcome to Graubünden — Caminada and Zumthor country! 🏔'], ['C-Real', 'Also... mountain lions. 🦁'], ['Sarah', 'NO.'], ['C-Real', 'I know, I know. Rope skip over their poop and use your bike if they chase you. You\'ve got this.']);
+    if (spot === 'sea') lines.push(['C-Real', 'THE SEA! You made it! 🌊'], ['C-Real', 'See that waterslide park? It only opens for complete sketchbooks.'], ['Sarah', 'Says who?'], ['C-Real', 'Says me. My world, my rules. 😘']);
+  } else lines.push(['C-Real', hint()]);
+  if (ST.met[spot] && ST.hearts < ST.maxHearts && ST.mush >= 2) {
+    lines.push(['C-Real', 'You look tired. Risotto ai funghi? (2 🍄)', () => { ST.mush -= 2; ST.hearts = ST.maxHearts; sfx.ding(); spawnHearts(P.x, P.y - 16, 5); }], ['Sarah', 'Mmmh. Hearts restored! ❤']);
+  } else if (ST.met[spot] && ST.hearts < ST.maxHearts) lines.push(['C-Real', 'Bring me 2 good mushrooms and I\'ll cook you a risotto that heals everything.']);
+  lines.push(['C-Real', 'I\'ll keep this spot as your checkpoint. ❤']);
+  ST.met[spot] = 1;
+  say(lines, saveGame);
+}
+function hint() {
+  if (!ST.sk.holz) return 'Frau Huber\'s wooden house in Baar. Use the bobby pin, and stay out of her line of sight. 👀';
+  if (!ST.sk.chapel) return 'Head north into the forest. Sogn Benedetg\'s front door is locked — but chapels have windows... around the back.';
+  if (!ST.sk.stall && !ST.items.key) return 'Caminada\'s stable in the Alps is locked. The farmer always "hides" the key in a hay bale up north in the snow. Very Swiss.';
+  if (!ST.sk.stall) return 'You\'ve got the stable key! Mind the cows — they\'re perfect for hiding behind.';
+  if (!ST.sk.therme && !ST.tiger) return t('The Therme Vals bouncer is scary. You know what\'s scarier? A snow tiger. They say one appears if you pet 5 cats. ({0}/5)', ST.cats.length);
+  if (!ST.sk.therme) return 'Take your snow tiger to visit the Therme Vals bouncer. 😼';
+  if (!ST.sk.pav && !ST.flags.bribed) return t('The pavilion guard by the sea loves risotto. Bring him 5 mushrooms. ({0}/5)', ST.mush);
+  if (!ST.sk.pav) return 'The Hortus Conclusus pavilion: two guards, very dark. The garden is in the middle. You can do it!';
+  return 'Your sketchbook is full! The waterslide park by the sea is open. I\'ll meet you at the bottom. 💙';
+}
+function buildingAct(b) {
+  P.bike = false;
+  const enter = () => enterInterior(b.id, b.doorX, b.doorY + 8);
+  if (ST.sk[b.id] && INTERIORS[b.id]) { say([['Sarah', t('I already sketched the "{0}" here. Still gorgeous.', t(INTERIORS[b.id].title))]]); return; }
+  switch (b.id) {
+    case 'holz':
+      if (!ST.items.pin) say([['Sarah', 'Locked. I need something to pick it with... maybe C-Real has something.']]);
+      else say([['Sarah', 'Frau Huber\'s house. Exposed timber, old joinery... I NEED to see inside.'], ['Sarah', '*click click* ...the bobby pin works! Quiet now.']], enter);
+      break;
+    case 'chapel': say([['Sign', '"Kapelle heute geschlossen." The door is locked tight.'], ['Sarah', 'Hmm... I bet there\'s a window around the back. 😏']]); break;
+    case 'stall':
+      if (!ST.items.key) say([['Sign', '"Stall — Please do not disturb the cows."'], ['Sarah', 'Locked. The farmer must keep the key somewhere... farmers love hay bales.']]);
+      else say([['Sarah', 'The key fits! *click* Hello, Strickbau. 😍']], enter);
+      break;
+    case 'therme':
+      if (ST.flags.bouncer) { say([['Sarah', 'The bouncer is gone. Time for a "swim".']], enter); break; }
+      if (ST.tiger && dist(tiger.x, tiger.y, P.x, P.y) < 120) {
+        say([['Bouncer', 'Hotel guests only, lady. And— is that... a SNOW TIGER?!'], ['Snow tiger', '*purrrrRRRRRR*'], ['Bouncer', 'I\'m on my break. A LONG break. Bye!', () => {
+          ST.flags.bouncer = true; fleeing.push({ x: b.doorX + 16, y: b.doorY + 2, vx: 90, vy: 30, t: 3, col: '#222', hat: '#111' }); sfx.roar();
+        }], ['Sarah', 'Good kitty. 🐯']], saveGame);
+      } else say([['Bouncer', 'Hotel guests only.'], ['Sarah', 'I\'m an architect.'], ['Bouncer', 'That\'s not a room number.'], ['Sarah', '(He\'s scary. I need someone even scarier on my side...)']]);
+      break;
+    case 'pav':
+      if (ST.flags.bribed) { say([['Sarah', 'The guard is busy with his risotto. In we go.']], enter); break; }
+      if (ST.mush >= 5) say([['Guard', 'Closed tonight. Unless... are those Steinpilze?!'], ['Sarah', 'Five beautiful mushrooms. For your risotto.', () => { ST.mush -= 5; ST.flags.bribed = true; sfx.ding(); }], ['Guard', '...I didn\'t see anything. Mind the night guard inside, though.']], saveGame);
+      else say([['Guard', 'Closed tonight. Private garden party.'], ['Guard', 'Although... I\'d look the other way for a proper risotto. Bring me 5 mushrooms.'], ['Sarah', t('(I have {0}. To the forest!)', ST.mush)]]);
+      break;
+    case 'park':
+      if (sketchCount() < 5) say([['Sign', t('RUTSCHBAHN PARADISE — "Opens for complete sketchbooks only." ({0}/5)', sketchCount())], ['Sarah', '...that is oddly specific. C-Real.']]);
+      else say([['C-Real', '❄️ Five sketches?! You did it!! The tallest waterslide in the world is yours. See you at the bottom! 💙'], ['Sarah', 'WATERSLIDE!!! 🌊']], startSlide);
+      break;
+    case 'creal': say([['Sarah', 'Our home. ❤ The plants need water. That\'s C-Real\'s job. (They\'re doomed.)']]); break;
+    case 'h1': say([['Sarah', 'Peeking through the window: beige everything. Not worth a break-in.']]); break;
+    case 'h2': say([['Sarah', 'A 70s chalet with an exquisite wooden ceiling... oh wait, that\'s a water stain.']]); break;
+    case 'h3': say([['Sarah', 'They have a Wagenfeld lamp. Respect. But no.']]); break;
+  }
+}
+function chapelWindow() {
+  if (ST.sk.chapel) { say([['Sarah', 'The window\'s still open. Zumthor would not approve of the draft.']]); return; }
+  P.bike = false;
+  const b = BMAP.chapel;
+  say([['Sarah', 'A window, slightly open. Architect\'s privilege! *climbs in*']], () => enterInterior('chapel', b.doorX, b.y * 16 - 12));
+}
+function hayAct(h) {
+  if (h.key && !ST.items.key) say([['Sarah', 'You dig through the hay... a key! Labelled "Stall Vrin". 🗝'], ['Sarah', 'Very secure, Swiss farmers. Very secure.', () => { ST.items.key = true; sfx.ding(); toast('🗝 Got: Stable key'); }]], saveGame);
+  else if (h.key) say([['Sarah', 'Just hay now. The key is safely in my pocket.']]);
+  else say([['Sarah', rnd() < .5 ? 'Just hay. And one very confused mouse.' : 'Hay. Itchy hay. No key.']]);
+}
+function petCat(c) {
+  sfx.meow(); spawnHearts(c.x, c.y - 8, 3);
+  if (!ST.cats.includes(c.id)) {
+    ST.cats.push(c.id); if (ST.hearts < ST.maxHearts) ST.hearts++;
+    popText(c.x, c.y - 16, t('{0} purrs ♥', c.name), '#ffb3c8');
+    if (ST.cats.length >= 5 && !ST.tiger) {
+      say([['???', '*A deep, soft purr rumbles from the trees...*'], ['Sarah', '...is that a SNOW TIGER?! 😍'], ['Snow tiger', '*rrrrRRRR* (The cats told me about you. I\'m Schneeflocke.)', () => { ST.tiger = true; tiger.x = P.x + 22; tiger.y = P.y; sfx.roar(); }],
+        ['Sarah', 'You can come with me! Mountain lions will think twice now.']], () => { crText('Word travels fast in the cat community. 🐯 Lions will flee from your new friend!'); saveGame(); });
+    }
+    saveGame();
+  } else popText(c.x, c.y - 16, t('{0} wants more pets', c.name), '#ffd6e0');
+}
+function hurt(src) {
+  if (P.inv > 0 || P.jump > 0 || fade.dir) return;
+  ST.hearts--; ST.stats.hits++; P.inv = 1.6; shake = .4; sfx.hurt();
+  const a = Math.atan2(P.y - src.y, P.x - src.x); P.kx = Math.cos(a) * 240; P.ky = Math.sin(a) * 240;
+  popText(P.x, P.y - 26, 'AAAAH!', '#ff6060');
+  if (ST.hearts <= 0) {
+    transition(() => {
+      const s = CR_SPOTS[ST.cp]; P.x = s.x; P.y = s.y + 18; ST.hearts = ST.maxHearts; P.bike = false;
+      for (const l of lions) { l.x = l.hx; l.y = l.hy; l.chasing = false; }
+      say([['C-Real', 'Whoa, I\'ve got you. Those lions... 😟 Sit down, I made tea.'], ['Sarah', 'I\'m fine. I\'m FINE. ...Is there poop on me?'], ['C-Real', '...let\'s not talk about it.']]);
+    });
+  }
+}
+function doJump() { if (P.jump <= 0) { P.jump = .55; sfx.jump(); } }
+
+// ---------------------------------------------------------------- interiors flow
+function enterInterior(id, retX, retY) {
+  transition(() => {
+    const d = INTERIORS[id];
+    IN = { id, d, prog: 0, caught: false, retX, retY, scribT: 0, bellT: 3, guards: d.guards.map(gd => {
+      const [a, b] = gd.path[0], [c2, d2] = gd.path[1];
+      return { ...gd, x: (a + .5) * 16, y: (b + .5) * 16 + 4, pi: 1, wait: .8, ang: Math.atan2(d2 - b, c2 - a), base: Math.atan2(d2 - b, c2 - a), alert: 0, anim: 0 };
+    }) };
+    d.map.forEach((row, y) => { for (let x = 0; x < 20; x++) {
+      if (row[x] === 'P') { P.x = (x + .5) * 16; P.y = (y + .5) * 16 + 4; IN.ex = P.x; IN.ey = P.y - 4; IN.exitLabel = 'Leave'; }
+      if (row[x] === 'D') { IN.dx = (x + .5) * 16; IN.dy = (y + .5) * 16; }
+    } });
+    d.map.forEach((row, y) => { const x = row.indexOf('E'); if (x >= 0) { IN.ex = (x + .5) * 16; IN.ey = y * 16 + 2; } });
+    P.bike = false; P.dir = 'up'; scene = 'interior'; banner = { text: d.name, t: 3 };
+  });
+}
+function exitInterior() {
+  transition(() => {
+    scene = 'world'; P.x = IN.retX; P.y = IN.retY; P.dir = 'down'; IN = null;
+    if (ST.tiger) { tiger.x = P.x + 16; tiger.y = P.y + 2; }
+    saveGame();
+  });
+}
+function caught(gd) {
+  if (IN.caught) return;
+  IN.caught = true; ST.stats.caught++; sfx.alarm(); shake = .3;
+  say([[gd.name, gd.line], ['Sarah', ['Oops. Wrong door?', 'I was just... admiring the craftsmanship!', 'Sorry! Huge fan of your floor plan!'][(rnd() * 3) | 0]]], () => {
+    exitInterior();
+    if (ST.stats.caught === 1) setTimeout(() => crText('Caught? 😂 Watch their flashlight cones. Try again!'), 1200);
+  });
+}
+function sketchDone() {
+  const id = IN.id, d = IN.d;
+  ST.sk[id] = true; sfx.ding(); spawnHearts(P.x, P.y - 18, 6);
+  say([['Sarah', t('Got it! "{0}" — sketched. ✏️', t(d.title))], ['Sketchbook', d.fact], ['Sarah', 'Now let\'s get out of here before anyone notices...']], () => {
+    exitInterior();
+    const n = sketchCount();
+    setTimeout(() => crText(n >= 5 ? 'ALL FIVE?!?! Meet me at the waterslide park by the sea!! 🌊' : t('{0}/5 sketches! You\'re a professional break-in architect. 😍', n)), 1300);
+  });
+}
+
+// ---------------------------------------------------------------- minigames flow
+function startRope() { transition(() => { scene = 'rope'; RP = { th: 0, per: 1.25, n: 0, jt: 0, st: 'ready', t: 0, best: ST.flags.ropeBest || 0 }; }); }
+function leaveRope() { transition(() => { scene = 'world'; RP = null; saveGame(); }); }
+const SLIDE_HW = 42, SLIDE_PY = 70;
+const centerX = d => 192 + 70 * Math.sin(d / 360) + 30 * Math.sin(d / 140 + 1.3);
+function startSlide() {
+  transition(() => {
+    scene = 'slide'; musI = 0;
+    const r = mulberry32((Date.now() & 0xff) + 1);
+    SL = { d: 0, sp: 110, x: centerX(0), vx: 0, score: 0, items: [], t: 0, done: false, spin: 0 };
+    for (let d = 300; d < CONFIG.slideLength - 200; d += 60 + r() * 50) {
+      const k = r(); SL.items.push({ d, off: (r() * 2 - 1) * 30, type: k < .4 ? 'heart' : k < .62 ? 'mush' : k < .9 ? 'poop' : 'star', got: false });
+    }
+  });
+}
+function startEnding() {
+  scene = 'ending'; musI = 0;
+  ST.stats.slide = Math.max(ST.stats.slide || 0, SL.score); ST.flags.finished = true; saveGame();
+  EN = { t: 0, shown: 0, phase: 0, conf: [] };
+  for (let i = 0; i < 120; i++) EN.conf.push({ x: rnd() * VW, y: -rnd() * VH, vy: 20 + rnd() * 40, vx: (rnd() - .5) * 20, c: ['#ff6fa8', '#ffd34d', '#4fc3f7', '#7ee081', '#ffffff', '#c38bff'][(rnd() * 6) | 0], r: rnd() * 6 });
+}
+const finalMsg = () => FINAL_MESSAGE[LANG] || FINAL_MESSAGE.en;
+function endToWorld() {
+  transition(() => { const b = BMAP.park; scene = 'world'; P.x = b.doorX; P.y = b.doorY + 10; EN = null; SL = null; saveGame(); });
+}
+
+// ---------------------------------------------------------------- update
+function update(dt) {
+  if (inp.mute) { muted = !muted; toast(muted ? '🔇 Sound off' : '🔊 Sound on', 1.5); }
+  for (let i = toasts.length - 1; i >= 0; i--) { toasts[i].t -= dt; if (toasts[i].t <= 0) toasts.splice(i, 1); }
+  if (banner) { banner.t -= dt; if (banner.t <= 0) banner = null; }
+  for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; p.life -= dt; p.x += (p.vx || 0) * dt; p.y += p.vy * dt; if (p.heart) p.vy += 30 * dt; if (p.life <= 0) parts.splice(i, 1); }
+  shake = Math.max(0, shake - dt);
+  if (fade.dir === 1) { fade.a += dt * 4; if (fade.a >= 1) { fade.a = 1; fade.dir = -1; const c = fade.cb; fade.cb = null; c && c(); } return; }
+  if (fade.dir === -1) { fade.a -= dt * 3; if (fade.a <= 0) { fade.a = 0; fade.dir = 0; } }
+  const mus = { world: 'world', interior: 'interior', rope: 'world', slide: 'slide', ending: 'ending' }[scene];
+  if (!paused) music(dt, mus);
+  if (dlg.cur) {
+    const len = dlg.cur.text.length;
+    if (dlg.shown < len) { dlg.shown = Math.min(len, dlg.shown + dt * 55); dlg.blipT -= dt; if (dlg.blipT <= 0) { sfx.blip(); dlg.blipT = .07; } }
+    if (inp.a) { if (dlg.shown < len) dlg.shown = len; else nextLine(); }
+    return;
+  }
+  if (book.open) {
+    if (inp.left) { book.sel = (book.sel + 4) % 5; sfx.blip(); }
+    if (inp.right) { book.sel = (book.sel + 1) % 5; sfx.blip(); }
+    if (inp.book || inp.pause || inp.a || inp.b) book.open = false;
+    return;
+  }
+  if (paused) { if (inp.left || inp.right) { cycleLang(inp.left ? -1 : 1); sfx.blip(); } if (inp.pause || inp.a) paused = false; return; }
+  switch (scene) {
+    case 'title': updateTitle(dt); break;
+    case 'world': updateWorld(dt); break;
+    case 'interior': updateInterior(dt); break;
+    case 'rope': updateRope(dt); break;
+    case 'slide': updateSlide(dt); break;
+    case 'ending': updateEnding(dt); break;
+  }
+}
+function updateTitle() {
+  title.hasSave = !!loadGame();
+  const n = title.hasSave ? 3 : 2;
+  if (inp.up || inp.down) { title.sel = (title.sel + (inp.up ? -1 : 1) + n) % n; sfx.blip(); }
+  if (title.sel >= n) title.sel = 0;
+  if (title.sel === n - 1 && (inp.a || inp.left || inp.right)) { cycleLang(inp.left ? -1 : 1); sfx.blip(); return; }
+  if (inp.left || inp.right) { cycleLang(inp.left ? -1 : 1); sfx.blip(); }
+  if (inp.a) { audioInit(); sfx.ding(); const cont = title.hasSave && title.sel === 0; transition(() => cont ? continueGame() : newGame()); }
+}
+function updatePlayer(dt, solid) {
+  let ax = inp.ax, ay = inp.ay; const l = Math.hypot(ax, ay); if (l > 1) { ax /= l; ay /= l; }
+  const sp = (P.bike ? 120 : 66) * (P.slow > 0 ? .45 : 1);
+  move(P, (ax * sp + P.kx) * dt, (ay * sp + P.ky) * dt, solid);
+  const damp = Math.pow(.004, dt); P.kx *= damp; P.ky *= damp;
+  P.moving = l > .1;
+  if (P.moving) { P.anim += dt; if (Math.abs(ax) > Math.abs(ay)) P.dir = ax < 0 ? 'left' : 'right'; else P.dir = ay < 0 ? 'up' : 'down'; }
+  P.jump = Math.max(0, P.jump - dt); P.inv = Math.max(0, P.inv - dt); P.slow = Math.max(0, P.slow - dt); P.trip = Math.max(0, P.trip - dt);
+}
+function worldInteractables() {
+  const L = [];
+  for (const b of BUILDINGS) L.push({ x: b.doorX, y: b.doorY, label: b.label, act: () => buildingAct(b) });
+  const ch = BMAP.chapel; L.push({ x: ch.doorX, y: ch.y * 16 - 6, label: 'Window', act: chapelWindow });
+  for (const k in CR_SPOTS) L.push({ x: CR_SPOTS[k].x, y: CR_SPOTS[k].y - 6, label: 'Talk', act: () => talkCReal(k) });
+  for (const c of cats) L.push({ x: c.x, y: c.y - 4, label: 'Pet', act: () => petCat(c) });
+  for (const s of SIGNS) L.push({ x: s.x, y: s.y - 4, label: s.label || 'Read', act: s.act });
+  for (const h of hays) L.push({ x: h.x, y: h.y - 4, label: 'Search', act: () => hayAct(h) });
+  return L;
+}
+let nearObj = null;
+function findNear(list) {
+  let best = null, bd = 24;
+  for (const o of list) { const d = dist(P.x, P.y - 4, o.x, o.y); if (d < (o.r || bd)) { best = o; bd = d; } }
+  return best;
+}
+function updateWorld(dt) {
+  if (inp.pause) { paused = true; return; }
+  if (inp.book) { book.open = true; return; }
+  updatePlayer(dt, solidW);
+  if (inp.b) {
+    if (ST.items.bike) { P.bike = !P.bike; sfx.blip(); popText(P.x, P.y - 26, P.bike ? 'Bike on!' : 'Bike off', '#cfe'); }
+    else popText(P.x, P.y - 26, 'No bike yet!', '#fcc');
+  }
+  nearObj = findNear(worldInteractables());
+  if (inp.a) { if (nearObj) nearObj.act(); else doJump(); }
+  // cats
+  for (const c of cats) {
+    c.t -= dt;
+    if (c.t <= 0) {
+      c.t = 1 + rnd() * 3;
+      if (rnd() < .45) c.vx = c.vy = 0; else { const a = rnd() * 6.28; c.vx = Math.cos(a) * 16; c.vy = Math.sin(a) * 16; }
+      if (dist(c.x, c.y, c.hx, c.hy) > 40) { const a = Math.atan2(c.hy - c.y, c.hx - c.x); c.vx = Math.cos(a) * 16; c.vy = Math.sin(a) * 16; }
+    }
+    move(c, c.vx * dt, c.vy * dt, solidW, 3, 3); if (c.vx) c.face = Math.sign(c.vx);
+  }
+  // tiger
+  if (ST.tiger) {
+    const d = dist(tiger.x, tiger.y, P.x, P.y);
+    if (d > 150) { tiger.x = P.x - 14; tiger.y = P.y + 2; }
+    tiger.moving = d > 26;
+    if (tiger.moving) { const a = Math.atan2(P.y - tiger.y, P.x - tiger.x), sp = Math.min(150, d * 2.4); move(tiger, Math.cos(a) * sp * dt, Math.sin(a) * sp * dt, solidW, 5, 3); tiger.face = Math.cos(a) < 0 ? -1 : 1; tiger.anim += dt; }
+  }
+  // lions
+  for (const l of lions) {
+    const d = dist(l.x, l.y, P.x, P.y);
+    const tg = ST.tiger && dist(l.x, l.y, tiger.x, tiger.y) < 95;
+    let vx = 0, vy = 0;
+    if (tg) { const a = Math.atan2(l.y - tiger.y, l.x - tiger.x); vx = Math.cos(a) * 85; vy = Math.sin(a) * 85; if (!l.scared) { l.scared = true; popText(l.x, l.y - 18, '?!', '#fff'); } l.chasing = false; }
+    else if (l.cool > 0) { l.cool -= dt; const a = Math.atan2(l.y - P.y, l.x - P.x); vx = Math.cos(a) * 40; vy = Math.sin(a) * 40; }
+    else if (d < 90 && dist(l.x, l.y, l.hx, l.hy) < 260) {
+      l.scared = false;
+      if (!l.chasing) { l.chasing = true; sfx.roar(); popText(l.x, l.y - 18, 'ROAR!', '#ffcf6b'); }
+      const a = Math.atan2(P.y - l.y, P.x - l.x); vx = Math.cos(a) * 54; vy = Math.sin(a) * 54;
+    } else {
+      l.scared = false; l.chasing = false; l.t -= dt;
+      if (l.t <= 0) { l.t = 1.5 + rnd() * 2.5; if (rnd() < .4) l.vx = l.vy = 0; else { const a = rnd() * 6.28; l.vx = Math.cos(a) * 22; l.vy = Math.sin(a) * 22; } if (dist(l.x, l.y, l.hx, l.hy) > 70) { const a = Math.atan2(l.hy - l.y, l.hx - l.x); l.vx = Math.cos(a) * 22; l.vy = Math.sin(a) * 22; } }
+      vx = l.vx; vy = l.vy;
+    }
+    move(l, vx * dt, vy * dt, solidW, 6, 4);
+    if (vx) l.face = Math.sign(vx);
+    if (vx || vy) { l.anim += dt; l.poopT -= dt; if (l.poopT <= 0) { l.poopT = 7 + rnd() * 8; if (poops.length < 40) poops.push({ x: l.x - l.face * 9, y: l.y }); } }
+    if (d < 12 && !tg) { hurt(l); l.cool = 1.6; }
+  }
+  // poop
+  for (let i = poops.length - 1; i >= 0; i--) {
+    const p = poops[i];
+    if (P.jump <= 0 && dist(P.x, P.y - 2, p.x, p.y) < 8) {
+      poops.splice(i, 1); ST.stats.poop++; P.slow = 2.2; sfx.eww(); shake = .15;
+      popText(P.x, P.y - 26, P.bike ? 'EWW! It\'s in the tire treads!' : 'EWWW! Lion poop!', '#c9a26b');
+      P.bike = false;
+      if (ST.stats.poop === 1) setTimeout(() => crText('Did you just... 🤢 Press [A] to rope skip OVER it next time!'), 900);
+    }
+  }
+  // mushrooms
+  for (let i = mushrooms.length - 1; i >= 0; i--) {
+    const m = mushrooms[i];
+    if (P.jump <= 0 && dist(P.x, P.y - 2, m.x, m.y) < 9) {
+      mushrooms.splice(i, 1); ST.mushTaken.push(m.id);
+      if (m.type === 'fliegen') { P.trip = 8; sfx.eww(); popText(P.x, P.y - 26, 'Whoa... the buildings are breathing...', '#ff8a8a'); if (!ST.flags.trip) { ST.flags.trip = 1; setTimeout(() => crText('Red with white dots?! I SAID NOT THOSE. 😂 It wears off soon.'), 1500); } }
+      else { const v = m.type === 'stein' ? 2 : 1; ST.mush += v; ST.stats.mush++; sfx.pick(); popText(m.x, m.y - 10, `+${v} ${m.type === 'stein' ? 'Steinpilz' : 'Eierschwamm'}`, '#ffe08a'); }
+    }
+  }
+  for (let i = fleeing.length - 1; i >= 0; i--) { const f = fleeing[i]; f.x += f.vx * dt; f.y += f.vy * dt; f.t -= dt; if (f.t <= 0) fleeing.splice(i, 1); }
+  // zones
+  const z = zoneOf(Math.floor(P.x / 16), Math.floor(P.y / 16));
+  if (z !== curZone) {
+    curZone = z;
+    banner = { text: { baar: 'Baar · Kanton Zug', forest: 'Pilzwald · The Mushroom Forest', mount: 'Graubünden · Lion Country', sea: 'The Sea' }[z], t: 3 };
+    if (!ST.visited[z]) {
+      ST.visited[z] = 1;
+      const m = { forest: 'Mushroom forest! Brown & orange = yum. Red with dots = NO. 🍄', mount: 'Lion country!! 🦁 Jump ([A]) over the poop, bike (B) away if they chase you!', sea: 'THE SEA!! 🌊 Smell that? Freedom. And sunscreen.' }[z];
+      if (m) setTimeout(() => crText(m), 1500);
+    }
+  }
+  textT -= dt; if (textT <= 0) { textT = 80 + rnd() * 50; crText(CR_TEXTS[(rnd() * CR_TEXTS.length) | 0]); }
+  saveT -= dt; if (saveT <= 0) { saveT = 5; saveGame(); }
+  cam.x = clamp(Math.round(P.x - VW / 2), 0, W * 16 - VW); cam.y = clamp(Math.round(P.y - 8 - VH / 2), 0, H * 16 - VH);
+}
+function guardSees(gd) {
+  const ex = gd.x, ey = gd.y - 8, px = P.x, py = P.y - 6, d = dist(ex, ey, px, py);
+  if (d > (gd.range || 66)) return false;
+  if (Math.abs(normA(Math.atan2(py - ey, px - ex) - gd.ang)) > .5) return false;
+  const n = Math.ceil(d / 3);
+  for (let i = 1; i < n; i++) if (blockI(ex + (px - ex) * i / n, ey + (py - ey) * i / n)) return false;
+  return true;
+}
+function updateInterior(dt) {
+  if (inp.pause) { paused = true; return; }
+  if (inp.book) { book.open = true; return; }
+  if (inp.b) popText(P.x, P.y - 26, 'No bikes indoors!', '#cfe');
+  updatePlayer(dt, solidI);
+  const nearD = !ST.sk[IN.id] && dist(P.x, P.y - 4, IN.dx, IN.dy) < 18;
+  const nearE = dist(P.x, P.y - 4, IN.ex, IN.ey) < 18;
+  nearObj = nearD ? { x: IN.dx, y: IN.dy, label: 'Hold: Sketch' } : nearE ? { x: IN.ex, y: IN.ey, label: IN.exitLabel || 'Leave' } : null;
+  if (nearD && inp.aHeld && !IN.caught) {
+    IN.prog += dt / 2.2; IN.scribT -= dt; if (IN.scribT <= 0) { sfx.scribble(); IN.scribT = .12; }
+    if (IN.prog >= 1) { IN.prog = 1; IN.caught = true; sketchDone(); return; }
+  } else IN.prog = Math.max(0, IN.prog - dt * .5);
+  if (inp.a && !nearD) { if (nearE) exitInterior(); else doJump(); }
+  if (IN.id === 'stall') { IN.bellT -= dt; if (IN.bellT <= 0) { IN.bellT = 3 + rnd() * 4; sfx.bell(); } }
+  for (const gd of IN.guards) {
+    const [wx, wy] = gd.path[gd.pi], tx = (wx + .5) * 16, ty = (wy + .5) * 16 + 4;
+    if (gd.wait > 0) { gd.wait -= dt; gd.ang = gd.base + Math.sin(gd.wait * 3.2) * .9; }
+    else {
+      const d = dist(gd.x, gd.y, tx, ty);
+      if (d < 1.5) { gd.x = tx; gd.y = ty; gd.pi = (gd.pi + 1) % gd.path.length; gd.wait = 1.3; const [nx, ny] = gd.path[gd.pi]; gd.base = Math.atan2(ny - wy, nx - wx); }
+      else {
+        const a = Math.atan2(ty - gd.y, tx - gd.x), s = Math.min(d, gd.speed * dt);
+        gd.x += Math.cos(a) * s; gd.y += Math.sin(a) * s; gd.anim += dt;
+        const diff = normA(a - gd.ang); gd.ang += clamp(diff, -4 * dt, 4 * dt);
+      }
+    }
+    if (!IN.caught && guardSees(gd)) gd.alert += dt * 3.2; else gd.alert = Math.max(0, gd.alert - dt * 1.5);
+    if (gd.alert >= 1 && !IN.caught) caught(gd);
+  }
+}
+function updateRope(dt) {
+  RP.t += dt;
+  if (inp.b || inp.pause) { leaveRope(); return; }
+  if (RP.st === 'ready') { if (inp.a) { RP.st = 'play'; RP.th = 0; } return; }
+  if (RP.st === 'over') { if (inp.a) { RP.st = 'ready'; RP.n = 0; RP.per = 1.25; RP.th = 0; RP.jt = 0; } return; }
+  if (inp.a && RP.jt <= 0) { RP.jt = .42; sfx.jump(); }
+  RP.jt = Math.max(0, RP.jt - dt);
+  const prev = RP.th; RP.th += dt * Math.PI * 2 / RP.per;
+  const k0 = Math.floor((prev - Math.PI) / (Math.PI * 2)), k1 = Math.floor((RP.th - Math.PI) / (Math.PI * 2));
+  if (k1 > k0) {
+    if (RP.jt > 0) {
+      RP.n++; RP.per = Math.max(.6, RP.per * .96); sfx.blip();
+      if (RP.n === CONFIG.ropeGoal && !ST.flags.rope) { ST.flags.rope = true; ST.maxHearts = Math.min(6, ST.maxHearts + 1); ST.hearts = ST.maxHearts; sfx.ding(); toast('❤ Rope skipping champion! +1 max heart'); }
+    } else {
+      RP.st = 'over'; sfx.bonk(); shake = .2;
+      if (RP.n > RP.best) { RP.best = RP.n; ST.flags.ropeBest = RP.n; }
+    }
+  }
+}
+function updateSlide(dt) {
+  const S = SL; S.t += dt;
+  if (S.done) return;
+  S.sp = Math.min(290, 110 + S.d / 28); S.d += S.sp * dt;
+  S.vx += inp.ax * 750 * dt; S.vx *= Math.pow(.06, dt); S.x += S.vx * dt;
+  S.spin = Math.max(0, S.spin - dt);
+  const cx = centerX(S.d);
+  if (S.x < cx - SLIDE_HW + 8) { S.x = cx - SLIDE_HW + 8; S.vx = Math.abs(S.vx) * .5 + 30; sfx.bonk(); }
+  if (S.x > cx + SLIDE_HW - 8) { S.x = cx + SLIDE_HW - 8; S.vx = -Math.abs(S.vx) * .5 - 30; sfx.bonk(); }
+  for (const it of S.items) {
+    if (it.got || Math.abs(it.d - S.d) > 9) continue;
+    if (Math.abs(centerX(it.d) + it.off - S.x) < 12) {
+      it.got = true; const sx = S.x, sy = SLIDE_PY;
+      if (it.type === 'heart') { S.score += 10; sfx.pick(); popText(sx, sy - 14, '+10 ❤', '#ff9ab8', 'screen'); }
+      if (it.type === 'mush') { S.score += 5; sfx.pick(); popText(sx, sy - 14, '+5 🍄', '#ffe08a', 'screen'); }
+      if (it.type === 'star') { S.score += 25; sfx.ding(); popText(sx, sy - 14, '+25 ⭐', '#fff59a', 'screen'); }
+      if (it.type === 'poop') { S.score = Math.max(0, S.score - 15); S.spin = 1; shake = .25; sfx.eww(); ST.stats.poop++; popText(sx, sy - 14, 'EWW! -15', '#c9a26b', 'screen'); }
+    }
+  }
+  if (S.d >= CONFIG.slideLength) { S.done = true; sfx.splash(); transition(startEnding); }
+}
+function updateEnding(dt) {
+  EN.t += dt;
+  for (const c of EN.conf) { c.y += c.vy * dt; c.x += c.vx * dt + Math.sin(EN.t * 2 + c.r) * .3; if (c.y > VH) { c.y = -5; c.x = rnd() * VW; } }
+  const msg = finalMsg();
+  if (EN.t > 1.5) EN.shown = Math.min(msg.length, EN.shown + dt * 30);
+  if (inp.a) {
+    if (EN.phase === 0 && EN.shown < msg.length) EN.shown = msg.length;
+    else if (EN.phase === 0) { EN.phase = 1; sfx.ding(); }
+    else endToWorld();
+  }
+}
+
+// ---------------------------------------------------------------- sprites
+function shadow(x, y, rx = 5) { ell(x, y, rx, 2, 'rgba(0,0,0,.25)'); }
+function drawBike(x, y, dir) {
+  const k = '#151518';
+  if (dir === 'left' || dir === 'right') {
+    for (const wx of [x - 6, x + 6]) { g.strokeStyle = k; g.lineWidth = 1.5; g.beginPath(); g.arc(wx, y - 3, 3.2, 0, 7); g.stroke(); }
+    R(x - 6, y - 4, 12, 1, k); R(x - 1, y - 8, 1, 5, k); R(dir === 'right' ? x + 4 : x - 5, y - 10, 1, 7, k); R(dir === 'right' ? x + 3 : x - 6, y - 10, 3, 1, '#333');
+    R(x - 3, y - 9, 4, 1, '#333');
+  } else {
+    R(x - 1, y - 7, 2, 8, k); R(x - 5, dir === 'down' ? y - 9 : y - 10, 10, 1, '#333'); R(x - 1, y - 2, 2, 3, '#555');
+  }
+}
+function drawSarah(x, y, dir, anim, jh, bike, moving) {
+  x = Math.round(x); y = Math.round(y);
+  shadow(x, y, bike ? 8 : 5);
+  y -= Math.round(jh);
+  if (bike) drawBike(x, y, dir);
+  const step = moving ? (Math.floor(anim * (bike ? 6 : 9)) % 2) : 0;
+  const HAIR = '#6b4226', SK = '#f1c6a5', TOP = '#1d1d22', JEAN = '#33497a';
+  const by = bike ? y - 3 : y;
+  if (!bike) { R(x - 3, by - 5, 2, 5 - step, JEAN); R(x + 1, by - 5, 2, 4 + step, JEAN); R(x - 3, by - 1 - step, 2, 1, '#f4f4f4'); R(x + 1, by - 2 + step, 2, 1, '#f4f4f4'); }
+  else { R(x - 3, by - 6, 2, 4, JEAN); R(x + 1, by - 6, 2, 3 + step, JEAN); }
+  R(x - 4, by - 11, 8, 6, TOP); R(x - 4, by - 11, 8, 1, '#333');
+  R(x - 5, by - 10, 1, 4, TOP); R(x + 4, by - 10, 1, 4, TOP); R(x - 5, by - 6, 1, 1, SK); R(x + 4, by - 6, 1, 1, SK);
+  R(x - 3, by - 17, 6, 6, SK);
+  if (dir === 'up') { R(x - 4, by - 18, 8, 10, HAIR); }
+  else {
+    R(x - 4, by - 18, 8, 2, HAIR); R(x - 3, by - 16, 6, 1, HAIR);
+    if (dir === 'down') {
+      R(x - 4, by - 16, 1, 8, HAIR); R(x + 3, by - 16, 1, 8, HAIR);
+      R(x - 2, by - 14, 1, 1, '#222'); R(x + 1, by - 14, 1, 1, '#222'); R(x - 1, by - 12, 2, 1, '#c9776b');
+      R(x - 3, by - 13, 1, 1, '#f5a8a0'); R(x + 2, by - 13, 1, 1, '#f5a8a0');
+    } else if (dir === 'left') { R(x + 1, by - 17, 3, 9, HAIR); R(x - 2, by - 14, 1, 1, '#222'); }
+    else { R(x - 4, by - 17, 3, 9, HAIR); R(x + 1, by - 14, 1, 1, '#222'); }
+  }
+}
+// C-Real: long-haired hippie with a brown beard, headband, tie-dye shirt, flares & sandals
+function drawCReal(x, y, tm) {
+  x = Math.round(x); y = Math.round(y);
+  ell(x, y - 9, 11, 14, `rgba(190,225,255,${.18 + .08 * Math.sin(tm * 3)})`);
+  shadow(x, y);
+  const HAIR = '#5a3a1e', BEARD = '#6b4526', SK = '#e9b892', JEAN = '#4a6aa0';
+  R(x - 3, y - 5, 2, 4, JEAN); R(x + 1, y - 5, 2, 4, JEAN); R(x - 4, y - 2, 3, 1, JEAN); R(x + 1, y - 2, 3, 1, JEAN);
+  R(x - 4, y - 1, 3, 1, '#8a5a2c'); R(x + 1, y - 1, 3, 1, '#8a5a2c');
+  // tie-dye shirt
+  R(x - 4, y - 12, 8, 7, '#e85d9a'); R(x - 4, y - 11, 8, 1, '#f2c230'); R(x - 4, y - 9, 8, 1, '#5ec4e8'); R(x - 4, y - 7, 8, 1, '#7ee081');
+  R(x - 5, y - 11, 1, 5, '#c38bff'); R(x + 4, y - 11, 1, 5, '#c38bff'); R(x - 5, y - 6, 1, 1, SK); R(x + 4, y - 6, 1, 1, SK);
+  // long hair behind the head, down to the shoulders
+  R(x - 5, y - 19, 10, 3, HAIR); R(x - 5, y - 16, 2, 8, HAIR); R(x + 3, y - 16, 2, 8, HAIR);
+  R(x - 3, y - 18, 6, 6, SK);
+  R(x - 4, y - 19, 8, 1, '#e74c3c'); R(x - 5, y - 18, 1, 1, '#e74c3c');   // headband
+  R(x - 2, y - 16, 1, 1, '#222'); R(x + 1, y - 16, 1, 1, '#222');
+  // big brown beard
+  R(x - 3, y - 14, 6, 3, BEARD); R(x - 2, y - 11, 4, 2, BEARD); R(x - 1, y - 9, 2, 1, BEARD);
+  R(x - 1, y - 14, 2, 1, '#c9776b');
+  // sparkling snowflakes around him
+  const sa = tm * 2.2;
+  for (const s of [1, -1]) { const fx = Math.round(x + s * Math.cos(sa) * 10), fy = Math.round(y - 12 + s * Math.sin(sa) * 9); R(fx - 1, fy, 3, 1, '#ffffff'); R(fx, fy - 1, 1, 3, '#ffffff'); }
+}
+function drawGuard(x, y, col, hat, anim, dir) {
+  x = Math.round(x); y = Math.round(y); shadow(x, y);
+  const st = Math.floor(anim * 8) % 2;
+  R(x - 3, y - 5, 2, 5 - st, '#2a2a30'); R(x + 1, y - 5, 2, 4 + st, '#2a2a30');
+  R(x - 4, y - 12, 8, 7, col); R(x - 5, y - 11, 1, 5, col); R(x + 4, y - 11, 1, 5, col);
+  R(x - 3, y - 18, 6, 6, '#e8b996'); R(x - 4, y - 20, 8, 3, hat);
+  if (dir !== 'up') { R(x - 2, y - 15, 1, 1, '#222'); R(x + 1, y - 15, 1, 1, '#222'); R(x - 1, y - 13, 2, 1, '#8a4a3a'); }
+}
+function drawCat(c, t) {
+  const x = Math.round(c.x), y = Math.round(c.y), f = c.face || 1, col = c.col;
+  shadow(x, y, 4);
+  const dark = col === '#2a2a2e' ? '#111' : 'rgba(0,0,0,.25)';
+  R(x - 4, y - 5, 8, 4, col); R(x - 4, y - 1, 1, 1, col); R(x + 3, y - 1, 1, 1, col);
+  const hx = f > 0 ? x + 3 : x - 6; R(hx, y - 8, 4, 4, col); R(hx, y - 9, 1, 1, col); R(hx + 3, y - 9, 1, 1, col);
+  R(f > 0 ? hx + 2 : hx + 1, y - 7, 1, 1, '#7ad37a');
+  const tx = f > 0 ? x - 5 : x + 4, wag = Math.round(Math.sin(t * 4 + c.hx) * 1.5);
+  R(tx, y - 8 + wag, 1, 4, col);
+  if (col === '#f1e6d6') { R(x - 2, y - 5, 2, 2, '#d98a3c'); R(x + 1, y - 4, 2, 2, '#333'); }
+  R(x - 4, y - 5, 8, 1, dark);
+  if (ST.cats.includes(c.id)) R(x - 1, y - 12 + Math.round(Math.sin(t * 3)), 2, 1, '#ff6fa8');
+}
+function drawLion(l, t) {
+  const x = Math.round(l.x), y = Math.round(l.y), f = l.face || 1, st = Math.floor(l.anim * 8) % 2;
+  shadow(x, y, 8);
+  const C = '#c79a5b', D = '#9c7240';
+  R(x - 7, y - 3, 2, 3 - st, D); R(x + 4, y - 3, 2, 2 + st, D); R(x - 4, y - 3, 2, 2 + st, C); R(x + 2, y - 3, 2, 3 - st, C);
+  R(x - 7, y - 8, 14, 6, C); R(x - 7, y - 8, 14, 1, '#d8b077');
+  const hx = f > 0 ? x + 5 : x - 11; R(hx, y - 12, 6, 6, C); R(hx + (f > 0 ? 4 : 0), y - 9, 2, 2, '#e8d0a8');
+  R(hx + (f > 0 ? 3 : 2), y - 11, 1, 1, l.chasing ? '#ff3030' : '#222'); R(hx + 1, y - 13, 1, 1, C); R(hx + 4, y - 13, 1, 1, C);
+  const tx = f > 0 ? x - 10 : x + 7; R(tx, y - 7 + Math.round(Math.sin(t * 5) * 1), 3, 1, C); R(f > 0 ? tx - 1 : tx + 3, y - 8, 1, 2, '#5a3a1a');
+}
+function drawTiger(x, y, f, anim, t) {
+  x = Math.round(x); y = Math.round(y); const st = Math.floor(anim * 8) % 2;
+  shadow(x, y, 9);
+  const C = '#f4f6fa', S = '#26262c';
+  R(x - 7, y - 3, 2, 3 - st, C); R(x + 4, y - 3, 2, 2 + st, C); R(x - 4, y - 3, 2, 2 + st, C); R(x + 2, y - 3, 2, 3 - st, C);
+  R(x - 8, y - 9, 16, 7, C);
+  for (let i = -6; i < 8; i += 3) R(x + i, y - 9, 1, 4, S);
+  const hx = f > 0 ? x + 6 : x - 13; R(hx, y - 13, 7, 7, C); R(hx + 1, y - 14, 1, 1, C); R(hx + 5, y - 14, 1, 1, C);
+  R(hx + 2, y - 13, 1, 2, S); R(hx + 4, y - 13, 1, 2, S); R(hx + (f > 0 ? 4 : 2), y - 11, 1, 1, '#4fa8ff'); R(hx + (f > 0 ? 6 : 0), y - 9, 1, 1, '#f39ab0');
+  const tx = f > 0 ? x - 11 : x + 8, w = Math.round(Math.sin(t * 3) * 2); R(tx, y - 10 + w, 3, 1, C); R(f > 0 ? tx : tx + 2, y - 11 + w, 1, 1, S);
+}
+function drawPoop(p, t) {
+  const x = Math.round(p.x), y = Math.round(p.y);
+  R(x - 3, y - 1, 6, 2, '#5b3a1e'); R(x - 2, y - 3, 4, 2, '#6b4526'); R(x - 1, y - 4, 2, 1, '#7a5230');
+  for (let i = 0; i < 2; i++) R(x + Math.round(Math.cos(t * 6 + i * 3) * 5), y - 7 + Math.round(Math.sin(t * 9 + i) * 2), 1, 1, '#111');
+}
+function drawMush(m, t) {
+  const x = Math.round(m.x), y = Math.round(m.y);
+  R(x - 1, y - 3, 2, 3, '#efe6d0');
+  if (m.type === 'stein') { R(x - 3, y - 6, 6, 3, '#7a4a22'); R(x - 2, y - 7, 4, 1, '#8f5a2c'); }
+  else if (m.type === 'eier') { R(x - 3, y - 5, 6, 2, '#f0a020'); R(x - 2, y - 6, 4, 1, '#f7bb45'); R(x - 1, y - 3, 2, 2, '#e89a1a'); }
+  else { R(x - 3, y - 6, 6, 3, '#d8261e'); R(x - 2, y - 7, 4, 1, '#e8392f'); R(x - 2, y - 6, 1, 1, '#fff'); R(x + 1, y - 5, 1, 1, '#fff'); R(x, y - 7, 1, 1, '#fff'); }
+  if ((t * 2 + m.x) % 3 < .15) R(x + 2, y - 8, 1, 1, '#fff');
+}
+function drawHay(h) { const x = Math.round(h.x), y = Math.round(h.y); shadow(x, y, 8); R(x - 7, y - 10, 14, 10, '#d9b44a'); R(x - 7, y - 10, 14, 2, '#e8c862'); for (let i = -6; i < 7; i += 3) R(x + i, y - 8, 1, 7, '#c49a32'); }
+function drawSign(s) { const x = Math.round(s.x), y = Math.round(s.y); R(x - 1, y - 8, 2, 8, '#6b4a2a'); R(x - 6, y - 14, 12, 7, '#a77b45'); R(x - 5, y - 13, 10, 5, '#c4955a'); R(x - 4, y - 11, 8, 1, '#6b4a2a'); }
+
+// ---------------------------------------------------------------- buildings
+function drawHouse(x, y, w, h, wall, roof, boards) {
+  R(x + 3, y + h - 1, w, 4, 'rgba(0,0,0,.25)');
+  R(x, y + 12, w, h - 12, wall);
+  if (boards) for (let i = 0; i < w; i += 4) R(x + i, y + 12, 1, h - 12, '#966334');
+  R(x - 3, y - 8, w + 6, 24, roof);
+  for (let j = 2; j < 24; j += 4) R(x - 3, y - 8 + j, w + 6, 1, 'rgba(0,0,0,.18)');
+  R(x - 3, y - 8, w + 6, 2, 'rgba(255,255,255,.2)'); R(x, y + 16, w, 2, 'rgba(0,0,0,.2)');
+  const wy = y + (h > 50 ? 24 : 20);
+  for (const wx of [x + 6, x + w - 18]) { R(wx - 2, wy, 2, 10, '#3f7a4a'); R(wx + 12, wy, 2, 10, '#3f7a4a'); R(wx, wy, 12, 10, '#f3e3c8'); R(wx + 1, wy + 1, 10, 8, '#8fc1e3'); R(wx + 6, wy + 1, 1, 8, '#f3e3c8'); R(wx - 1, wy + 10, 14, 2, '#8a5a2c'); R(wx + 1, wy + 9, 2, 1, '#ff5a5a'); R(wx + 7, wy + 9, 2, 1, '#ff5a5a'); }
+  R(x + w / 2 - 6, y + h - 20, 12, 20, '#6b3f1f'); R(x + w / 2 + 3, y + h - 11, 1, 2, '#e0c060');
+}
+function drawBuilding(b) {
+  const x = b.x * 16 - cam.x, y = b.y * 16 - cam.y, w = b.w * 16, h = b.h * 16, cx = x + w / 2;
+  const done = ST.sk[b.id];
+  if (b.kind === 'house') drawHouse(x, y, w, h, b.wall, b.roof, false);
+  if (b.id === 'creal') { R(x + w - 6, y - 26, 1, 18, '#ddd'); R(x + w - 5, y - 26, 9, 7, '#3d6fb5'); R(x + w - 2, y - 25, 1, 5, '#fff'); R(x + w - 4, y - 23, 5, 1, '#fff'); R(x + w - 3, y - 24, 1, 1, '#fff'); R(x + w - 1, y - 24, 1, 1, '#fff'); R(x + w - 3, y - 22, 1, 1, '#fff'); R(x + w - 1, y - 22, 1, 1, '#fff'); }
+  if (b.kind === 'holz') drawHouse(x, y, w, h, '#b9824b', '#6e4f3a', true);
+  if (b.kind === 'chapel') {
+    ell(cx + 3, y + h, w / 2, 5, 'rgba(0,0,0,.25)');
+    const tear = (top, bot, sx) => { g.beginPath(); g.moveTo(cx, top); g.bezierCurveTo(cx + w * sx * .62, top + 18, cx + w * sx * .5, bot, cx, bot); g.bezierCurveTo(cx - w * sx * .5, bot, cx - w * sx * .62, top + 18, cx, top); g.closePath(); };
+    g.save(); tear(y - 10, y + h, 1); g.clip();
+    R(x - 8, y - 12, w + 16, h + 16, '#a49a8a');
+    for (let j = 0; j < h + 14; j += 3) for (let i = 0; i < w + 16; i += 4) { R(x - 8 + i + ((j / 3) % 2) * 2, y - 12 + j, 3, 2, (hash(i, j) & 1) ? '#9a907f' : '#b4aa98'); }
+    g.restore();
+    g.fillStyle = '#7f776b'; tear(y - 10, y + h * .6, .92); g.fill();
+    g.strokeStyle = '#958c7e'; g.lineWidth = 1; g.beginPath(); g.moveTo(cx, y - 8); g.lineTo(cx, y + h * .58); g.stroke();
+    R(cx - 26, y + h * .6 + 1, 52, 3, '#ece3c9'); for (let i = -26; i < 26; i += 4) R(cx + i, y + h * .6 + 1, 1, 3, '#6e675c');
+    R(cx - 5, y + h - 14, 10, 14, '#5b4a38'); R(cx - 3, y - 4, 6, 4, '#e9dfc0');
+    R(cx + 30, y + h - 46, 6, 40, '#8e8576'); R(cx + 29, y + h - 50, 8, 5, '#6e675c');
+  }
+  if (b.kind === 'stall') {
+    R(x + 3, y + h - 1, w, 4, 'rgba(0,0,0,.25)');
+    for (let j = 0; j < (h - 16) / 4; j++) {
+      const yy = y + 16 + j * 4; R(x, yy, w, 4, j % 2 ? '#7b4a26' : '#6a3d1d'); R(x, yy + 3, w, 1, '#4e2c14');
+      if (j % 2) { R(x - 3, yy, 3, 4, '#8f5a30'); R(x + w, yy, 3, 4, '#8f5a30'); R(x - 2, yy + 1, 1, 1, '#5a3418'); R(x + w + 1, yy + 1, 1, 1, '#5a3418'); }
+    }
+    R(x - 4, y - 10, w + 8, 28, '#5c5f63');
+    for (let j = 0; j < 28; j += 6) { R(x - 4, y - 10 + j, w + 8, 1, '#4d5054'); for (let i = (j % 12 ? 0 : 7); i < w + 8; i += 14) R(x - 4 + i, y - 10 + j, 1, 6, '#4d5054'); }
+    R(x - 4, y - 10, w + 8, 2, '#80848a');
+    R(x + 12, y + 22, 10, 6, '#2b1a0e'); R(x + w - 22, y + 22, 10, 6, '#2b1a0e');
+    R(cx - 11, y + h - 26, 22, 26, '#5b3519'); g.strokeStyle = '#7a4a26'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx - 11, y + h - 26); g.lineTo(cx + 11, y + h); g.moveTo(cx + 11, y + h - 26); g.lineTo(cx - 11, y + h); g.stroke();
+  }
+  if (b.kind === 'therme') {
+    const fy = y + Math.round(h * .5);
+    R(x - 4, y - 6, w + 8, fy - y + 6, '#6f9c4c');
+    for (let i = 0; i < 40; i++) R(x - 4 + (hash(i, 3) % (w + 8)), y - 6 + (hash(i, 9) % (fy - y)), 2, 1, '#5d8a3e');
+    for (let i = 0; i < 5; i++) { R(x + 14 + i * 26, y + 6 + (i % 2) * 8, 16, 1, '#26332a'); const sy = (time * 10 + i * 7) % 20; ell(x + 22 + i * 26, y + 4 - sy, 3 + sy * .2, 2 + sy * .1, `rgba(255,255,255,${.3 - sy * .014})`); }
+    const L = ['#8c9290', '#7b817f', '#9da3a0', '#848a88', '#6f7573'];
+    for (let j = fy; j < y + h; j += 2) R(x, j, w, 2, L[hash(j, 1) % 5]);
+    for (const ox of [16, 44, w - 50, w - 22]) { R(x + ox, fy + 6, 6, y + h - fy - 6, '#1d2a33'); R(x + ox, y + h - 6, 6, 6, '#3c6d8a'); }
+    R(cx - 9, y + h - 24, 18, 24, '#1c252c'); R(cx - 9, y + h - 6, 18, 6, '#3c6d8a');
+    if (!ST.flags.bouncer) drawGuard(b.doorX + 16 - cam.x, b.doorY + 2 - cam.y, '#222', '#111', 0, 'down');
+  }
+  if (b.kind === 'pav') {
+    const fy = y + Math.round(h * .6);
+    R(x + 3, y + h - 1, w, 4, 'rgba(0,0,0,.3)');
+    R(x - 2, y - 6, w + 4, fy - y + 6, '#141414'); R(x - 2, y - 6, w + 4, 1, '#333');
+    R(x + 24, y + 4, w - 48, fy - y - 12, '#3c7a3a');
+    for (let i = 0; i < 26; i++) R(x + 26 + hash(i, 5) % (w - 52), y + 6 + hash(i, 8) % (fy - y - 16), 1, 1, ['#b48be0', '#ffffff', '#e86fa8', '#c9a0f0'][i % 4]);
+    R(x + 22, y + 2, w - 44, 2, '#222'); R(x + 22, fy - 10, w - 44, 2, '#0a0a0a');
+    R(x, fy, w, y + h - fy, '#1b1b1b'); for (let i = 0; i < w; i += 6) R(x + i, fy, 1, y + h - fy, '#242424');
+    R(cx - 6, y + h - 20, 12, 20, '#000'); R(cx - 4, y + h - 8, 8, 2, '#2e5e2c');
+    if (!ST.flags.bribed) drawGuard(b.doorX + 16 - cam.x, b.doorY + 2 - cam.y, '#2f3b52', '#111', 0, 'down');
+  }
+  if (b.kind === 'park') {
+    R(x + 44, y + 40, 66, 50, '#f0f0f0'); R(x + 48, y + 44, 58, 42, '#47b6e6');
+    for (let i = 0; i < 6; i++) R(x + 52 + ((i * 17 + time * 12) % 50), y + 50 + i * 6, 6, 1, 'rgba(255,255,255,.6)');
+    R(x + 6, y - 28, 30, 6, '#e74c3c'); for (let i = 0; i < 30; i += 6) R(x + 6 + i, y - 28, 3, 6, '#fff');
+    for (const px of [x + 8, x + 32]) R(px, y - 22, 2, h + 16, '#d0d0d0');
+    for (let j = -20; j < h - 6; j += 8) R(x + 8, y + j, 26, 1, '#bbb');
+    const slide = (col, pts) => { g.strokeStyle = col; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath(); g.moveTo(pts[0], pts[1]); g.bezierCurveTo(pts[2], pts[3], pts[4], pts[5], pts[6], pts[7]); g.stroke(); g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 2; g.stroke(); };
+    slide('#e74c3c', [x + 34, y - 18, x + 110, y - 10, x + 30, y + 60, x + 64, y + 64]);
+    slide('#f1c40f', [x + 34, y - 10, x + 70, y + 10, x + 120, y + 20, x + 92, y + 58]);
+    slide('#3498db', [x + 10, y - 16, x - 20, y + 30, x + 40, y + 50, x + 54, y + 74]);
+    R(x, y + h - 4, w, 2, '#ffffff'); for (let i = 0; i < w; i += 8) R(x + i, y + h - 8, 1, 6, '#fff');
+    R(cx - 28, y + h - 22, 56, 10, '#ff6fa8'); R(cx - 26, y + h - 20, 52, 6, '#ff9ac4');
+    if (sketchCount() < 5) for (let i = -8; i < 8; i += 3) R(cx + i, y + h - 12, 1, 12, '#777'); else R(cx - 8, y + h - 12, 16, 12, '#47b6e6');
+  }
+  if (done && INTERIORS[b.id]) { const bob = Math.round(Math.sin(time * 3) * 1.5); R(cx - 4, y - 22 + bob, 8, 8, '#fff7d6'); R(cx - 3, y - 21 + bob, 6, 6, '#7ec850'); R(cx - 2, y - 18 + bob, 1, 1, '#fff'); R(cx - 1, y - 17 + bob, 1, 1, '#fff'); R(cx, y - 18 + bob, 1, 1, '#fff'); R(cx + 1, y - 19 + bob, 1, 1, '#fff'); }
+}
+
+// ---------------------------------------------------------------- scene drawing
+function drawWorld() {
+  const sx0 = shake > 0 ? Math.round((rnd() - .5) * 6 * shake / .4) : 0, sy0 = shake > 0 ? Math.round((rnd() - .5) * 6 * shake / .4) : 0;
+  const cx0 = cam.x, cy0 = cam.y; cam.x += sx0; cam.y += sy0;
+  const x0 = Math.floor(cam.x / 16), y0 = Math.floor(cam.y / 16);
+  for (let ty = y0; ty <= y0 + 14; ty++) for (let tx = x0; tx <= x0 + 24; tx++) {
+    if (tx < 0 || ty < 0 || tx >= W || ty >= H) continue;
+    const id = map[ty * W + tx], v = hash(tx, ty) & 3, sx = tx * 16 - cam.x, sy = ty * 16 - cam.y;
+    const gid = GROUND[id] ? id : baseTile(tx, ty);
+    g.drawImage(GROUND[gid][v], sx, sy);
+    if (id === T.WATER) { if (((tx + ty) & 1) === 0) R(sx + 4 + Math.round(Math.sin(time * 2 + tx * .7 + ty * 1.3) * 3), sy + 5 + (tx * 3) % 6, 5, 1, 'rgba(255,255,255,.35)'); }
+    else if (OVER[id]) { const o = (id === T.PINE && zoneOf(tx, ty) === 'mount' && ty < 12) ? OVER.PINE_SNOW : OVER[id]; g.drawImage(o[v], sx, sy); }
+  }
+  const vis = (x, y, m = 40) => x > cam.x - m && x < cam.x + VW + m && y > cam.y - m && y < cam.y + VH + m + 30;
+  for (const m of mushrooms) if (vis(m.x, m.y)) { g.save(); g.translate(-cam.x, -cam.y); drawMush(m, time); g.restore(); }
+  for (const p of poops) if (vis(p.x, p.y)) { g.save(); g.translate(-cam.x, -cam.y); drawPoop(p, time); g.restore(); }
+  const D = [];
+  for (const b of BUILDINGS) if (vis(b.x * 16 + b.w * 8, b.y * 16, 140)) D.push({ y: (b.y + b.h) * 16, f: () => { g.restore(); drawBuilding(b); g.save(); g.translate(-cam.x, -cam.y); } });
+  for (const s of SIGNS) if (vis(s.x, s.y)) D.push({ y: s.y, f: () => drawSign(s) });
+  for (const h of hays) if (vis(h.x, h.y)) D.push({ y: h.y, f: () => drawHay(h) });
+  for (const c of cats) if (vis(c.x, c.y)) D.push({ y: c.y, f: () => drawCat(c, time) });
+  for (const l of lions) if (vis(l.x, l.y)) D.push({ y: l.y, f: () => drawLion(l, time) });
+  for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (vis(s.x, s.y)) D.push({ y: s.y, f: () => drawCReal(s.x, s.y, time + s.x) }); }
+  for (const f of fleeing) D.push({ y: f.y, f: () => drawGuard(f.x, f.y, f.col, f.hat, time, 'right') });
+  if (ST.tiger) D.push({ y: tiger.y, f: () => drawTiger(tiger.x, tiger.y, tiger.face, tiger.moving ? tiger.anim : 0, time) });
+  D.push({ y: P.y, f: drawPlayer });
+  D.sort((a, b) => a.y - b.y);
+  g.save(); g.translate(-cam.x, -cam.y);
+  for (const d of D) d.f();
+  g.restore();
+  cam.x = cx0; cam.y = cy0;
+  if (curZone === 'forest') { g.fillStyle = 'rgba(10,30,10,.12)'; g.fillRect(0, 0, VW, VH); }
+}
+function drawPlayer() {
+  if (P.inv > 0 && Math.floor(P.inv * 12) % 2 === 0) return;
+  const jh = P.jump > 0 ? Math.sin(Math.PI * (1 - P.jump / .55)) * 10 : 0;
+  const ropeBehind = P.jump > 0 && !P.bike && Math.cos((1 - P.jump / .55) * Math.PI * 2) > 0;
+  if (ropeBehind) drawRopeArc();
+  drawSarah(P.x, P.y, P.dir, P.anim, jh, P.bike, P.moving);
+  if (P.jump > 0 && !P.bike && !ropeBehind) drawRopeArc();
+  if (P.slow > 0) for (let i = 0; i < 2; i++) R(P.x + Math.cos(time * 7 + i * 3) * 7, P.y - 20 + Math.sin(time * 9 + i) * 3, 1, 1, '#111');
+}
+function drawRopeArc() {
+  const ph = (1 - P.jump / .55) * Math.PI * 2, jh = Math.sin(Math.PI * (1 - P.jump / .55)) * 10;
+  const hy = P.y - 9 - jh, my = hy - 15 * Math.cos(ph);
+  g.strokeStyle = '#ff6fa8'; g.lineWidth = 1; g.beginPath(); g.moveTo(P.x - 6, hy); g.quadraticCurveTo(P.x, 2 * my - hy, P.x + 6, hy); g.stroke();
+}
+function drawInterior() {
+  const st = STYLE[IN.d.style], m = IN.d.map;
+  g.fillStyle = '#0b0b0f'; g.fillRect(0, 0, VW, VH);
+  const sx0 = shake > 0 ? Math.round((rnd() - .5) * 4) : 0;
+  g.save(); g.translate(IOX + sx0, IOY);
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 20; x++) {
+    const ch = m[y][x], sx = x * 16, sy = y * 16;
+    if (ch === '#' || ch === 'E') {
+      const below = y < 11 && m[y + 1][x] !== '#';
+      if (below || ch === 'E') {
+        R(sx, sy, 16, 16, st.face);
+        if (IN.d.style === 'stall') for (let j = 0; j < 16; j += 4) R(sx, sy + j, 16, 1, '#4e2c14');
+        else if (IN.d.style === 'therme') for (let j = 0; j < 16; j += 2) R(sx, sy + j, 16, 1, ['#6c7570', '#5f6863', '#7a837e'][hash(x, y * 16 + j) % 3]);
+        else if (IN.d.style !== 'pav') for (let i = 0; i < 16; i += 4) R(sx + i, sy, 1, 16, st.faceL);
+        R(sx, sy, 16, 2, st.top);
+        if (ch === 'E') { R(sx + 2, sy + 2, 12, 14, '#4a2c14'); R(sx + 11, sy + 9, 1, 2, '#e0c060'); }
+      } else R(sx, sy, 16, 16, st.top);
+      continue;
+    }
+    R(sx, sy, 16, 16, st.floor);
+    if (IN.d.style === 'stall') { for (let k = 0; k < 5; k++) R(sx + hash(x * 5 + k, y) % 15, sy + hash(y * 7 + k, x) % 15, 2, 1, st.line); }
+    else if (IN.d.style === 'therme') { R(sx, sy + 15, 16, 1, st.line); R(sx + (y % 2) * 8, sy, 1, 16, st.line); }
+    else { R(sx, sy + ((x + y) % 2) * 8, 16, 1, st.line); R(sx, sy + 15, 16, 1, st.line); }
+    if (ch === 'w') { R(sx, sy, 16, 16, '#3f8fb5'); R(sx + 3 + Math.round(Math.sin(time * 2 + x + y) * 2), sy + 5 + (x % 3) * 3, 6, 1, 'rgba(255,255,255,.4)'); }
+    if (ch === 'g') { R(sx, sy, 16, 16, '#2f6a32'); for (let k = 0; k < 6; k++) R(sx + hash(x * 9 + k, y) % 14, sy + hash(y * 3 + k, x) % 12, 1, 3, ['#b48be0', '#ffffff', '#e86fa8', '#7ec850', '#c9a0f0', '#4f9a4a'][k]); }
+    if (ch === 'h') { R(sx + 1, sy + 1, 14, 14, '#d9b44a'); R(sx + 1, sy + 1, 14, 2, '#e8c862'); for (let k = 3; k < 14; k += 3) R(sx + k, sy + 3, 1, 11, '#c49a32'); }
+    if (ch === 'b') { R(sx + 1, sy + 4, 14, 9, IN.d.style === 'chapel' ? '#b58b52' : '#7a4a22'); R(sx + 1, sy + 4, 14, 2, IN.d.style === 'chapel' ? '#cfa76a' : '#94602e'); }
+    if (ch === 'c' && m[y][x - 1] !== 'c') {
+      const wag = Math.round(Math.sin(time * 3 + x) * 1);
+      R(sx + 3, sy + 2, 24, 11, '#8a5a3a'); R(sx + 3, sy + 2, 24, 2, '#a06c48'); R(sx + 25, sy, 7, 8, '#8a5a3a'); R(sx + 28, sy + 5, 4, 3, '#e6cdb0');
+      R(sx + 25, sy - 1, 1, 2, '#eee'); R(sx + 31, sy - 1, 1, 2, '#eee'); R(sx + 27, sy + 2, 1, 1, '#111');
+      R(sx + 22, sy + 8, 3, 4, '#d9a400'); R(sx + 1, sy + 3 + wag, 2, 6, '#5a3a22');
+      for (const lx of [5, 10, 19, 24]) R(sx + lx, sy + 13, 2, 3, '#5a3a22');
+    }
+    if (ch === 'o') { R(sx + 5, sy + 2, 6, 14, IN.d.style === 'chapel' ? '#b8955c' : '#6a4520'); R(sx + 5, sy + 2, 2, 14, 'rgba(255,255,255,.18)'); R(sx + 4, sy + 13, 8, 3, 'rgba(0,0,0,.25)'); }
+    if (ch === 'D' && !ST.sk[IN.id]) {
+      const p = .5 + .5 * Math.sin(time * 4);
+      ell(sx + 8, sy + 8, 7 + p * 2, 5 + p, `rgba(255,211,77,${.25 + p * .25})`);
+      R(sx + 7, sy + 3, 2, 8, '#ffd34d'); R(sx + 7, sy + 11, 2, 2, '#f1c6a5'); R(sx + 7, sy + 2, 2, 1, '#ff8fb1');
+    }
+  }
+  // flashlight cones
+  for (const gd of IN.guards) {
+    const ex = gd.x, ey = gd.y - 8, rng = gd.range || 66;
+    g.fillStyle = gd.alert > 0 ? `rgba(255,${120 - gd.alert * 80},80,.35)` : 'rgba(255,240,150,.22)';
+    g.beginPath(); g.moveTo(ex, ey);
+    for (let i = 0; i <= 18; i++) {
+      const a = gd.ang - .5 + i / 18; let r = 0;
+      while (r < rng && !blockI(ex + Math.cos(a) * r, ey + Math.sin(a) * r)) r += 3;
+      g.lineTo(ex + Math.cos(a) * r, ey + Math.sin(a) * r);
+    }
+    g.closePath(); g.fill();
+  }
+  const D = IN.guards.map(gd => ({ y: gd.y, f: () => { const dd = Math.abs(Math.cos(gd.ang)) > Math.abs(Math.sin(gd.ang)) ? 'side' : (Math.sin(gd.ang) < 0 ? 'up' : 'down'); drawGuard(gd.x, gd.y, gd.col, gd.hat, gd.wait > 0 ? 0 : gd.anim, dd); } }));
+  D.push({ y: P.y, f: drawPlayer });
+  D.sort((a, b) => a.y - b.y); for (const d of D) d.f();
+  if (IN.d.style === 'therme') { g.fillStyle = 'rgba(255,250,220,.07)'; for (let i = 0; i < 4; i++) { g.beginPath(); const bx = 40 + i * 70; g.moveTo(bx, 0); g.lineTo(bx + 8, 0); g.lineTo(bx + 38, 192); g.lineTo(bx + 30, 192); g.fill(); } }
+  if (IN.d.style === 'chapel') { g.fillStyle = 'rgba(255,245,210,.06)'; g.fillRect(0, 16, 320, 40); }
+  g.restore();
+  if (IN.d.style === 'pav' || IN.d.style === 'stall') {
+    const gr = g.createRadialGradient(P.x + IOX, P.y + IOY - 8, 30, P.x + IOX, P.y + IOY - 8, 220);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, IN.d.style === 'pav' ? 'rgba(0,0,0,.65)' : 'rgba(0,0,0,.35)'); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+  }
+}
+function drawMountains(baseY, col, snow, seed) {
+  const pts = [[0, VH]]; const r = mulberry32(seed);
+  for (let x = 0; x <= VW + 40; x += 40) pts.push([x, baseY - r() * 50]);
+  pts.push([VW, VH]); poly(pts, col);
+  if (snow) for (let i = 1; i < pts.length - 1; i++) { const [px, py] = pts[i]; if (py < baseY - 30) poly([[px, py], [px - 9, py + 9], [px + 9, py + 9]], '#f4f8fb'); }
+}
+function drawTitleScene() {
+  const gr = g.createLinearGradient(0, 0, 0, VH); gr.addColorStop(0, '#6db8e8'); gr.addColorStop(.7, '#d2eef9'); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+  circ(320, 40, 14, '#fff3b0');
+  drawMountains(120, '#8aa3c2', true, 5); drawMountains(150, '#6d8f6a', false, 9);
+  R(0, 160, VW, 56, '#5f9e4a'); R(0, 168, 120, 20, '#3f86c8');
+  for (let i = 0; i < 18; i++) g.drawImage(OVER[T.PINE][i % 4], 130 + i * 14 + (i % 3) * 3, 146 + (i % 2) * 6);
+  // little Sogn Benedetg on the hill
+  const cx = 300, cy = 150; ell(cx, cy, 10, 12, '#a49a8a'); ell(cx, cy - 4, 9, 8, '#7f776b'); R(cx + 12, cy - 18, 3, 20, '#8e8576');
+  const bx = ((time * 45) % (VW + 60)) - 30;
+  drawSarah(bx, 202, 'right', time, 0, true, true);
+  drawTiger(bx - 34, 203, 1, time, time);
+  drawCReal(350, 196, time);
+  drawCat({ x: 60, y: 200, face: 1, col: '#e08a3c', hx: 0, id: 'x' }, time);
+}
+function drawRopeScene() {
+  const gr = g.createLinearGradient(0, 0, 0, VH); gr.addColorStop(0, '#7cc4ee'); gr.addColorStop(1, '#d8f0fa'); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+  drawMountains(130, '#8aa3c2', true, 3); R(0, 150, VW, 66, '#6aa84f');
+  for (let i = 0; i < 30; i++) R(hash(i, 1) % VW, 152 + hash(i, 2) % 60, 2, 1, '#5d9a45');
+  // tree on the right (rope tied)
+  R(286, 110, 8, 80, '#5a3b1f'); circ(290, 100, 26, '#2f6b2c'); circ(282, 92, 14, '#3e8a38');
+  const th = RP.th, hy = 150, lx = 140, rx = 285;
+  const my = hy - 52 * Math.cos(th), ctrl = 2 * my - hy;
+  const jh = RP.jt > 0 ? Math.sin(Math.PI * (1 - RP.jt / .42)) * 14 : 0;
+  const front = Math.sin(th) > 0;
+  const rope = () => { g.strokeStyle = '#ff6fa8'; g.lineWidth = 2; g.beginPath(); g.moveTo(lx, hy); g.quadraticCurveTo(212, ctrl, rx, hy); g.stroke(); };
+  if (!front) rope();
+  g.save(); g.translate(212, 190); g.scale(2, 2); drawSarah(0, 0, 'down', 0, jh / 2, false, false); g.restore();
+  g.save(); g.translate(128, 190); g.scale(2, 2); drawCReal(0, 0, time); g.restore();
+  R(lx - 2, hy - 2 + Math.round(Math.sin(th) * 3), 4, 4, '#e9b892');
+  if (front) rope();
+}
+function drawSlideScene() {
+  const S = SL;
+  g.fillStyle = '#5f9e4a'; g.fillRect(0, 0, VW, VH);
+  const k0 = Math.floor((S.d - SLIDE_PY) / 24) - 1;
+  for (let k = k0; k < k0 + 12; k++) for (let j = 0; j < 3; j++) {
+    const hx = hash(k, j) % VW, sy = SLIDE_PY + (k * 24 - S.d) + (hash(j, k) % 20);
+    if (Math.abs(hx - centerX(k * 24)) > SLIDE_HW + 18) g.drawImage(OVER[T.TREE][(k + j) & 3], hx - 8, sy - 8);
+  }
+  for (let sy = 0; sy < VH; sy += 2) {
+    const d = S.d + (sy - SLIDE_PY);
+    if (d > CONFIG.slideLength) { R(0, sy, VW, 2, '#3aa6dc'); if (d < CONFIG.slideLength + 6) R(0, sy, VW, 2, '#f0f0f0'); continue; }
+    if (d < -40) continue;
+    const cx = centerX(d), rim = (Math.floor(d / 30) % 2) ? '#e74c3c' : '#ffffff';
+    R(cx - SLIDE_HW - 4, sy, 4, 2, rim); R(cx + SLIDE_HW, sy, 4, 2, rim);
+    R(cx - SLIDE_HW, sy, SLIDE_HW * 2, 2, '#4fb3e8');
+    if (hash(Math.floor(d / 2), 7) % 9 === 0) R(cx - SLIDE_HW + (hash(Math.floor(d), 3) % (SLIDE_HW * 2)), sy, 6, 1, 'rgba(255,255,255,.7)');
+  }
+  for (const it of S.items) {
+    if (it.got) continue;
+    const sy = SLIDE_PY + (it.d - S.d); if (sy < -10 || sy > VH + 10) continue;
+    const x = centerX(it.d) + it.off;
+    if (it.type === 'heart') { circ(x - 2, sy - 1, 2.5, '#ff4d6d'); circ(x + 2, sy - 1, 2.5, '#ff4d6d'); poly([[x - 4.5, sy], [x + 4.5, sy], [x, sy + 5]], '#ff4d6d'); }
+    if (it.type === 'mush') drawMush({ x, y: sy + 4, type: 'stein' }, time);
+    if (it.type === 'star') { g.save(); g.translate(x, sy); g.rotate(time * 3); poly([[0, -6], [2, -2], [6, -2], [3, 1], [4, 6], [0, 3], [-4, 6], [-3, 1], [-6, -2], [-2, -2]], '#ffd34d'); g.restore(); }
+    if (it.type === 'poop') { circ(x, sy, 6, '#ff9ac4'); circ(x, sy, 3, '#4fb3e8'); drawPoop({ x, y: sy + 1 }, time); }
+  }
+  for (const bd of [1200, 3000, 4800]) { const sy = SLIDE_PY + (bd - S.d); if (sy > -30 && sy < VH + 30) { const x = centerX(bd) + SLIDE_HW + 24; drawCReal(x, sy, time); } }
+  g.save(); g.translate(Math.round(S.x), SLIDE_PY); g.rotate(S.spin * 12 + Math.sin(S.t * 6) * .1);
+  circ(0, 0, 8, '#ff6fa8'); circ(0, 0, 4.5, '#4fb3e8'); R(-2, -5, 4, 4, '#6b4226'); R(-4, -2, 8, 4, '#1d1d22'); R(-6, -1, 2, 1, '#f1c6a5'); R(4, -1, 2, 1, '#f1c6a5');
+  g.restore();
+  for (let i = 0; i < 3; i++) R(S.x - 6 + hash(Math.floor(S.t * 20), i) % 12, SLIDE_PY - 10 - (hash(i, Math.floor(S.t * 20)) % 6), 2, 1, 'rgba(255,255,255,.8)');
+}
+function drawEndingScene() {
+  g.fillStyle = '#e9e2d0'; g.fillRect(0, 0, VW, VH);
+  for (let x = 0; x < VW; x += 12) R(x, 0, 1, VH, '#d9d1bd'); for (let y = 0; y < VH; y += 12) R(0, y, VW, 1, '#d9d1bd');
+  R(36, 44, 312, 150, '#f8f8f8'); R(42, 50, 300, 138, '#3aa6dc');
+  for (let i = 0; i < 14; i++) R(50 + ((i * 37 + time * 15) % 280), 56 + i * 9, 10, 1, 'rgba(255,255,255,.45)');
+  const bx = 192 + Math.sin(time * .8) * 20, by = 128 + Math.sin(time * 1.3) * 3;
+  circ(bx, by, 11, '#ff6fa8'); circ(bx, by, 6, '#3aa6dc');
+  g.save(); g.translate(bx, by + 2); g.scale(1.3, 1.3); drawSarah(0, 0, 'down', 0, 0, false, false); g.restore();
+  g.save(); g.translate(192, 44); g.scale(1.6, 1.6); drawCReal(0, 0, time); g.restore();
+  for (let i = 0; i < 3; i++) { const hx = 160 + i * 32, hy = 14 + Math.sin(time * 2 + i) * 3; R(hx, hy + 8, 1, 14, '#aaa'); circ(hx - 3, hy, 4, ['#ff4d6d', '#ffd34d', '#4fc3f7'][i]); circ(hx + 3, hy, 4, ['#ff4d6d', '#ffd34d', '#4fc3f7'][i]); poly([[hx - 7, hy + 1], [hx + 7, hy + 1], [hx, hy + 8]], ['#ff4d6d', '#ffd34d', '#4fc3f7'][i]); }
+  g.save(); g.translate(330, 190); g.scale(1.4, 1.4); drawTiger(0, 0, -1, 0, time); g.restore();
+  drawCat({ x: 52, y: 205, face: 1, col: '#e08a3c', hx: 3, id: 'c1' }, time); drawCat({ x: 70, y: 208, face: 1, col: '#2a2a2e', hx: 5, id: 'c2' }, time);
+}
+
+// ---------------------------------------------------------------- UI layer
+function rrect(x, y, w, h, r, fill, stroke) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); } }
+function txt(s, x, y, size = 8, col = '#fff', align = 'left', bold = false, sh = true) {
+  ctx.font = font(size, bold); ctx.textAlign = align; ctx.textBaseline = 'top';
+  if (sh) { ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillText(s, x + .6, y + .6); }
+  ctx.fillStyle = col; ctx.fillText(s, x, y);
+}
+function wrap(s, maxW, size, bold) {
+  ctx.font = font(size, bold); const out = [];
+  for (const para of s.split('\n')) { let line = ''; for (const w of para.split(' ')) { const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } out.push(line); }
+  return out;
+}
+function heart(x, y, s, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, y + s * .9); ctx.bezierCurveTo(x - s * 1.3, y, x - s * .7, y - s * 1, x, y - s * .3); ctx.bezierCurveTo(x + s * .7, y - s * 1, x + s * 1.3, y, x, y + s * .9); ctx.fill(); }
+function withCtx(c, fn) { const o = g; g = c; fn(); g = o; }
+const SPEAKER_COL = { 'Sarah': '#ff8fb1', 'C-Real': '#ffd34d', 'Sign': '#d9c19a', 'Sketchbook': '#9fe0a0', 'Snow tiger': '#bfe3ff', '???': '#bbb' };
+function drawPortrait(who, x, y) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(2, 2);
+  withCtx(ctx, () => {
+    if (who === 'Sarah') drawSarah(0, 0, 'down', 0, 0, false, false);
+    else if (who === 'C-Real') drawCReal(0, 0, time);
+    else if (who === 'Snow tiger') drawTiger(3, 0, -1, 0, time);
+    else if (who === 'Sketchbook') { R(-7, -18, 14, 16, '#fff7d6'); R(-6, -17, 1, 14, '#c9b98a'); R(-4, -14, 9, 1, '#888'); R(-4, -11, 7, 1, '#888'); R(-4, -8, 8, 1, '#888'); }
+    else if (who === 'Sign') drawSign({ x: 0, y: -2 });
+    else if (who !== '???') { const gd = IN && IN.guards.find(q => q.name === who); drawGuard(0, 0, gd ? gd.col : (who === 'Bouncer' ? '#222' : '#2f3b52'), gd ? gd.hat : '#111', 0, 'down'); }
+  });
+  ctx.restore();
+}
+function drawDialog() {
+  const l = dlg.cur; if (!l) return;
+  const col = SPEAKER_COL[l.who] || '#9ad0ff', bx = 8, by = VH - 62, bw = VW - 16, bh = 56;
+  rrect(bx, by, bw, bh, 5, 'rgba(18,16,28,.93)', col);
+  rrect(bx + 4, by + 4, 40, 48, 4, 'rgba(255,255,255,.07)');
+  drawPortrait(l.who, bx + 24, by + 48);
+  const who = t(l.who); ctx.font = font(8, true);
+  rrect(bx + 50, by - 8, Math.max(40, ctx.measureText(who).width + 12), 13, 4, col);
+  txt(who, bx + 56, by - 6, 8, '#1a1a22', 'left', true, false);
+  const lines = wrap(l.text, bw - 64, 8.5); let left = Math.floor(dlg.shown);
+  lines.slice(0, 5).forEach((ln, i) => { if (left <= 0) return; const s = ln.slice(0, left); left -= ln.length + 1; txt(s, bx + 52, by + 8 + i * 10.5, 8.5, '#f4f0ff'); });
+  if (dlg.shown >= l.text.length && Math.floor(time * 3) % 2) txt('▼', bx + bw - 12, by + bh - 12, 7, col);
+}
+function drawHUD() {
+  rrect(3, 3, Math.max(ST.maxHearts * 11 + 6, 150), 26, 4, 'rgba(10,10,20,.45)');
+  for (let i = 0; i < ST.maxHearts; i++) heart(10 + i * 11, 9, 4.2, i < ST.hearts ? '#ff4d6d' : 'rgba(255,255,255,.22)');
+  let s = `🍄 ${ST.mush}   ✏️ ${sketchCount()}/5   ${ST.tiger ? '🐯' : '🐾'} ${ST.cats.length}/5`;
+  if (ST.items.key) s += '  🗝'; if (ST.items.bike) s += P.bike ? '  🚲!' : '  🚲';
+  txt(s, 7, 17, 7.5, '#fff');
+}
+function drawUI() {
+  if (scene === 'title') {
+    txt('SARCHITECT', VW / 2, 26, 34, '#ffffff', 'center', true);
+    txt(t('Break in · Sketch · Slide'), VW / 2, 64, 10, '#3a4a6a', 'center', true, false);
+    const opts = (title.hasSave ? [t('Continue'), t('New game')] : [t('New game')]).concat('◀ ' + t('Language: {0}', LANG_NAMES[LANG]) + ' ▶');
+    opts.forEach((o, i) => { const y = 82 + i * 17, sel = i === title.sel; rrect(VW / 2 - 66, y, 132, 14, 7, sel ? 'rgba(255,111,168,.92)' : 'rgba(255,255,255,.55)'); txt((sel && i < opts.length - 1 ? '▶ ' : '') + o, VW / 2, y + 3, 8.5, sel ? '#fff' : '#334', 'center', true, false); });
+    txt(t('Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M'), VW / 2, 136, 6.5, '#334', 'center', false, false);
+    txt(t('a game by C-Real, for Sarah ♥'), VW / 2, 147, 7.5, '#b0306a', 'center', true, false);
+    return;
+  }
+  if (scene === 'world' || scene === 'interior') {
+    const ox = scene === 'interior' ? IOX : -cam.x, oy = scene === 'interior' ? IOY : -cam.y;
+    if (scene === 'world') for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (dist(s.x, s.y, P.x, P.y) < 110) txt('C-Real', s.x + ox, s.y + oy - 32, 7, '#ffd34d', 'center', true); }
+    if (scene === 'world' && ST.tiger && dist(tiger.x, tiger.y, P.x, P.y) < 60 && !tiger.moving) txt('Schneeflocke', tiger.x + ox, tiger.y + oy - 24, 6, '#cfeaff', 'center');
+    if (nearObj && !dlg.cur && !fade.dir) {
+      const label = t(nearObj.label), x = nearObj.x + ox, y = nearObj.y + oy - 26;
+      ctx.font = font(6, true); const kw = Math.max(9, ctx.measureText(BTN_A).width + 5);
+      ctx.font = font(7, true); const w = ctx.measureText(label).width + kw + 9;
+      rrect(x - w / 2, y, w, 12, 6, 'rgba(20,20,30,.85)', '#ff8fb1'); rrect(x - w / 2 + 1.5, y + 1.5, kw, 9, 4.5, '#ff6fa8');
+      txt(BTN_A, x - w / 2 + 1.5 + kw / 2, y + 2.6, 6, '#fff', 'center', true, false); txt(label, x - w / 2 + kw + 4.5, y + 2.5, 7, '#fff', 'left', true, false);
+    }
+    if (scene === 'interior') {
+      if (IN.prog > 0) { const x = P.x + ox, y = P.y + oy - 34; rrect(x - 20, y, 40, 6, 3, 'rgba(0,0,0,.7)'); rrect(x - 19, y + 1, 38 * IN.prog, 4, 2, '#ffd34d'); txt(t('sketching...'), x, y - 9, 6.5, '#ffe9a0', 'center'); }
+      for (const gd of IN.guards) if (gd.alert > .05) txt(gd.alert > .6 ? '!' : '?', gd.x + ox, gd.y + oy - 34, 12, gd.alert > .6 ? '#ff4040' : '#ffd34d', 'center', true);
+    }
+    for (const p of parts) {
+      const a = Math.min(1, p.life / p.max * 2), x = p.x + (p.space === 'screen' ? 0 : ox), y = p.y + (p.space === 'screen' ? 0 : oy);
+      ctx.globalAlpha = a; if (p.heart) heart(x, y, 3, '#ff6f9a'); else txt(p.text, x, y, 7.5, p.col, 'center', true); ctx.globalAlpha = 1;
+    }
+    drawHUD();
+    if (banner) { const a = Math.min(1, banner.t, (3 - banner.t) * 3); ctx.globalAlpha = Math.max(0, a); rrect(VW / 2 - 100, 34, 200, 18, 9, 'rgba(10,10,20,.6)'); txt(t(banner.text), VW / 2, 38.5, 9, '#fff', 'center', true, false); ctx.globalAlpha = 1; }
+  }
+  if (scene === 'rope') {
+    txt('SEILSPRINGEN CLUB BAAR', VW / 2, 8, 12, '#fff', 'center', true);
+    txt(`${RP.n}`, VW / 2, 26, 26, RP.n >= CONFIG.ropeGoal ? '#ffd34d' : '#fff', 'center', true);
+    txt(t('Goal: {0}   ·   Best: {1}', CONFIG.ropeGoal, RP.best), VW / 2, 58, 8, '#234', 'center', true, false);
+    if (RP.st === 'ready') txt(t('Press [A] to jump when the rope reaches your feet!   (B = leave)'), VW / 2, 72, 8, '#234', 'center', false, false);
+    if (RP.st === 'over') { rrect(VW / 2 - 90, 74, 180, 30, 6, 'rgba(10,10,20,.75)'); txt(RP.n >= CONFIG.ropeGoal ? t('Amazing! {0} skips!', RP.n) : t('Tripped after {0}!', RP.n), VW / 2, 78, 10, '#fff', 'center', true, false); txt(t('[A] = try again   ·   B = leave'), VW / 2, 92, 7.5, '#ffd6e6', 'center', false, false); }
+  }
+  if (scene === 'slide') {
+    rrect(4, 4, 92, 24, 5, 'rgba(10,10,20,.5)'); txt(t('Score: {0}', SL.score), 10, 7, 9, '#fff', 'left', true);
+    rrect(10, 19, 80, 4, 2, 'rgba(255,255,255,.25)'); rrect(10, 19, 80 * Math.min(1, SL.d / CONFIG.slideLength), 4, 2, '#ff6fa8');
+    if (SL.t < 3.5) txt(t('Steer ← → · catch hearts · dodge the lion-poop floaties!'), VW / 2, 190, 8, '#fff', 'center', true);
+    for (const bd of [1200, 3000, 4800]) { const sy = SLIDE_PY + (bd - SL.d); if (sy > -30 && sy < VH + 30) txt(t(['GO SARAH!!', 'WOOOO! 🌊', 'ALMOST THERE! ❤'][[1200, 3000, 4800].indexOf(bd)]), centerX(bd) + SLIDE_HW + 24, sy - 34, 8, '#ffd34d', 'center', true); }
+    for (const p of parts) { ctx.globalAlpha = Math.min(1, p.life / p.max * 2); txt(p.text || '', p.x, p.y, 8, p.col, 'center', true); ctx.globalAlpha = 1; }
+  }
+  if (scene === 'ending') {
+    for (const c of EN.conf) { ctx.fillStyle = c.c; ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(EN.t * 3 + c.r); ctx.fillRect(-2, -1, 4, 2); ctx.restore(); }
+    if (EN.phase === 0) {
+      rrect(30, 82, VW - 60, 104, 8, 'rgba(18,16,28,.9)', '#ffd34d');
+      txt('C-Real', 44, 88, 9, '#ffd34d', 'left', true, false);
+      const lines = wrap(finalMsg(), VW - 90, 8.5); let left = Math.floor(EN.shown);
+      lines.slice(0, 8).forEach((ln, i) => { if (left <= 0) return; txt(ln.slice(0, left), 44, 101 + i * 10.5, 8.5, '#fff'); left -= ln.length + 1; });
+      if (EN.shown >= finalMsg().length && Math.floor(time * 3) % 2) txt('▼', VW - 44, 172, 7, '#ffd34d');
+    } else {
+      rrect(60, 70, VW - 120, 132, 8, 'rgba(18,16,28,.92)', '#ff8fb1');
+      txt('SARCHITECT', VW / 2, 76, 16, '#fff', 'center', true, false);
+      txt(t('a game by C-Real, made with love for Sarah'), VW / 2, 96, 7.5, '#ff8fb1', 'center', false, false);
+      const S = ST.stats; const rows = [t('Sketches: {0}/5', sketchCount()), t('Mushrooms found: {0}', S.mush), t('Cats petted: {0}', ST.cats.length), t('Times caught breaking in: {0}', S.caught), t('Mountain lion poop stepped in: {0}', S.poop), t('Lion scares: {0}', S.hits), t('Waterslide score: {0}', SL ? SL.score : S.slide)];
+      rows.forEach((r, i) => txt(r, VW / 2, 110 + i * 10, 8, '#eee', 'center', false, false));
+      txt(t('Inspired by Peter Zumthor & Gion A. Caminada'), VW / 2, 182, 6.5, '#aaa', 'center', false, false);
+      txt(t('[A]: keep exploring'), VW / 2, 191, 7, '#ffd34d', 'center', true, false);
+    }
+  }
+  // toasts
+  toasts.forEach((t, i) => {
+    const a = Math.min(1, t.t * 2, (t.max - t.t) * 4), w = Math.min(230, wrap(t.text, 220, 7.5)[0] ? 230 : 230);
+    const lines = wrap(t.text, 214, 7.5), h = 8 + lines.length * 9;
+    const x = VW - w - 6 + (1 - Math.min(1, (t.max - t.t) * 4)) * 40, y = 34 + i * 34;
+    ctx.globalAlpha = Math.max(0, a); rrect(x, y, w, h, 6, 'rgba(250,250,255,.95)', '#ffd34d');
+    lines.forEach((ln, j) => txt(ln, x + 7, y + 4 + j * 9, 7.5, '#222', 'left', false, false)); ctx.globalAlpha = 1;
+  });
+  if (book.open) drawBook();
+  if (paused) drawPause();
+  drawDialog();
+}
+function drawPause() {
+  ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, VW, VH);
+  rrect(VW / 2 - 120, 30, 240, 156, 8, 'rgba(18,16,28,.95)', '#ff8fb1');
+  txt(t('PAUSED'), VW / 2, 38, 14, '#fff', 'center', true, false);
+  ['Move: Arrow keys / WASD / stick', '[A]: talk · pet · rope skip', 'Hold [A] at a ✨ spot to sketch it', 'B (B, Shift): hop on / off the black bike', 'Book (Tab, Q): your sketchbook', 'M: mute · Esc / P: pause', '', 'Avoid guard flashlight cones & lions.', 'Jump over lion poop. Pet cats. ❤', t('◀ ▶ Language: {0}', LANG_NAMES[LANG]), 'Press [A] or Esc to continue']
+    .forEach((s, i) => txt(s ? t(s) : '', VW / 2, 60 + i * 10.5, 7.5, i >= 9 ? '#ffd34d' : '#ddd', 'center', i === 9, false));
+}
+function pencil(fn) { ctx.save(); ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = .7; ctx.lineCap = 'round'; fn(); ctx.restore(); }
+function jline(x0, y0, x1, y1, seed = 1) { const r = mulberry32(seed + Math.round(x0 * 7 + y0 * 13)); ctx.beginPath(); ctx.moveTo(x0 + (r() - .5), y0 + (r() - .5)); ctx.lineTo((x0 + x1) / 2 + (r() - .5) * 1.4, (y0 + y1) / 2 + (r() - .5) * 1.4); ctx.lineTo(x1 + (r() - .5), y1 + (r() - .5)); ctx.stroke(); }
+function jpoly(pts, close = true) { for (let i = 0; i < pts.length - (close ? 0 : 1); i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; jline(a[0], a[1], b[0], b[1], i); } }
+function drawSketch(id, x, y, w, h) {
+  const cx = x + w / 2, cy = y + h / 2;
+  pencil(() => {
+    if (id === 'holz') {
+      jpoly([[x + 10, cy - 18], [cx - 6, cy - 18], [cx - 6, cy + 18], [x + 10, cy + 18]]);
+      for (let i = -1; i <= 1; i++) { const yy = cy + i * 12; jpoly([[cx - 6, yy - 3], [cx + 10, yy - 6], [cx + 10, yy + 6], [cx - 6, yy + 3]]); }
+      jpoly([[cx + 10, cy - 18], [x + w - 10, cy - 18], [x + w - 10, cy + 18], [cx + 10, cy + 18]], false);
+      for (let i = 0; i < 6; i++) jline(x + 14 + i * 5, cy - 14, x + 16 + i * 5, cy + 14, i);
+    }
+    if (id === 'chapel') {
+      ctx.beginPath(); ctx.moveTo(cx, y + 8); ctx.bezierCurveTo(cx + 40, y + 20, cx + 30, y + h - 8, cx, y + h - 8); ctx.bezierCurveTo(cx - 30, y + h - 8, cx - 40, y + 20, cx, y + 8); ctx.stroke();
+      for (let i = 0; i < 16; i++) { const t = i / 16 * Math.PI * 2, px = cx + Math.sin(t) * 20, py = cy + 4 - Math.cos(t) * 24 * (Math.cos(t) > 0 ? 1 : .8); ctx.beginPath(); ctx.arc(px, py, 1.2, 0, 7); ctx.stroke(); }
+      for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(x + w - 28 + i * 6 + (j % 2) * 3, y + 10 + j * 5, 3, 0, Math.PI); ctx.stroke(); }
+    }
+    if (id === 'stall') {
+      for (let j = 0; j < 7; j++) { const yy = y + 14 + j * 7; if (j % 2) jpoly([[x + 12, yy], [x + w - 30, yy], [x + w - 30, yy + 6], [x + 12, yy + 6]]); else { jpoly([[x + 20, yy], [x + w - 12, yy], [x + w - 12, yy + 6], [x + 20, yy + 6]]); ctx.beginPath(); ctx.arc(x + w - 12, yy + 3, 3, 0, 7); ctx.stroke(); } }
+      jline(x + w - 30, y + 10, x + w - 30, y + h - 8, 9);
+    }
+    if (id === 'therme') {
+      for (let j = 0; j < 18; j++) { const yy = y + 10 + j * 3.2; jline(x + 10, yy, cx - 8 - (j % 3) * 4, yy, j); jline(cx + 8 + (j % 2) * 5, yy, x + w - 10, yy, j + 30); }
+      ctx.save(); ctx.strokeStyle = 'rgba(230,180,40,.8)'; jline(cx - 2, y + 4, cx - 6, y + h - 6, 3); jline(cx + 2, y + 4, cx + 6, y + h - 6, 4); ctx.restore();
+      ctx.beginPath(); for (let i = 0; i < 5; i++) { ctx.moveTo(x + 16 + i * 14, y + h - 10); ctx.quadraticCurveTo(x + 23 + i * 14, y + h - 13, x + 30 + i * 14, y + h - 10); } ctx.stroke();
+    }
+    if (id === 'pav') {
+      ctx.save(); ctx.fillStyle = 'rgba(30,30,30,.25)'; ctx.fillRect(x + 10, y + 8, w - 20, h - 16); ctx.restore();
+      jpoly([[x + 10, y + 8], [x + w - 10, y + 8], [x + w - 10, y + h - 8], [x + 10, y + h - 8]]);
+      jpoly([[x + 22, y + 18], [x + w - 22, y + 18], [x + w - 22, y + h - 18], [x + 22, y + h - 18]]);
+      ctx.save(); ctx.fillStyle = '#f7f0dc'; ctx.fillRect(x + 23, y + 19, w - 46, h - 38); ctx.restore();
+      for (let i = 0; i < 26; i++) { const r = mulberry32(i); const px = x + 26 + r() * (w - 52), py = y + 22 + r() * (h - 44); ctx.beginPath(); ctx.moveTo(px, py + 4); ctx.lineTo(px, py); ctx.stroke(); ctx.beginPath(); ctx.arc(px, py - 1, 1.2, 0, 7); ctx.stroke(); }
+    }
+  });
+}
+function drawBook() {
+  ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, VW, VH);
+  const bx = 34, by = 14, bw = VW - 68, bh = VH - 28;
+  rrect(bx - 4, by - 4, bw + 8, bh + 8, 8, '#5b3a22'); rrect(bx, by, bw, bh, 5, '#fbf5e4');
+  for (let y = by + 8; y < by + bh - 4; y += 9) { ctx.fillStyle = '#5b3a22'; ctx.beginPath(); ctx.arc(bx + bw / 2, y, 1.6, 0, 7); ctx.fill(); }
+  const id = PAGE_ORDER[book.sel], d = INTERIORS[id], have = !!ST.sk[id];
+  txt(t('My Architectural Sketchbook — page {0}/5', book.sel + 1), bx + 10, by + 6, 7, '#8a6a48', 'left', true, false);
+  rrect(bx + 12, by + 22, bw / 2 - 24, bh - 54, 3, '#fffdf4', '#e3d8bb');
+  if (have) drawSketch(id, bx + 12, by + 22, bw / 2 - 24, bh - 54);
+  else { txt('?', bx + bw / 4, by + 60, 30, '#d8ccb0', 'center', true, false); }
+  const rx = bx + bw / 2 + 10, rw = bw / 2 - 22;
+  wrap(t(have ? d.title : '??? (not yet sketched)'), rw, 10, true).slice(0, 2).forEach((ln, i) => txt(ln, rx, by + 22 + i * 11, 10, '#3a2a1a', 'left', true, false));
+  const tl = wrap(t(have ? d.title : '??? (not yet sketched)'), rw, 10, true).length > 1 ? 11 : 0;
+  txt(have ? t(d.sub) : t('Somewhere {0}...', t(d.where)), rx, by + 36 + tl, 7, '#8a6a48', 'left', false, false);
+  wrap(t(have ? d.fact : 'A locked building with a beautiful detail inside. Find a way in, avoid the guards, and hold [A] at the ✨ spot.'), rw, 7.5).forEach((ln, i) => txt(ln, rx, by + 50 + tl + i * 10, 7.5, '#3a3a3a', 'left', false, false));
+  for (let i = 0; i < 5; i++) { ctx.fillStyle = i === book.sel ? '#ff6fa8' : ST.sk[PAGE_ORDER[i]] ? '#7ec850' : '#d8ccb0'; ctx.beginPath(); ctx.arc(VW / 2 - 24 + i * 12, by + bh - 12, 3.2, 0, 7); ctx.fill(); }
+  txt(t('◀ ▶ flip pages   ·   [A] / Tab: close'), VW / 2, by + bh - 26, 7, '#8a6a48', 'center', false, false);
+}
+
+// ---------------------------------------------------------------- render & loop
+function render() {
+  g = lowCtx; g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = false;
+  if (scene === 'title') drawTitleScene();
+  else if (scene === 'world') drawWorld();
+  else if (scene === 'interior') drawInterior();
+  else if (scene === 'rope') drawRopeScene();
+  else if (scene === 'slide') drawSlideScene();
+  else if (scene === 'ending') drawEndingScene();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
+  if (P.trip > 0 && (scene === 'world' || scene === 'interior')) {
+    const k = Math.min(1, P.trip / 2), sx = cv.width / VW, sy = cv.height / VH;
+    ctx.filter = `hue-rotate(${Math.round(time * 120 * k) % 360}deg) saturate(${1 + .8 * k})`;
+    for (let yy = 0; yy < VH; yy += 4) ctx.drawImage(low, 0, yy, VW, 4, Math.sin(time * 3 + yy * .08) * 4 * k * sx, yy * sy, cv.width, Math.ceil(4 * sy) + 1);
+    ctx.filter = 'none';
+  } else ctx.drawImage(low, 0, 0, cv.width, cv.height);
+  ctx.setTransform(cv.width / VW, 0, 0, cv.height / VH, 0, 0);
+  drawUI();
+  if (fade.a > 0) { ctx.fillStyle = `rgba(8,6,14,${fade.a})`; ctx.fillRect(0, 0, VW, VH); }
+}
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; time += dt;
+  pollInput(); update(dt); render(); clearPressed();
+  requestAnimationFrame(loop);
+}
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => { });
+buildTiles(); genWorld(); spawnEntities();
+title.hasSave = !!loadGame();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
