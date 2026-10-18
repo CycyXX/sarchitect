@@ -1,6 +1,6 @@
 // Offline support. The page is network-first, so a new deploy shows up on the next online
 // visit, falling back to the cached copy when offline. Icons and manifest are cache-first.
-const CACHE = 'sarchitect-v1';
+const CACHE = 'sarchitect-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './icon-192.png', './icon-512.png'])));
