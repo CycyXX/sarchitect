@@ -695,7 +695,7 @@ function spawnHearts(x, y, n = 3) { for (let i = 0; i < n; i++) parts.push({ x: 
 const fade = { a: 0, dir: 0, cb: null };
 function transition(cb) { if (fade.dir === 1) return; fade.dir = 1; fade.cb = cb; }
 let scene = 'title', time = 0, paused = false, shake = 0, cam = { x: 0, y: 0 }, curZone = null;
-let saveT = 0, textT = 60, IN = null, RP = null, SL = null, EN = null;
+let saveT = 0, textT = 60, guitT = 0, IN = null, RP = null, SL = null, EN = null;
 const book = { open: false, sel: 0 };
 const title = { sel: 0, hasSave: false };
 
@@ -1042,6 +1042,8 @@ function updateWorld(dt) {
       if (m) setTimeout(() => crText(m), 1500);
     }
   }
+  const gd = dist(P.x, P.y, CR_SPOTS.sea.x, CR_SPOTS.sea.y);
+  if (gd < 130) { guitT -= dt; if (guitT <= 0) { guitT = .42; if (rnd() < .8) tone(midi([60, 62, 64, 67, 69, 72, 74][(rnd() * 7) | 0]), .6, 'triangle', .05 * (1 - gd / 130)); } }
   textT -= dt; if (textT <= 0) { textT = 80 + rnd() * 50; crText(CR_TEXTS[(rnd() * CR_TEXTS.length) | 0]); }
   saveT -= dt; if (saveT <= 0) { saveT = 5; saveGame(); }
   cam.x = clamp(Math.round(P.x - VW / 2), 0, W * 16 - VW); cam.y = clamp(Math.round(P.y - 8 - VH / 2), 0, H * 16 - VH);
@@ -1172,11 +1174,20 @@ function drawSarah(x, y, dir, anim, jh, bike, moving) {
     else { R(x - 4, by - 17, 3, 9, HAIR); R(x + 1, by - 14, 1, 1, '#222'); }
   }
 }
-// C-Real: long-haired hippie with a brown beard, headband, tie-dye shirt, flares & sandals
-function drawCReal(x, y, tm) {
-  x = Math.round(x); y = Math.round(y);
-  ell(x, y - 9, 11, 14, `rgba(190,225,255,${.18 + .08 * Math.sin(tm * 3)})`);
-  shadow(x, y);
+// C-Real: long-haired hippie with a brown beard, headband, tie-dye shirt, flares & sandals.
+// pose = region: baar eats pasta, forest carries a mushroom basket, mount skis, sea plays guitar.
+function drawCReal(x0, y, tm, pose) {
+  x0 = Math.round(x0); y = Math.round(y);
+  ell(x0, y - 9, 11, 14, `rgba(190,225,255,${.18 + .08 * Math.sin(tm * 3)})`);
+  if (pose === 'mount') { ell(x0, y, 15, 4, '#eef3f8'); ell(x0 - 4, y - 1, 6, 2, '#ffffff'); }
+  if (pose === 'baar') for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) R(x0 - 9 + i * 3, y - 2 + j * 2, 3, 2, (i + j) % 2 ? '#d94b4b' : '#f4f4f4');
+  shadow(x0, y);
+  const x = pose === 'mount' ? x0 + Math.round(Math.sin(tm * 2.5)) : x0;   // skier sways
+  if (pose === 'mount') {
+    R(x0 - 10, y - 1, 20, 1, '#e74c3c'); R(x0 + 9, y - 2, 2, 1, '#e74c3c');
+    g.strokeStyle = '#b8b8b8'; g.lineWidth = 1; g.beginPath(); g.moveTo(x - 5, y - 7); g.lineTo(x0 - 9, y); g.moveTo(x + 4, y - 7); g.lineTo(x0 + 8, y); g.stroke();
+    R(x0 - 10, y - 1, 2, 1, '#444'); R(x0 + 7, y - 1, 2, 1, '#444');
+  }
   const HAIR = '#5a3a1e', BEARD = '#6b4526', SK = '#e9b892', JEAN = '#4a6aa0';
   R(x - 3, y - 5, 2, 4, JEAN); R(x + 1, y - 5, 2, 4, JEAN); R(x - 4, y - 2, 3, 1, JEAN); R(x + 1, y - 2, 3, 1, JEAN);
   R(x - 4, y - 1, 3, 1, '#8a5a2c'); R(x + 1, y - 1, 3, 1, '#8a5a2c');
@@ -1191,6 +1202,26 @@ function drawCReal(x, y, tm) {
   // big brown beard
   R(x - 3, y - 14, 6, 3, BEARD); R(x - 2, y - 11, 4, 2, BEARD); R(x - 1, y - 9, 2, 1, BEARD);
   R(x - 1, y - 14, 2, 1, '#c9776b');
+  if (pose === 'mount') { R(x - 3, y - 21, 6, 2, '#2a62c9'); R(x - 2, y - 21, 4, 1, '#8fd3ff'); }   // ski goggles on the forehead
+  if (pose === 'baar') {   // bowl of pasta, fork going up to the mouth and back
+    R(x - 5, y - 7, 10, 1, '#ffffff'); R(x - 4, y - 6, 8, 2, '#d8d8d8'); R(x - 3, y - 8, 6, 1, '#f2d06b'); R(x - 2, y - 9, 4, 1, '#f2d06b'); R(x - 1, y - 9, 2, 1, '#d9442e');
+    if (Math.floor(tm * 1.5) % 2) { R(x + 2, y - 14, 1, 6, '#ffffff'); R(x + 1, y - 14, 1, 1, '#ffffff'); R(x + 3, y - 12, 1, 3, '#f2d06b'); }
+    else { R(x + 4, y - 11, 1, 5, '#ffffff'); R(x + 3, y - 9, 1, 2, '#f2d06b'); }
+  }
+  if (pose === 'forest') {   // basket full of mushrooms
+    R(x + 5, y - 11, 1, 3, '#8a5a2c'); R(x + 8, y - 11, 1, 3, '#8a5a2c'); R(x + 5, y - 11, 4, 1, '#8a5a2c');
+    R(x + 4, y - 8, 6, 4, '#a8743a'); R(x + 4, y - 8, 6, 1, '#c48a4a'); R(x + 5, y - 9, 2, 1, '#7a4a22'); R(x + 7, y - 9, 2, 1, '#f0a020');
+  }
+  if (pose === 'sea') {   // acoustic guitar, strumming, music notes floating up
+    for (let i = 0; i < 8; i++) R(x + 1 + i, y - 8 - (i >> 1), 1, 1, '#6b4526');
+    R(x + 9, y - 13, 2, 2, '#4a2f18');
+    ell(x - 2, y - 7, 4, 3, '#c8843e'); ell(x - 2, y - 7, 1.4, 1.4, '#3a2414');
+    R(x - 1, y - 10 + Math.floor(tm * 6) % 2, 1, 1, SK);
+    for (let k = 0; k < 2; k++) {
+      const p = (tm * .6 + k * .5) % 1, nx = Math.round(x + 7 + k * 4 + Math.sin(p * 6) * 2), ny = Math.round(y - 18 - p * 14);
+      R(nx, ny, 1, 3, '#fff'); R(nx - 1, ny + 2, 2, 1, '#fff'); R(nx + 1, ny, 1, 1, '#fff');
+    }
+  }
   // sparkling snowflakes around him
   const sa = tm * 2.2;
   for (const s of [1, -1]) { const fx = Math.round(x + s * Math.cos(sa) * 10), fy = Math.round(y - 12 + s * Math.sin(sa) * 9); R(fx - 1, fy, 3, 1, '#ffffff'); R(fx, fy - 1, 1, 3, '#ffffff'); }
@@ -1357,7 +1388,7 @@ function drawWorld() {
   for (const h of hays) if (vis(h.x, h.y)) D.push({ y: h.y, f: () => drawHay(h) });
   for (const c of cats) if (vis(c.x, c.y)) D.push({ y: c.y, f: () => drawCat(c, time) });
   for (const l of lions) if (vis(l.x, l.y)) D.push({ y: l.y, f: () => drawLion(l, time) });
-  for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (vis(s.x, s.y)) D.push({ y: s.y, f: () => drawCReal(s.x, s.y, time + s.x) }); }
+  for (const k in CR_SPOTS) { const s = CR_SPOTS[k]; if (vis(s.x, s.y)) D.push({ y: s.y, f: () => drawCReal(s.x, s.y, time + s.x, k) }); }
   for (const f of fleeing) D.push({ y: f.y, f: () => drawGuard(f.x, f.y, f.col, f.hat, time, 'right') });
   if (ST.tiger) D.push({ y: tiger.y, f: () => drawTiger(tiger.x, tiger.y, tiger.face, tiger.moving ? tiger.anim : 0, time) });
   D.push({ y: P.y, f: drawPlayer });
@@ -1542,13 +1573,18 @@ function wrap(s, maxW, size, bold) {
   return out;
 }
 function heart(x, y, s, col) { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, y + s * .9); ctx.bezierCurveTo(x - s * 1.3, y, x - s * .7, y - s * 1, x, y - s * .3); ctx.bezierCurveTo(x + s * .7, y - s * 1, x + s * 1.3, y, x, y + s * .9); ctx.fill(); }
+// the C-Real you are talking to keeps his regional pose in the dialog portrait
+function crPoseNear() {
+  if (scene !== 'world') return undefined;
+  for (const k in CR_SPOTS) if (dist(CR_SPOTS[k].x, CR_SPOTS[k].y, P.x, P.y) < 120) return k;
+}
 function withCtx(c, fn) { const o = g; g = c; fn(); g = o; }
 const SPEAKER_COL = { 'Sarah': '#ff8fb1', 'C-Real': '#ffd34d', 'Sign': '#d9c19a', 'Sketchbook': '#9fe0a0', 'Snow tiger': '#bfe3ff', '???': '#bbb' };
 function drawPortrait(who, x, y) {
   ctx.save(); ctx.translate(x, y); ctx.scale(2, 2);
   withCtx(ctx, () => {
     if (who === 'Sarah') drawSarah(0, 0, 'down', 0, 0, false, false);
-    else if (who === 'C-Real') drawCReal(0, 0, time);
+    else if (who === 'C-Real') drawCReal(0, 0, time, crPoseNear());
     else if (who === 'Snow tiger') drawTiger(3, 0, -1, 0, time);
     else if (who === 'Sketchbook') { R(-7, -18, 14, 16, '#fff7d6'); R(-6, -17, 1, 14, '#c9b98a'); R(-4, -14, 9, 1, '#888'); R(-4, -11, 7, 1, '#888'); R(-4, -8, 8, 1, '#888'); }
     else if (who === 'Sign') drawSign({ x: 0, y: -2 });
