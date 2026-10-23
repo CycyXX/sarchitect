@@ -1530,7 +1530,10 @@ SCENES.glissade = {
   music: 'slide',
   update(dt) {
     const G = GL;
-    if (G.done) { if (inp.a) backToWorld(() => { const j = JAY_SPOTS.trailhead; P.x = j.x; P.y = j.y + 18; say([['C-Real', 'Glissading is the BEST part. Best day ever? Best day ever. ❤'], ['Sarah', G.axe ? 'And I still have my ice axe!' : 'We\'ll find the ice axe in spring. Probably.']], saveGame); }); return; }
+    if (G.done) { if (inp.a) backToWorld(() => { const j = JAY_SPOTS.trailhead; P.x = j.x; P.y = j.y + 18; say([['C-Real', 'Glissading is the BEST part. Best day ever? Best day ever. ❤'], ['Sarah', G.axe ? 'And I still have my ice axe!' : 'We\'ll find the ice axe in spring. Probably.']], () => {
+      saveGame();
+      if (LEVELS[3] && !ST.l3.flags.arrived) say([['C-Real', 'Shasta slides, wildfires, rockfall... Time to fly home. And maybe refresh our first aid. 🩹'], ['Sarah', 'Home to Baar! ✈️']], () => startFlight3());
+    }); }); return; }
     G.t += dt; G.tumble = Math.max(0, G.tumble - dt);
     G.v = Math.min(360, G.v + 150 * dt);
     if (inp.aHeld && G.axe && G.tumble <= 0) {

@@ -468,8 +468,10 @@ const SAVE_KEY = 'sarchitect_v1';
 function defaultState() {
   return { level: 1, sk: {}, items: { pin: false, bike: false, key: false }, cats: [], mush: 0, mushTaken: [], maxHearts: CONFIG.startHearts, hearts: CONFIG.startHearts,
     flags: {}, cp: 'baar', met: {}, visited: {}, tiger: false, px: null, py: null, pos: {}, stats: { poop: 0, caught: 0, hits: 0, mush: 0, slide: 0, beers: 0 },
-    l2: defaultL2() };
+    l2: defaultL2(), l3: defaultL3() };
 }
+// Level 3 progress (first aid in Kanton Zug, zug.js)
+function defaultL3() { return { cases: {}, met: {}, visited: {}, cp: null, stats: {}, flags: {}, cherries: 0 }; }
 // Level 2 progress (filled in by california.js; kept separate so Level 1 stays intact)
 function defaultL2() { return { postcards: {}, laws: {}, money: 0, permits: {}, flags: {}, cp: null, met: {}, visited: {}, donuts: 0, stats: {} }; }
 let ST = defaultState();
@@ -484,7 +486,7 @@ function loadGame() {
     const s = localStorage.getItem(SAVE_KEY);
     if (s) {
       const d = JSON.parse(s), base = defaultState();
-      return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}), l2: Object.assign(base.l2, d.l2 || {}), pos: d.pos || {}, level: d.level || 1 });
+      return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}), l2: Object.assign(base.l2, d.l2 || {}), l3: Object.assign(base.l3, d.l3 || {}), pos: d.pos || {}, level: d.level || 1 });
     }
   } catch (e) { }
   return null;
@@ -1160,11 +1162,15 @@ function update(dt) {
 }
 // extra scenes (minigames, cutscenes) registered by levels: { update(dt), draw(), ui(), music }
 const SCENES = {};
+const LEVEL_LABELS = { 1: '🏔 Level 1: Luzern', 2: '✈️ Level 2: California', 3: '✚ Level 3: Kanton Zug' };
 function titleOptions() {
   const sv = loadGame(), o = [];
   if (sv) o.push({ label: 'Continue', act: continueGame });
   o.push({ label: 'New game', act: newGame });
-  if (sv && sv.flags.finished && LEVELS[2]) o.push({ label: sv.level === 2 ? '🏔 Level 1: Luzern' : '✈️ Level 2: California', act: () => { ST = loadGame(); enterLevel(ST.level === 2 ? 1 : 2); } });
+  if (sv) {   // jump to any other unlocked level
+    const unlocked = { 1: true, 2: !!(sv.flags.finished && LEVELS[2]), 3: !!(sv.l2 && sv.l2.flags && sv.l2.flags.finished && LEVELS[3]) };
+    for (const n of [1, 2, 3]) if (unlocked[n] && n !== sv.level && (n !== 1 || unlocked[2])) o.push({ label: LEVEL_LABELS[n], act: () => { ST = loadGame(); enterLevel(n); } });
+  }
   o.push({ lang: true });
   return o;
 }
@@ -2017,7 +2023,7 @@ function drawUI() {
     txt('SARCHITECT', VW / 2, 26, 34, '#ffffff', 'center', true);
     txt(t('Break in · Sketch · Slide'), VW / 2, 64, 10, '#3a4a6a', 'center', true, false);
     const opts = (title.opts || titleOptions()).map(o => o.lang ? '◀ ' + t('Language: {0}', LANG_NAMES[LANG]) + ' ▶' : t(o.label));
-    const oy = 82 - (opts.length > 3 ? 8 : 0);
+    const oy = 82 - Math.max(0, opts.length - 3) * 8;
     opts.forEach((o, i) => { const y = oy + i * 16, sel = i === title.sel; rrect(VW / 2 - 70, y, 140, 14, 7, sel ? 'rgba(255,111,168,.92)' : 'rgba(255,255,255,.55)'); txt((sel && i < opts.length - 1 ? '▶ ' : '') + o, VW / 2, y + 3, 8.5, sel ? '#fff' : '#334', 'center', true, false); });
     txt(t('Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M'), VW / 2, 146, 6.5, '#334', 'center', false, false);
     txt(t('a game by C-Real, for Sarah ♥'), VW / 2, 156, 7.5, '#b0306a', 'center', true, false);
@@ -2255,10 +2261,12 @@ function boot() {
   buildTiles(); loadLevel(1);
   title.hasSave = !!loadGame();
   if (/debug2/.test(location.search) && LEVELS[2]) { newGame(); enterLevel(2); if (LEVELS[2].debug) LEVELS[2].debug(); }
+  if (/debug3/.test(location.search) && LEVELS[3]) { newGame(); enterLevel(3); if (LEVELS[3].debug) LEVELS[3].debug(); }
   requestAnimationFrame(loop);
 }
 addEventListener('DOMContentLoaded', boot);
 </script>
 <script src="california.js"></script>
+<script src="zug.js"></script>
 </body>
 </html>

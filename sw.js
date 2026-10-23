@@ -1,9 +1,9 @@
 // Offline support. The page and the game scripts are network-first, so a new deploy shows up on
 // the next online visit, falling back to the cached copy when offline. Icons and manifest are cache-first.
-const CACHE = 'sarchitect-v3';
+const CACHE = 'sarchitect-v4';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './california.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'])));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './california.js', './zug.js', './manifest.webmanifest', './icon-192.png', './icon-512.png'])));
   self.skipWaiting();
 });
 
