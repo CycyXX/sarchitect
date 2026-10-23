@@ -468,8 +468,10 @@ const SAVE_KEY = 'sarchitect_v1';
 function defaultState() {
   return { level: 1, sk: {}, items: { pin: false, bike: false, key: false }, cats: [], mush: 0, mushTaken: [], maxHearts: CONFIG.startHearts, hearts: CONFIG.startHearts,
     flags: {}, cp: 'baar', met: {}, visited: {}, tiger: false, px: null, py: null, pos: {}, stats: { poop: 0, caught: 0, hits: 0, mush: 0, slide: 0, beers: 0 },
-    l2: defaultL2(), l3: defaultL3() };
+    l2: defaultL2(), l3: defaultL3(), l4: defaultL4() };
 }
+// Level 4 progress (time travel through world history, history.js); pos keeps Sarah's spot per era
+function defaultL4() { return { era: 0, unlocked: 0, quests: {}, sk: {}, cards: {}, met: {}, pos: {}, flags: {}, stats: {}, cp: null }; }
 // Level 3 progress (first aid in Kanton Zug, zug.js)
 function defaultL3() { return { cases: {}, met: {}, visited: {}, cp: null, stats: {}, flags: {}, cherries: 0 }; }
 // Level 2 progress (filled in by california.js; kept separate so Level 1 stays intact)
@@ -486,7 +488,7 @@ function loadGame() {
     const s = localStorage.getItem(SAVE_KEY);
     if (s) {
       const d = JSON.parse(s), base = defaultState();
-      return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}), l2: Object.assign(base.l2, d.l2 || {}), l3: Object.assign(base.l3, d.l3 || {}), pos: d.pos || {}, level: d.level || 1 });
+      return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}), l2: Object.assign(base.l2, d.l2 || {}), l3: Object.assign(base.l3, d.l3 || {}), l4: Object.assign(base.l4, d.l4 || {}), pos: d.pos || {}, level: d.level || 1 });
     }
   } catch (e) { }
   return null;
@@ -588,7 +590,8 @@ function l1Terrain(tx, ty, r) {
   return t;
 }
 function loadLevel(n) {
-  LV = LEVELS[n]; W = LV.W; H = LV.H; map = new Uint8Array(W * H);
+  LV = LEVELS[n]; if (LV.prepare) LV.prepare();   // e.g. Level 4 swaps in the current era's map
+  W = LV.W; H = LV.H; map = new Uint8Array(W * H);
   BUILDINGS = LV.buildings; PATHS = LV.paths; CR_SPOTS = LV.crSpots; START = LV.start; SIGNS = LV.signs;
   zoneOf = LV.zoneOf; baseTile = LV.baseTile;
   BMAP = {};
@@ -1162,14 +1165,14 @@ function update(dt) {
 }
 // extra scenes (minigames, cutscenes) registered by levels: { update(dt), draw(), ui(), music }
 const SCENES = {};
-const LEVEL_LABELS = { 1: '🏔 Level 1: Luzern', 2: '✈️ Level 2: California', 3: '✚ Level 3: Kanton Zug' };
+const LEVEL_LABELS = { 1: '🏔 Level 1: Luzern', 2: '✈️ Level 2: California', 3: '✚ Level 3: Kanton Zug', 4: '⏳ Level 4: Through the Ages' };
 function titleOptions() {
   const sv = loadGame(), o = [];
   if (sv) o.push({ label: 'Continue', act: continueGame });
   o.push({ label: 'New game', act: newGame });
   if (sv) {   // jump to any other unlocked level
-    const unlocked = { 1: true, 2: !!(sv.flags.finished && LEVELS[2]), 3: !!(sv.l2 && sv.l2.flags && sv.l2.flags.finished && LEVELS[3]) };
-    for (const n of [1, 2, 3]) if (unlocked[n] && n !== sv.level && (n !== 1 || unlocked[2])) o.push({ label: LEVEL_LABELS[n], act: () => { ST = loadGame(); enterLevel(n); } });
+    const unlocked = { 1: true, 2: !!(sv.flags.finished && LEVELS[2]), 3: !!(sv.l2 && sv.l2.flags && sv.l2.flags.finished && LEVELS[3]), 4: !!(sv.l3 && sv.l3.flags && sv.l3.flags.finished && LEVELS[4]) };
+    for (const n of [1, 2, 3, 4]) if (unlocked[n] && n !== sv.level && (n !== 1 || unlocked[2])) o.push({ label: LEVEL_LABELS[n], act: () => { ST = loadGame(); enterLevel(n); } });
   }
   o.push({ lang: true });
   return o;
@@ -2262,11 +2265,13 @@ function boot() {
   title.hasSave = !!loadGame();
   if (/debug2/.test(location.search) && LEVELS[2]) { newGame(); enterLevel(2); if (LEVELS[2].debug) LEVELS[2].debug(); }
   if (/debug3/.test(location.search) && LEVELS[3]) { newGame(); enterLevel(3); if (LEVELS[3].debug) LEVELS[3].debug(); }
+  if (/debug4/.test(location.search) && LEVELS[4]) { newGame(); if (LEVELS[4].debug) LEVELS[4].debug(); enterLevel(4); }
   requestAnimationFrame(loop);
 }
 addEventListener('DOMContentLoaded', boot);
 </script>
 <script src="california.js"></script>
 <script src="zug.js"></script>
+<script src="history.js"></script>
 </body>
 </html>

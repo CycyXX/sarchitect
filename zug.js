@@ -674,7 +674,7 @@ SCENES.ending3 = {
   update(dt) {
     EN3.t += dt; for (const c of EN3.conf) { c.y += c.vy * dt; if (c.y > VH) { c.y = -5; c.x = rnd() * VW; } }
     const msg = finalMsg3(); if (EN3.t > 1.5) EN3.shown = Math.min(msg.length, EN3.shown + dt * 30);
-    if (inp.a) { if (EN3.phase === 0 && EN3.shown < msg.length) EN3.shown = msg.length; else if (EN3.phase < 2) { EN3.phase++; sfx.ding(); } else backToWorld(() => { const b = BMAP.samariter; P.x = b.doorX; P.y = b.doorY + 10; }); }
+    if (inp.a) { if (EN3.phase === 0 && EN3.shown < msg.length) EN3.shown = msg.length; else if (EN3.phase < 2) { EN3.phase++; sfx.ding(); } else backToWorld(() => { const b = BMAP.samariter; P.x = b.doorX; P.y = b.doorY + 10; if (LEVELS[4] && !ST.l4.flags.arrived) setTimeout(() => crText('Did you see that? Something is glowing deep inside the Höllgrotten... ⏳'), 2500); }); }
   },
   draw() {
     R(0, 0, VW, VH, '#8a5a32'); for (let y = 0; y < VH; y += 12) R(0, y, VW, 1, '#7a4e2a');
@@ -743,6 +743,7 @@ function l3Hint() {
   const next = CASE_ORDER.find(k => L3().cases[k] === undefined);
   if (next) return CASE_HINTS[next];
   if (!L3().flags.exam) return 'All cases done! Final exam at the Samariterverein Baar. 📝';
+  if (LEVELS[4]) return 'Something is glowing deep inside the Höllgrotten. Shall we take a look? ⏳';
   return 'Official Nothelferin! I feel very safe. And a bit hungry. Kirschtorte? 🍒';
 }
 function l3Talk(spot) {
@@ -775,6 +776,7 @@ function l3BuildingAct(b) {
       break;
     case 'hoell':
       if (course && L3().cases.cave === undefined) startCase('cave');
+      else if (L3().flags.finished && LEVELS[4]) l4PortalFromBaar();   // the time portal deep in the caves (history.js)
       else say([['Sarah', 'The Höllgrotten: stalactites like a Zumthor bath. Mind the wet stairs!']]);
       break;
     case 'funi': case 'funitop': {
