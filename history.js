@@ -20,7 +20,7 @@ const FINAL_MESSAGE_4 = {
     "Zähtuusig Jahr, wo Mänsche baued, schriibed, träumed. Und vo de ganze Gschicht isch mis Lieblingskapitel immer no das, won ich mit dir schriibe.\n" +
     "Ich ha di mega gern. — C-Real ♥",
 };
-const L4 = () => ST.l4;
+const L4 = () => ST.level === 5 ? ST.l5 : ST.l4;   // Level 5 (helvetia.js) reuses the Level 4 minigames and their progress helpers
 const st4 = (k, n = 1) => { L4().stats[k] = (L4().stats[k] || 0) + n; };
 const q4 = id => !!L4().quests[id];
 const at4 = (tx, ty) => ({ x: tx * 16 + 8, y: ty * 16 + 10 });
@@ -120,7 +120,8 @@ function yearLabel4(y, a) { return y < 0 ? t(a ? '~{0} BC' : '{0} BC', -y) : t(a
 function card4(id, quiet) {
   if (L4().cards[id]) return;
   L4().cards[id] = 1; sfx.ding(); saveGame();
-  if (!quiet) toast(t('📜 New chronicle card: {0}', t(CARDS4[id].title)));
+  const C = CARDS4[id] || (typeof CARDS5 !== 'undefined' && CARDS5[id]);
+  if (!quiet && C) toast(t('📜 New chronicle card: {0}', t(C.title)));
 }
 
 // ---------------------------------------------------------------- the five era maps
@@ -769,15 +770,17 @@ function goHome4() {
   setTimeout(() => say([['Sarah', 'Home! AD 2026. Running water, cherries, and nobody wants to wrestle me.'], ['C-Real', 'The portal stone in the Höllgrotten will take us back whenever you like. ⏳']]), 900);
 }
 let TW4 = null;
-function startTimewarp4(to, fromYear, home) { saveL4Pos(); saveGame(); transition(() => { scene = 'timewarp'; musI = 0; TW4 = { t: 0, to, from: fromYear, target: home ? 2026 : ERAS4[to].from, home: !!home }; }); }
+// opts (Level 5): { target, name, years, go } replace the Level 4 era lookup
+function startTimewarp4(to, fromYear, home, opts) { saveL4Pos(); saveGame(); transition(() => { scene = 'timewarp'; musI = 0; TW4 = Object.assign({ t: 0, to, from: fromYear, target: home ? 2026 : ERAS4[to].from, home: !!home }, opts || {}); }); }
 function l4PortalFromBaar() {
+  if (L4().flags.finished && typeof l5PortalFromBaar === 'function' && LEVELS[5]) { l5PortalFromBaar(); return; }
   if (!L4().flags.arrived) say([['C-Real', 'Whoa. A ring of standing stones, deep inside the Höllgrotten... and it\'s humming.'], ['Sarah', 'They\'re carved. Foxes, boars, vultures... This looks like Göbekli Tepe. That\'s 11,000 years old!'],
     ['C-Real', 'Only one way to find out where it leads. Hold my hand? ⏳'], ['Sarah', 'Always.']], () => { L4().flags.arrived = 1; startTimewarp4(0, 2026); });
   else say([['C-Real', t('The stones are humming again. Back to {0}?', t(ERAS4[L4().era].name))]], () => startTimewarp4(L4().era, 2026));
 }
 SCENES.timewarp = {
   music: 'warp',
-  update(dt) { const W4 = TW4; W4.t += dt; if (W4.t > 4.4 || (W4.t > 1.4 && inp.a)) { W4.t = -99; transition(() => W4.home ? goHome4() : enterEra4(W4.to)); } },
+  update(dt) { const W4 = TW4; W4.t += dt; if (W4.t > 4.4 || (W4.t > 1.4 && inp.a)) { W4.t = -99; transition(() => W4.go ? W4.go() : W4.home ? goHome4() : enterEra4(W4.to)); } },
   draw() {
     const tm = Math.max(0, TW4.t); g.fillStyle = '#0a0618'; g.fillRect(0, 0, VW, VH);
     for (let i = 0; i < 16; i++) {
@@ -791,7 +794,7 @@ SCENES.timewarp = {
   ui() {
     const k = Math.min(1, Math.max(0, TW4.t - .4) / 3), e = 1 - Math.pow(1 - k, 3), y = TW4.from + (TW4.target - TW4.from) * e;
     txt(fmtYear4(y), VW / 2, 18, 24, '#ffffff', 'center', true);
-    if (TW4.t > 3.2) { const n = TW4.home ? 'Baar' : t(ERAS4[TW4.to].name); txt(n, VW / 2, 176, 14, '#ffe08a', 'center', true); if (!TW4.home) txt(t(ERAS4[TW4.to].years), VW / 2, 196, 8, '#d8c8ff', 'center', true); }
+    if (TW4.t > 3.2) { const n = TW4.home ? 'Baar' : t(TW4.name || ERAS4[TW4.to].name); txt(n, VW / 2, 176, 14, '#ffe08a', 'center', true); if (!TW4.home) txt(t(TW4.years || ERAS4[TW4.to].years), VW / 2, 196, 8, '#d8c8ff', 'center', true); }
   },
 };
 // a small choice menu over the world (used by the portal stone)
@@ -820,7 +823,7 @@ const missing4 = e => MAINS4[e].filter(k => k.startsWith('sk_') ? !L4().sk[k.sli
 function portalAct4() {
   const e = L4().era, opts = [];
   if (e < 4 && eraDone4(e)) opts.push({ label: t('Onward to: {0} ({1})', t(ERAS4[e + 1].name), t(ERAS4[e + 1].years)), act: () => startTimewarp4(e + 1, ERAS4[e].from) });
-  if (e === 4 && L4().flags.fallen) opts.push({ label: t('Onward to: the Middle Ages (AD 529)'), act: startScriptorium4 });
+  if (e === 4 && L4().flags.fallen) opts.push({ label: t('Onward to: the Middle Ages (AD 529)'), act: () => L4().flags.exam && typeof startTimewarp5 === 'function' && LEVELS[5] ? startTimewarp5(0, 529) : startScriptorium4() });
   for (let k = 0; k <= L4().unlocked; k++) if (k !== e && !(k === e + 1 && eraDone4(e))) opts.push({ label: t('Travel to: {0} ({1})', t(ERAS4[k].name), t(ERAS4[k].years)), act: () => startTimewarp4(k, ERAS4[e].from) });
   opts.push({ label: t('Home to Baar (AD 2026)'), act: () => startTimewarp4(0, ERAS4[e].from, true) }, { label: t('Stay here'), act: () => { } });
   if (!portalActive4()) {
@@ -859,6 +862,7 @@ SCENES.timing4 = {
   },
   draw() {
     const M = TM4, k = M.p / M.d.goal;
+    if (M.d.draw) { M.d.draw(M, k); return; }   // Level 5 scenes bring their own artwork
     if (M.id === 'pillar') {
       sky4('#f2a86a', '#f8e0b0', 140); R(0, 120, VW, 96, '#b8a068'); ell(VW / 2, 150, 200, 30, '#a89060');
       for (let i = 0; i < 7; i++) drawPillarT(40 + i * 50 + (i > 2 ? 40 : 0), 130, 22);
@@ -891,8 +895,8 @@ SCENES.timing4 = {
     let dots = ''; for (let i = 0; i < D.goal; i++) dots += i < M.p ? '●' : '○'; txt(dots, VW / 2, 40, 8, '#ffd34d', 'center', true);
     if (M.id !== 'sprint') txt('✗'.repeat(M.miss) + '·'.repeat(Math.max(0, 3 - M.miss)), VW - 30, 24, 10, '#ff8a8a', 'center', true);
     if (M.mode === 'play' && M.t < 5) tipUI4(D.tip, 204);
-    if (M.mode === 'win') winPanel4(M.id === 'pillar' ? 'The pillar stands! 🗿' : M.id === 'wrestle' ? 'A draw! New best friends. 🤝' : 'FIRST! 🏅🫒');
-    if (M.mode === 'lose') losePanel4(M.id === 'sprint' ? 'Beaten by a beard. Again!' : M.id === 'wrestle' ? 'Pinned! Try again.' : 'The pillar slipped back down!');
+    if (M.mode === 'win') winPanel4(D.win || (M.id === 'pillar' ? 'The pillar stands! 🗿' : M.id === 'wrestle' ? 'A draw! New best friends. 🤝' : 'FIRST! 🏅🫒'), D.winSub);
+    if (M.mode === 'lose') losePanel4(D.lose || (M.id === 'sprint' ? 'Beaten by a beard. Again!' : M.id === 'wrestle' ? 'Pinned! Try again.' : 'The pillar slipped back down!'));
     screenParts();
   },
 };
@@ -911,7 +915,8 @@ function startRun4(id, onWin) {
     const D = RUNS4[id], r = mulberry32(id.length * 97 + 7), obs = [];
     for (let d = 380; d < D.len - 180; d += 85 + r() * 70) {
       const k = r(), off = (r() * 2 - 1) * 52;
-      if (id === 'marathon') obs.push({ d, off, kind: k < .55 ? 'low' : 'goat', ph: r() * 6 });
+      if (D.gen) D.gen(obs, d, k, off, r);   // Level 5 runs define their own obstacles
+      else if (id === 'marathon') obs.push({ d, off, kind: k < .55 ? 'low' : 'goat', ph: r() * 6 });
       else if (id === 'hannibal') obs.push({ d, off, kind: k < .4 ? 'low' : k < .75 ? 'crevasse' : 'snowball', ph: r() * 6 });
       else obs.push({ d, off, kind: k < .35 ? 'low' : k < .8 ? 'pumice' : 'cart', ph: r() * 6 });
       if (r() < .5) obs.push({ d: d + 40, off: (r() * 2 - 1) * 45, kind: 'item' });
@@ -919,7 +924,7 @@ function startRun4(id, onWin) {
     RN4 = { id, D, onWin, d: 0, v: 90, x: runC4(0), hp: 3, jump: 0, tumble: 0, inv: 0, obs, score: 0, mode: 'play', t: 0 };
   });
 }
-const obsX4 = (o, d) => runC4(o.d) + o.off + (o.kind === 'goat' || o.kind === 'snowball' ? Math.sin(time * 1.6 + o.ph) * 30 : 0);
+const obsX4 = (o, d) => runC4(o.d) + o.off + (o.kind === 'goat' || o.kind === 'snowball' || (RN4 && RN4.D.sway && RN4.D.sway.includes(o.kind)) ? Math.sin(time * 1.6 + o.ph) * 30 : 0);
 SCENES.run4 = {
   get music() { return RN4 ? RN4.D.music : 'roma'; },
   update(dt) {
@@ -936,12 +941,13 @@ SCENES.run4 = {
     for (const o of S.obs) {
       if (o.hit || Math.abs(o.d - S.d) > 9) continue;
       const ox = obsX4(o, S.d), near = Math.abs(ox - S.x) < (o.kind === 'crevasse' ? 16 : o.kind === 'cart' ? 14 : 10);
+      if (S.D.hitKinds && S.D.hitKinds[o.kind] === 'air' && S.jump > 0) continue;   // e.g. a jumpable barrier
       if (!near) continue;
       if (o.kind === 'item') { o.hit = true; S.score++; sfx.pick(); popText(S.x, 70, '+1 ' + S.D.item, '#ffe08a', 'screen'); continue; }
       if (o.kind === 'low' && S.jump > 0) continue;
       if (S.inv > 0) continue;
       o.hit = true; S.hp--; S.tumble = .7; S.inv = 1.2; S.v *= .45; sfx.bonk(); shake = .3;
-      popText(VW / 2, 90, t({ low: 'Ouch! Jump next time!', goat: 'A goat! Baa! 🐐', crevasse: 'Crevasse! Careful! ❄️', snowball: 'Snowball! ☃️', pumice: 'Pumice! Ow! 🌋', cart: 'Cart crash! 🛒' }[o.kind]), '#ff9a8a', 'screen');
+      popText(VW / 2, 90, t(({ low: 'Ouch! Jump next time!', goat: 'A goat! Baa! 🐐', crevasse: 'Crevasse! Careful! ❄️', snowball: 'Snowball! ☃️', pumice: 'Pumice! Ow! 🌋', cart: 'Cart crash! 🛒' })[o.kind] || (S.D.hitMsg && S.D.hitMsg[o.kind]) || 'Ouch!'), '#ff9a8a', 'screen');
       if (S.hp <= 0) { S.mode = 'lose'; S.t = 0; return; }
     }
     if (S.d >= S.D.len) { S.mode = 'win'; S.t = 0; sfx.ding(); st4('runs'); }
@@ -955,7 +961,8 @@ SCENES.run4 = {
       R(c - 82, sy, 4, 2, D.edge); R(c + 78, sy, 4, 2, D.edge);
       if (sy % 24 === 0 && hash(Math.floor(d / 24), 5) % 3 === 0) {
         for (const sx of [c - 104, c + 92]) {
-          if (D.deco === 'olive') g.drawImage(OVER[T.OLIVE][hash(Math.floor(d), 1) & 3], sx, sy - 8);
+          if (D.drawDeco) D.drawDeco(sx, sy, d);
+          else if (D.deco === 'olive') g.drawImage(OVER[T.OLIVE][hash(Math.floor(d), 1) & 3], sx, sy - 8);
           else if (D.deco === 'pine') g.drawImage(OVER.PINE_SNOW[hash(Math.floor(d), 1) & 3], sx, sy - 8);
           else { R(sx, sy - 10, 14, 12, '#d8c8a8'); R(sx - 1, sy - 12, 16, 3, '#9a4a3a'); }
         }
@@ -966,6 +973,7 @@ SCENES.run4 = {
       const x = obsX4(o, S.d);
       if (o.kind === 'item') txt(D.item, x, sy - 10, 10, '#fff', 'center', false, false);
       else if (o.kind === 'low') { if (S.id === 'pompeii') { R(x - 12, sy - 4, 24, 6, '#d8d0c0'); R(x - 12, sy - 4, 24, 1, '#f0e8dc'); } else { circ(x, sy, 7, '#7a7470'); circ(x - 2, sy - 2, 3, '#9a948e'); } }
+      else if (D.drawObs && D.drawObs(o, x, sy, S)) { /* drawn by the level */ }
       else if (o.kind === 'goat') drawGoat({ x, y: sy + 4, face: Math.cos(time * 1.6 + o.ph) > 0 ? 1 : -1, anim: time });
       else if (o.kind === 'crevasse') { ell(x, sy, 16, 4, '#4a6a9a'); ell(x, sy - 1, 13, 2, '#2a3a5a'); }
       else if (o.kind === 'snowball') { circ(x, sy - 6, 8, '#ffffff'); circ(x - 2, sy - 8, 3, '#e8eef4'); }
@@ -975,9 +983,11 @@ SCENES.run4 = {
     const jh = S.jump > 0 ? Math.sin(Math.PI * (1 - S.jump / .55)) * 12 : 0;
     g.save(); g.translate(Math.round(S.x), py); if (S.tumble > 0) g.rotate(Math.sin(S.t * 30) * .3);
     if (S.inv > 0 && Math.floor(S.inv * 12) % 2) g.globalAlpha = .5;
-    if (S.id === 'hannibal') { g.translate(0, -jh); drawElephantBack4(0, 0, S.t); drawSarah(0, -14, 'up', S.t * 2, 0, false, true); }
+    if (D.player) D.player(S, jh);
+    else if (S.id === 'hannibal') { g.translate(0, -jh); drawElephantBack4(0, 0, S.t); drawSarah(0, -14, 'up', S.t * 2, 0, false, true); }
     else drawSarah(0, 0, 'up', S.t * 2, jh, false, true);
     g.restore();
+    if (D.after) D.after(S);
     if (S.id === 'pompeii') { for (let i = 0; i < 40; i++) R((hash(i, 2) % VW + time * 20 * (1 + i % 3)) % VW, (hash(i, 5) % VH + time * 60 * (1 + i % 2)) % VH, 1, 2, 'rgba(60,55,50,.6)'); g.fillStyle = 'rgba(200,60,20,.12)'; g.fillRect(0, 0, VW, 50); }
     if (S.id === 'hannibal') for (let i = 0; i < 30; i++) R((hash(i, 2) % VW + Math.sin(time + i) * 10) % VW, (hash(i, 5) % VH + time * 40 * (1 + i % 2)) % VH, 1, 1, '#ffffff');
   },
@@ -986,8 +996,8 @@ SCENES.run4 = {
     rrect(90, 22, 204, 5, 2, 'rgba(0,0,0,.35)'); rrect(90, 22, 204 * Math.min(1, S.d / S.D.len), 5, 2, '#ff6fa8');
     let s = ''; for (let i = 0; i < 3; i++) s += i < S.hp ? '❤' : '·'; txt(s, 10, 8, 9, '#ff9ab8', 'left', true); txt(`${S.D.item} ${S.score}`, VW - 10, 8, 9, '#fff', 'right', true);
     if (S.mode === 'play' && S.t < 5) tipUI4(S.D.tip, 204);
-    if (S.mode === 'win') winPanel4(S.id === 'marathon' ? 'Athens! "We have won!" 🏛️' : S.id === 'hannibal' ? 'Italy! Surus made it! 🐘' : 'The harbour! Saved! ⛵', t('{0} collected: {1}', S.D.item, S.score));
-    if (S.mode === 'lose') losePanel4(S.id === 'marathon' ? 'Out of breath!' : S.id === 'hannibal' ? 'Surus refuses to go on!' : 'Too much ash! Run!');
+    if (S.mode === 'win') winPanel4(S.D.win || (S.id === 'marathon' ? 'Athens! "We have won!" 🏛️' : S.id === 'hannibal' ? 'Italy! Surus made it! 🐘' : 'The harbour! Saved! ⛵'), t('{0} collected: {1}', S.D.item, S.score));
+    if (S.mode === 'lose') losePanel4(S.D.lose || (S.id === 'marathon' ? 'Out of breath!' : S.id === 'hannibal' ? 'Surus refuses to go on!' : 'Too much ash! Run!'));
     screenParts();
   },
 };
@@ -1267,9 +1277,10 @@ SCENES.boss4 = {
 
 // ---------------------------------------------------------------- GAZE: sketching Göbekli Tepe while a hyena keeps checking on you
 let GZ4 = null;
-function startGaze4(onWin) { transition(() => { scene = 'gaze4'; musI = 0; GZ4 = { onWin, p: 0, t: 0, st: 'away', st_t: 2.5, hx: 60, hd: 1, caught: 0, mode: 'play', scribT: 0 }; }); }
+// cfg (Level 5): { title, tip, caught, win, winSub, music, draw(Z) } replaces the Göbekli Tepe artwork and texts
+function startGaze4(onWin, cfg) { transition(() => { scene = 'gaze4'; musI = 0; GZ4 = { onWin, cfg: cfg || null, p: 0, t: 0, st: 'away', st_t: 2.5, hx: 60, hd: 1, caught: 0, mode: 'play', scribT: 0 }; }); }
 SCENES.gaze4 = {
-  music: 'stone',
+  get music() { return GZ4 && GZ4.cfg && GZ4.cfg.music || 'stone'; },
   update(dt) {
     const Z = GZ4; Z.t += dt;
     if (Z.mode === 'win') { if (Z.t > .6 && inp.a) backToWorld(Z.onWin); return; }
@@ -1277,11 +1288,12 @@ SCENES.gaze4 = {
     Z.st_t -= dt;
     if (Z.st === 'away') { Z.hx += Z.hd * 30 * dt; if (Z.hx < 30 || Z.hx > 150) Z.hd *= -1; if (Z.st_t <= 0) { Z.st = 'turn'; Z.st_t = .6; } }
     else if (Z.st === 'turn') { if (Z.st_t <= 0) { Z.st = 'look'; Z.st_t = 1.2 + rnd() * 1.2; } }
-    else if (Z.st === 'look') { if (inp.aHeld) { Z.p = Math.max(0, Z.p - .3); Z.caught++; Z.st = 'away'; Z.st_t = 2 + rnd() * 2; sfx.eww(); popText(Z.hx, 120, t('Hee hee hee! 🐾'), '#ffcf6b', 'screen'); shake = .2; } else if (Z.st_t <= 0) { Z.st = 'away'; Z.st_t = 1.5 + rnd() * 2.5; } }
+    else if (Z.st === 'look') { if (inp.aHeld) { Z.p = Math.max(0, Z.p - .3); Z.caught++; Z.st = 'away'; Z.st_t = 2 + rnd() * 2; sfx.eww(); popText(Z.hx, 120, t(Z.cfg && Z.cfg.caught || 'Hee hee hee! 🐾'), '#ffcf6b', 'screen'); shake = .2; } else if (Z.st_t <= 0) { Z.st = 'away'; Z.st_t = 1.5 + rnd() * 2.5; } }
     if (inp.aHeld && Z.st !== 'look') { Z.p += dt / 6; Z.scribT -= dt; if (Z.scribT <= 0) { sfx.scribble(); Z.scribT = .12; } if (Z.p >= 1) { Z.p = 1; Z.mode = 'win'; Z.t = 0; sfx.ding(); } }
   },
   draw() {
-    const Z = GZ4; sky4('#e89a5a', '#f8dca8', 130); R(0, 120, VW, 96, '#b8a068');
+    const Z = GZ4; if (Z.cfg && Z.cfg.draw) { Z.cfg.draw(Z); return; }
+    sky4('#e89a5a', '#f8dca8', 130); R(0, 120, VW, 96, '#b8a068');
     g.save(); g.translate(0, 40);   // a T-pillar with arms, a belt, a fox and a boar
     R(196, 30, 30, 100, '#d8d0bc'); R(176, 14, 70, 18, '#e4dccb'); R(200, 70, 22, 3, '#9a9280');
     g.strokeStyle = '#8a8270'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(203, 40); g.lineTo(203, 66); g.moveTo(219, 40); g.lineTo(219, 66); g.moveTo(203, 66); g.lineTo(212, 68); g.moveTo(219, 66); g.lineTo(212, 68); g.stroke();
@@ -1297,10 +1309,10 @@ SCENES.gaze4 = {
     for (let i = 0; i < n; i++) { g.moveTo(L[i][0], L[i][1]); g.lineTo(L[i][2], L[i][3]); } g.stroke();
   },
   ui() {
-    const Z = GZ4; txt(t('SKETCHING GÖBEKLI TEPE'), VW / 2, 6, 10, '#3a2a1a', 'center', true, false);
+    const Z = GZ4, C = Z.cfg || {}; txt(t(C.title || 'SKETCHING GÖBEKLI TEPE'), VW / 2, 6, 10, C.col || '#3a2a1a', 'center', true, false);
     rrect(110, 22, 164, 6, 3, 'rgba(0,0,0,.35)'); rrect(110, 22, 164 * Z.p, 6, 3, '#ffd34d');
-    if (Z.mode === 'play' && Z.t < 6) txt(t('Hold [A] to sketch. When the hyena turns around, let go and freeze!'), VW / 2, 34, 7.5, '#3a2a1a', 'center', true, false);
-    if (Z.mode === 'win') winPanel4('Sketched! ✏️', 'T-shaped pillars, 11,600 years old, with arms, hands and belts carved on them: maybe ancestors, maybe spirits.');
+    if (Z.mode === 'play' && Z.t < 6) txt(t(C.tip || 'Hold [A] to sketch. When the hyena turns around, let go and freeze!'), VW / 2, 34, 7.5, C.col || '#3a2a1a', 'center', true, false);
+    if (Z.mode === 'win') winPanel4(C.win || 'Sketched! ✏️', C.winSub || 'T-shaped pillars, 11,600 years old, with arms, hands and belts carved on them: maybe ancestors, maybe spirits.');
     screenParts();
   },
 };
@@ -1675,7 +1687,8 @@ SCENES.ending4 = {
   update(dt) {
     EN4.t += dt; for (const c of EN4.conf) { c.y += c.vy * dt; if (c.y > VH) { c.y = -5; c.x = rnd() * VW; } }
     const msg = finalMsg4(); if (EN4.t > 1.5) EN4.shown = Math.min(msg.length, EN4.shown + dt * 30);
-    if (inp.a) { if (EN4.phase === 1 && EN4.shown < msg.length) EN4.shown = msg.length; else if (EN4.phase < 2) { EN4.phase++; sfx.ding(); } else transition(goHome4); }
+    if (inp.a) { if (EN4.phase === 1 && EN4.shown < msg.length) EN4.shown = msg.length; else if (EN4.phase < 2) { EN4.phase++; sfx.ding(); } else transition(typeof startTimewarp5 === 'function' && LEVELS[5] ? () => startTimewarp5(0, 529) : goHome4); }
+    if (inp.b && EN4.phase === 2 && typeof startTimewarp5 === 'function' && LEVELS[5]) transition(goHome4);
   },
   draw() {
     R(0, 0, VW, VH, '#2a1e3a'); for (let i = 0; i < 60; i++) R(hash(i, 1) % VW, hash(i, 2) % VH, 1, 1, i % 3 ? '#8a7aaa' : '#ffffff');
@@ -1702,7 +1715,7 @@ SCENES.ending4 = {
       txt('SARCHITECT 4: THROUGH THE AGES', VW / 2, 32, 11, '#fff', 'center', true, false);
       [t('Eras visited: {0}/5', L4().unlocked + 1), t('Chronicle cards: {0}/{1}', cardCount4(), CARD_IDS4.length), t('Monuments sketched: {0}/5', SKETCHES4.filter(s => L4().sk[s[0]]).length), t('Runs survived: {0}', S.runs || 0), t('Exam: {0}/16', S.exam || 0), t('Lion poop stepped in: {0}', ST.stats.poop || 0)].forEach((r, i) => txt(r, VW / 2, 52 + i * 11, 8, '#eee', 'center', false, false));
       wrap(t('History is full of stories and legends. The dates here follow today\'s scholarly consensus; many are approximate.'), VW - 150, 7).forEach((ln, i) => txt(ln, VW / 2, 124 + i * 9, 7, '#c8b0ff', 'center', false, false));
-      txt(t('[A]: home to Baar'), VW / 2, 168, 7.5, '#ffd34d', 'center', true, false);
+      txt(t(typeof startTimewarp5 === 'function' && LEVELS[5] ? '[A]: onward into the Middle Ages   ·   B: home to Baar' : '[A]: home to Baar'), VW / 2, 168, 7.5, '#ffd34d', 'center', true, false);
     }
   },
 };
