@@ -268,7 +268,7 @@ function e3Terrain(tx, ty, r) {
 const ERA3 = {
   key: 'greece', name: 'Ancient Greece', years: '~776–146 BC', pose: 'homer', music: 'hellas', W: 76, H: 46, seed: 776, from: -776,
   zoneOf: e3Zone, baseTile: e3Base, terrain: e3Terrain,
-  paths: [[[13, 33], [13, 30], [11, 30]], [[13, 33], [24, 30], [36, 30], [42, 30], [42, 29]], [[36, 30], [40, 34], [40, 35]], [[42, 30], [50, 22], [54, 16]],
+  paths: [[[13, 33], [13, 30], [11, 30]], [[13, 30], [24, 30], [36, 30], [42, 30], [42, 29]], [[36, 30], [40, 34], [40, 35]], [[42, 30], [50, 22], [54, 16]],
     [[20, 28], [20, 14], [16, 9], [15, 8]], [[24, 30], [36, 24], [40, 12], [48, 7], [49, 6]], [[48, 7], [56, 8]], trail4([[42, 30], [48, 33]])],
   buildings: [
     { id: 'stadion', x: 6, y: 26, w: 9, h: 4, kind: 'stadium', label: 'Stadion' },
@@ -972,8 +972,8 @@ SCENES.run4 = {
       if (o.hit) continue; const sy = py + (S.d - o.d); if (sy < -20 || sy > VH + 20) continue;
       const x = obsX4(o, S.d);
       if (o.kind === 'item') txt(D.item, x, sy - 10, 10, '#fff', 'center', false, false);
+      else if (D.drawObs && D.drawObs(o, x, sy, S)) { /* level-specific obstacle (checked before the generic 'low' rock) */ }
       else if (o.kind === 'low') { if (S.id === 'pompeii') { R(x - 12, sy - 4, 24, 6, '#d8d0c0'); R(x - 12, sy - 4, 24, 1, '#f0e8dc'); } else { circ(x, sy, 7, '#7a7470'); circ(x - 2, sy - 2, 3, '#9a948e'); } }
-      else if (D.drawObs && D.drawObs(o, x, sy, S)) { /* drawn by the level */ }
       else if (o.kind === 'goat') drawGoat({ x, y: sy + 4, face: Math.cos(time * 1.6 + o.ph) > 0 ? 1 : -1, anim: time });
       else if (o.kind === 'crevasse') { ell(x, sy, 16, 4, '#4a6a9a'); ell(x, sy - 1, 13, 2, '#2a3a5a'); }
       else if (o.kind === 'snowball') { circ(x, sy - 6, 8, '#ffffff'); circ(x - 2, sy - 8, 3, '#e8eef4'); }

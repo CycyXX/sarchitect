@@ -673,8 +673,8 @@ SCENES.ending3 = {
   music: 'ending',
   update(dt) {
     EN3.t += dt; for (const c of EN3.conf) { c.y += c.vy * dt; if (c.y > VH) { c.y = -5; c.x = rnd() * VW; } }
-    const msg = finalMsg3(); if (EN3.t > 1.5) EN3.shown = Math.min(msg.length, EN3.shown + dt * 30);
-    if (inp.a) { if (EN3.phase === 0 && EN3.shown < msg.length) EN3.shown = msg.length; else if (EN3.phase < 2) { EN3.phase++; sfx.ding(); } else backToWorld(() => { const b = BMAP.samariter; P.x = b.doorX; P.y = b.doorY + 10; if (LEVELS[4] && !ST.l4.flags.arrived) setTimeout(() => crText('Did you see that? Something is glowing deep inside the Höllgrotten... ⏳'), 2500); }); }
+    const msg = finalMsg3(); if (EN3.phase === 1) EN3.shown = Math.min(msg.length, EN3.shown + dt * 30);
+    if (inp.a) { if (EN3.phase === 1 && EN3.shown < msg.length) EN3.shown = msg.length; else if (EN3.phase < 2) { EN3.phase++; sfx.ding(); } else backToWorld(() => { const b = BMAP.samariter; P.x = b.doorX; P.y = b.doorY + 10; if (LEVELS[4] && !ST.l4.flags.arrived) setTimeout(() => crText('Did you see that? Something is glowing deep inside the Höllgrotten... ⏳'), 2500); }); }
   },
   draw() {
     R(0, 0, VW, VH, '#8a5a32'); for (let y = 0; y < VH; y += 12) R(0, y, VW, 1, '#7a4e2a');
@@ -764,12 +764,23 @@ function l3BuildingAct(b) {
   P.bike = false;
   const course = L3().cases.course !== undefined;
   switch (b.id) {
-    case 'samariter':
+    case 'samariter': {
+      // cases with fewer than 3 stars can be practised again here (finishCase keeps the best result)
+      const weak = course ? CASE_ORDER.filter(k => L3().cases[k] !== undefined && L3().cases[k] < 3) : [];
+      const examReady = casesDone() >= CASE_ORDER.length && !L3().flags.exam;
+      if (weak.length && typeof menu4 === 'function') {
+        const opts = weak.map(k => ({ label: t(CASES[k].title) + '   ' + '⭐'.repeat(L3().cases[k]) + '☆'.repeat(3 - L3().cases[k]), act: () => startCase(k) }));
+        if (examReady) opts.unshift({ label: t('Take the final exam 📝'), act: startExam });
+        opts.push({ label: t('Not now'), act: () => { } });
+        say([['Instructor', examReady ? 'All cases solved! Take the exam, or practise a case again for more stars?' : 'Want to practise a case again? Every star counts.']], () => menu4('SAMARITERVEREIN BAAR', opts));
+        break;
+      }
       if (!course) startCase('course');
       else if (casesDone() >= CASE_ORDER.length && !L3().flags.exam) startExam();
       else if (L3().flags.exam) say([['Instructor', 'Our proudest graduate! Remember to refresh your course every few years.']]);
       else say([['Instructor', t('Solved {0}/8 cases. Come back for the exam when all are done!', casesDone())]]);
       break;
+    }
     case 'cafe':
       if (course && L3().cases.cafe === undefined) startCase('cafe');
       else say([['Sarah', 'One slice of Zuger Kirschtorte, please. Small bites. 🍒', () => { ST.hearts = ST.maxHearts; }]]);
@@ -827,6 +838,9 @@ const LEVEL3 = {
 LEVELS[3] = LEVEL3;
 // ================================================================ translations [English, Deutsch, Schwiizerdütsch]
 addTR([
+  ["Take the final exam 📝", "Zur Abschlussprüfung 📝", "Zur Abschlussprüefig 📝"], ["Not now", "Jetzt nicht", "Jetzt nöd"], ["SAMARITERVEREIN BAAR", "SAMARITERVEREIN BAAR", "SAMARITERVEREIN BAAR"],
+  ["All cases solved! Take the exam, or practise a case again for more stars?", "Alle Fälle gelöst! Zur Prüfung, oder einen Fall nochmals üben für mehr Sterne?", "Alli Fäll glöst! Zur Prüefig, oder en Fall nomol üebe für meh Stern?"],
+  ["Want to practise a case again? Every star counts.", "Möchtest du einen Fall nochmals üben? Jeder Stern zählt.", "Wotsch en Fall nomol üebe? Jede Stern zellt."],
   // world
   ["BAAR. Home of the Höllgrotten caves, the Lorze and the best cherries in the canton.", "BAAR. Heimat der Höllgrotten, der Lorze und der besten Kirschen im Kanton.", "BAAR. Dihei vo de Höllgrotte, de Lorze und de beschte Chriesi im Kanton."],
   ["ZUG. Lake, old town, Zytturm and Zuger Kirschtorte. Population: very relaxed.", "ZUG. See, Altstadt, Zytturm und Zuger Kirschtorte. Bevölkerung: sehr entspannt.", "ZUG. See, Altstadt, Zytturm und Zuger Chriesitorte. Bevölkerig: sehr entspannt."],

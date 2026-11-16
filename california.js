@@ -1192,70 +1192,144 @@ SCENES.climb = {
 
 // ---------------------------------------------------------------- C-Real's looper busking (Union Square)
 let BU = null;
-const BEAT = .6, LOOP_NAMES = ['🥁 Drums', '🎸 Bass', '🎹 Chords', '🎵 Melody'];
-const PROG = [57, 53, 48, 55], MINOR = [true, false, false, false];
-const MELODY = [[69, 72, 74, 76], [72, 69, 67, 69], [67, 64, 67, 72], [74, 72, 71, 67]];
+// Four loop layers on an eighth-note grid (8 steps per bar). Each layer has its own rhythm, and what Sarah
+// actually hits is what gets looped. After the fourth layer comes a free solo over the full loop.
+const LOOP_NAMES = ['🥁 Drums', '🎸 Bass', '🎹 Chords', '🎵 Melody'];
+const LOOP_PAT = [[0, 2, 4, 6], [0, 3, 4, 7], [0, 4], [0, 2, 4, 6]], LOOP_NEED = [3, 3, 2, 3];
+const LOOP_HELP = ['Drums: [A] when a note reaches the ring!', 'Bass: these notes fall between the beats. [A] on the ring!', 'Chords: hold [A] through the long notes!', 'Melody: press the arrow shown on each note!'];
+const ARROW = { up: '▲', down: '▼', left: '◀', right: '▶' };
+const SONGS = [   // chord roots, minor chords, melody per bar, solo scale
+  { beat: .6, prog: [57, 53, 48, 55], minor: [true, false, false, false], mel: [[69, 72, 74, 76], [72, 69, 67, 69], [67, 64, 67, 72], [74, 72, 71, 67]], key: 69, scale: [0, 3, 5, 7, 10, 12, 15] },
+  { beat: .54, prog: [48, 55, 57, 53], minor: [false, false, true, false], mel: [[72, 76, 79, 76], [74, 79, 83, 79], [72, 76, 81, 76], [72, 77, 81, 77]], key: 72, scale: [0, 2, 4, 7, 9, 12, 14] },
+  { beat: .66, prog: [50, 46, 53, 48], minor: [true, false, false, false], mel: [[74, 77, 81, 77], [70, 74, 77, 74], [72, 77, 81, 77], [72, 76, 79, 76]], key: 74, scale: [0, 3, 5, 7, 10, 12, 15] },
+];
+for (const S of SONGS) { const f = S.mel.flat(); S.dirs = f.map((n, i) => { const d = n - f[(i + f.length - 1) % f.length]; return d > 0 ? 'up' : d < -4 ? 'left' : d < 0 ? 'down' : 'right'; }); }
 function startBuskIntro() {
-  const first = !L2().flags.busked;
-  say(first ? [['C-Real', 'Welcome to my looper show! 🎸 I play, you record.'], ['C-Real', 'Press [A] on each of the 4 beats to record a loop layer: drums, bass, chords, melody.'], ['C-Real', 'The tighter we are, the better the crowd tips!']] : [['C-Real', 'Jam session! Hit [A] on the beat. 🎸']],
-    () => { L2().flags.busked = 1; transition(() => { scene = 'busk'; BU = { t: -BEAT * 4, layers: 0, hitsByBar: {}, hitBeats: new Set(), lastBeat: -99, phase: 'rec', perfect: 0, jamBars: 0, tips: 0, coins: [] }; }); });
+  const first = !L2().flags.busked2;
+  say(first ? [['C-Real', 'Welcome to my looper show! 🎸 I play, you record.'], ['C-Real', 'Four layers: drums, bass, chords, melody. Hit each note when it reaches the ring: [A], hold [A] for the chords, arrows for the melody.'], ['C-Real', 'Whatever you play is what loops. Then we solo! The tighter we are, the better the crowd tips.']] : [['C-Real', 'Jam session! Hit [A] on the beat. 🎸']],
+    () => {
+      L2().flags.busked = L2().flags.busked2 = 1;
+      const n = statAdd('jams') || L2().stats.jams, song = SONGS[(n - 1) % SONGS.length];   // a different song every visit
+      transition(() => { scene = 'busk'; BU = { song, t: -song.beat * 4, layers: 0, rec: [], hits: {}, hold: null, lastStep: -99, phase: 'rec', recBar: 0, perfect: 0, solo: new Set(), soloI: 3, jamEnd: 0, tips: 0, stars: 1, best: 0, record: false, coins: [] }; });
+    });
 }
-function playBeat(bi) {
-  const b = ((bi % 4) + 4) % 4, bar = Math.floor(bi / 4), root = PROG[((bar % 4) + 4) % 4], L = BU.layers;
-  if (BU.phase === 'rec' || bi < 0) tone(b === 0 ? 1320 : 990, .04, 'square', .03);
-  if (bi < 0) return;
-  if (L > 0) { if (b % 2 === 0) tone(110, .18, 'sine', .3, -70); else noise(.1, .16, 1800); noise(.03, .05, 7000); }
-  if (L > 1) tone(midi(root - 12), BEAT * .9, 'sine', .16);
-  if (L > 2 && b % 2 === 0) for (const iv of [0, MINOR[((bar % 4) + 4) % 4] ? 3 : 4, 7]) tone(midi(root + iv), BEAT * 1.6, 'triangle', .035);
-  if (L > 3) tone(midi(MELODY[((bar % 4) + 4) % 4][b]), BEAT * .7, 'square', .045);
+const buskBar = () => Math.floor(BU.t / (BU.song.beat / 2) / 8 + 1e-6);
+function buskSound(L, st, bi) {   // one note of layer L at step st (0-7) of a bar on chord bi
+  const S = BU.song, root = S.prog[bi];
+  if (L === 0) { if (st % 4 === 0) tone(110, .18, 'sine', .3, -70); else noise(.1, .16, 1800); noise(.03, .05, 7000); }
+  else if (L === 1) tone(midi(root - 12), S.beat * .85, 'sine', .16);
+  else if (L === 2) for (const iv of [0, S.minor[bi] ? 3 : 4, 7]) tone(midi(root + iv), S.beat * 1.8, 'triangle', .035);
+  else tone(midi(S.mel[bi][st >> 1]), S.beat * .7, 'square', .045);
+}
+function buskStep(si) {   // runs once per eighth note: metronome plus every recorded layer
+  const B = BU, st = ((si % 8) + 8) % 8, bi = ((Math.floor(si / 8) % 4) + 4) % 4;
+  if (st % 2 === 0 && (B.phase === 'rec' || si < 0)) tone(st === 0 ? 1320 : 990, .04, 'square', .03);
+  if (si < 0) return;
+  B.rec.forEach((steps, L) => { if (steps.has(st)) buskSound(L, st, bi); });
+}
+function buskCoins(n, x0, w) { for (let i = 0; i < n; i++) BU.coins.push({ x: x0 + rnd() * w, y: 34, vx: (rnd() - .5) * 60, vy: -50 }); }
+function buskBarEnd(done) {   // bar number "done" just finished
+  const B = BU;
+  if (B.phase === 'rec') {
+    if (done < B.recBar) return;   // that was a listening bar
+    const L = B.layers, got = LOOP_PAT[L].filter(p => B.hits[done * 8 + p]);
+    if (got.length >= LOOP_NEED[L]) {
+      B.rec.push(new Set(got)); B.layers++; sfx.ding(); buskCoins(4, 120, 140);
+      if (B.layers >= 4) { B.phase = 'jam'; B.jamEnd = done + 5; popText(VW / 2, 76, 'Full loop! The crowd goes wild! 🙌', '#7ee081', 'screen'); }
+      else { B.recBar = done + 2; popText(VW / 2, 76, t('{0} recorded!', t(LOOP_NAMES[L])), '#7ee081', 'screen'); }
+    } else { B.recBar = done + 1; popText(VW / 2, 76, 'Again! 🔁', '#ffb070', 'screen'); }
+  } else if (B.phase === 'jam') {
+    buskCoins(5, 60, 260);
+    if (done + 1 >= B.jamEnd) {
+      B.phase = 'done'; B.tips = 10 + B.layers * 5 + Math.min(16, B.perfect) + Math.min(14, B.solo.size);
+      B.stars = B.tips >= 50 ? 3 : B.tips >= 38 ? 2 : 1; B.best = L2().stats.bestTips || 0; B.record = B.best > 0 && B.tips > B.best; sfx.ding();
+    }
+  }
+}
+function buskHit(press) {   // a key press while recording: match it to the nearest note of the current layer
+  const B = BU, S = B.song, sl = S.beat / 2, L = B.layers, near = Math.round(B.t / sl);
+  let abs = null, dn = 9;
+  for (let a = near - 3; a <= near + 3; a++) {
+    if (a < B.recBar * 8 || !LOOP_PAT[L].includes(((a % 8) + 8) % 8) || B.hits[a] || (B.hold && B.hold.abs === a)) continue;
+    const d = B.t - a * sl; if (Math.abs(d) < Math.abs(dn)) { dn = d; abs = a; }
+  }
+  if (abs === null || Math.abs(dn) > .32) { if (buskBar() >= B.recBar) { popText(VW / 2, 150, 'Off beat', '#ff9a9a', 'screen'); sfx.bonk(); } return; }
+  if (Math.abs(dn) > .14) { popText(VW / 2, 150, dn < 0 ? 'Too early' : 'Too late', '#ff9a9a', 'screen'); sfx.bonk(); return; }
+  const st = ((abs % 8) + 8) % 8, bi = ((Math.floor(abs / 8) % 4) + 4) % 4;
+  if (L === 3 && press !== S.dirs[bi * 4 + (st >> 1)]) { popText(VW / 2, 150, 'Wrong arrow!', '#ff9a9a', 'screen'); sfx.bonk(); return; }
+  buskSound(L, st, bi);
+  if (L === 2) B.hold = { abs, until: (abs + 2) * sl - .08 }; else B.hits[abs] = 1;
+  if (Math.abs(dn) < .055) { B.perfect++; popText(VW / 2, 150, 'Perfect! ✨', '#fff59a', 'screen'); } else if (L !== 2) popText(VW / 2, 150, 'Nice! 👍', '#bfe3ff', 'screen');
+}
+function buskSolo(press) {   // free solo: every press sounds, presses on the grid earn a coin
+  const B = BU, S = B.song, sl = S.beat / 2, abs = Math.round(B.t / sl), n = S.scale.length;
+  B.soloI = clamp(B.soloI + ({ up: 1, down: -1, right: 2, left: -2 }[press] || (rnd() < .5 ? -1 : 1)), 0, n - 1);
+  tone(midi(S.key + S.scale[B.soloI]), .24, 'square', .05);
+  if (Math.abs(B.t - abs * sl) < .1 && !B.solo.has(abs)) { B.solo.add(abs); buskCoins(1, 150, 80); }
 }
 SCENES.busk = {
   music: null,
   update(dt) {
-    const B = BU;
-    if (B.phase === 'done') { if (inp.a) backToWorld(() => { addMoney(B.tips); statAdd('tips', B.tips); toast(t('🎸 The crowd tipped ${0}!', B.tips)); saveGame(); }); return; }
+    const B = BU, sl = B.song.beat / 2;
+    if (B.phase === 'done') {
+      if (inp.a) backToWorld(() => {
+        addMoney(B.tips); statAdd('tips', B.tips); L2().stats.bestTips = Math.max(L2().stats.bestTips || 0, B.tips); toast(t('🎸 The crowd tipped ${0}!', B.tips));
+        say([['C-Real', ['A bit wobbly... but hey, that\'s jazz. 🎷', 'Solid loop! The crowd loved it.', 'THAT groove!! We should go on tour. 🚐'][B.stars - 1]]], saveGame);
+      });
+      return;
+    }
     if (inp.b) { backToWorld(); return; }
     B.t += dt;
     for (const c of B.coins) { c.vy += 300 * dt; c.x += c.vx * dt; c.y += c.vy * dt; } B.coins = B.coins.filter(c => c.y < 200);
-    const bi = Math.floor(B.t / BEAT + 1e-6);
-    if (bi !== B.lastBeat) {
-      B.lastBeat = bi; playBeat(bi);
-      if (bi > 0 && bi % 4 === 0) {   // a bar just ended
-        const done = bi / 4 - 1;
-        if (B.phase === 'rec') {
-          if ((B.hitsByBar[done] || 0) >= 3) { B.layers++; sfx.ding(); popText(VW / 2, 60, t('{0} recorded!', t(LOOP_NAMES[B.layers - 1])), '#7ee081', 'screen'); for (let i = 0; i < 4; i++) B.coins.push({ x: 120 + rnd() * 140, y: 40, vx: (rnd() - .5) * 60, vy: -60 }); if (B.layers >= 4) B.phase = 'jam'; }
-          else popText(VW / 2, 60, t('Again! 🔁'), '#ffb070', 'screen');
-        } else if (B.phase === 'jam') { B.jamBars++; for (let i = 0; i < 6; i++) B.coins.push({ x: 60 + rnd() * 260, y: 30, vx: (rnd() - .5) * 60, vy: -40 }); if (B.jamBars >= 2) { B.phase = 'done'; B.tips = 10 + B.layers * 5 + B.perfect; sfx.ding(); } }
-      }
+    const si = Math.floor(B.t / sl + 1e-6);
+    if (si !== B.lastStep) { B.lastStep = si; if (si > 0 && si % 8 === 0) buskBarEnd(si / 8 - 1); if (B.phase !== 'done') buskStep(si); }
+    if (B.hold) {   // a chord has to be held for a full beat
+      if (B.t >= B.hold.until) { B.hits[B.hold.abs] = 1; B.hold = null; popText(VW / 2, 150, 'Nice! 👍', '#bfe3ff', 'screen'); }
+      else if (!inp.aHeld) { B.hold = null; popText(VW / 2, 150, 'Hold it longer!', '#ff9a9a', 'screen'); sfx.bonk(); }
     }
-    if (inp.a && B.phase === 'rec') {
-      const nb = Math.round(B.t / BEAT), d = Math.abs(B.t - nb * BEAT);
-      if (nb >= 0 && d < .15 && !B.hitBeats.has(nb)) { B.hitBeats.add(nb); const bar = Math.floor(nb / 4); B.hitsByBar[bar] = (B.hitsByBar[bar] || 0) + 1; if (d < .06) { B.perfect++; popText(VW / 2, 150, 'Perfect! ✨', '#fff59a', 'screen'); } else popText(VW / 2, 150, 'Nice! 👍', '#bfe3ff', 'screen'); }
-      else { popText(VW / 2, 150, t('Off beat'), '#ff9a9a', 'screen'); sfx.bonk(); }
-    }
+    const dir = inp.up ? 'up' : inp.down ? 'down' : inp.left ? 'left' : inp.right ? 'right' : null;
+    if (B.phase === 'rec' && B.t > -sl) {
+      if (B.layers === 3) { if (dir) buskHit(dir); else if (inp.a && buskBar() >= B.recBar) popText(VW / 2, 150, 'Use the arrows!', '#ff9a9a', 'screen'); }
+      else if (inp.a) buskHit('a');
+    } else if (B.phase === 'jam' && (inp.a || dir)) buskSolo(dir || 'a');
   },
   draw() {
-    const B = BU, beatPh = (((B.t / BEAT) % 1) + 1) % 1, bounce = beatPh < .15 ? 2 : 0;
+    const B = BU, beat = B.song.beat, beatPh = (((B.t / beat) % 1) + 1) % 1, bounce = beatPh < .15 ? 2 : 0;
     const gr = g.createLinearGradient(0, 0, 0, VH); gr.addColorStop(0, '#ffb07a'); gr.addColorStop(1, '#ffe0b0'); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
     for (let i = 0; i < 9; i++) R(i * 46 - 6, 40 + (i % 3) * 18, 40, 140, ['#c8c0d0', '#d8c8a8', '#b9c4cc'][i % 3]);
     R(0, 150, VW, 66, '#d8d2c4'); for (let x = 0; x < VW; x += 16) R(x, 150, 1, 66, '#c4beb0');
     for (const px of [30, 354]) { R(px, 70, 4, 82, '#8a6a3a'); for (let i = 0; i < 5; i++) poly([[px + 2, 70], [px - 16 + i * 8, 62 + (i % 2) * 6], [px - 12 + i * 8, 66]], '#3a8a3a'); }
-    const crowd = 2 + B.layers * 2 + (B.phase !== 'rec' ? 2 : 0);
+    const crowd = 2 + B.layers * 2 + (B.phase !== 'rec' ? 2 : 0) + Math.min(5, B.solo.size >> 1);
     for (let i = 0; i < crowd; i++) { const cx2 = 40 + (i * 61) % 300, cy2 = 196 + (i % 2) * 6; drawPerson(cx2 + (cx2 > 150 && cx2 < 240 ? 90 : 0), cy2 - (B.layers ? bounce : 0), { shirt: ['#3a7bd5', '#e05a5a', '#5aa05a', '#d9a400', '#8a5ad0'][i % 5], pants: '#3a3a4a' }); }
     bigSprite(() => drawCReal(0, 0, time, 'busk'), 192, 176 - bounce, 2.4);
     for (const c of B.coins) circ(c.x, c.y, 2, '#ffd34d');
   },
   ui() {
-    const B = BU;
+    const B = BU, S = B.song, sl = S.beat / 2, L = B.layers, bar = buskBar();
     txt(t('UNION SQUARE LOOPER JAM'), VW / 2, 6, 11, '#3a2a1a', 'center', true, false);
-    LOOP_NAMES.forEach((n, i) => { const on = i < B.layers, cur = i === B.layers && B.phase === 'rec'; rrect(6, 24 + i * 15, 92, 13, 5, on ? '#7ee081' : cur ? '#ff6fa8' : 'rgba(255,255,255,.6)'); txt(t(n) + (on ? ' ✓' : cur ? ' ●REC' : ''), 11, 27 + i * 15, 7, on || cur ? '#fff' : '#555', 'left', true, false); });
-    const beatIdx = ((Math.floor(B.t / BEAT) % 4) + 4) % 4;
-    for (let i = 0; i < 4; i++) { ctx.fillStyle = i === beatIdx && B.t >= -BEAT * 4 ? (B.t < 0 ? '#ffd34d' : '#ff6fa8') : 'rgba(0,0,0,.25)'; ctx.beginPath(); ctx.arc(VW / 2 - 27 + i * 18, 32, 6, 0, 7); ctx.fill(); }
-    if (B.t < 0) txt(t('Count-in... {0}', Math.ceil(-B.t / BEAT)), VW / 2, 44, 9, '#3a2a1a', 'center', true, false);
-    else if (B.phase === 'rec') txt(t('Hit [A] on every beat! ({0}/4 in this bar)', B.hitsByBar[Math.floor(B.t / BEAT / 4)] || 0), VW / 2, 44, 8, '#3a2a1a', 'center', true, false);
-    else if (B.phase === 'jam') txt(t('Full loop! The crowd goes wild! 🙌'), VW / 2, 44, 9, '#3a2a1a', 'center', true, false);
+    LOOP_NAMES.forEach((n, i) => { const on = i < L, cur = i === L && B.phase === 'rec'; rrect(6, 24 + i * 15, 92, 13, 5, on ? '#7ee081' : cur ? '#ff6fa8' : 'rgba(255,255,255,.6)'); txt(t(n) + (on ? ' ✓' : cur ? ' ●REC' : ''), 11, 27 + i * 15, 7, on || cur ? '#fff' : '#555', 'left', true, false); });
+    // the note lane: notes slide from the right to the ring
+    const X0 = 108, X1 = 378, RX = 134, Y = 38, SPD = 100, nx = a => RX + (a * sl - B.t) * SPD;
+    rrect(X0, Y - 10, X1 - X0, 20, 10, 'rgba(40,28,18,.45)');
+    for (let a = Math.ceil((B.t - .25) / sl); nx(a) < X1 - 4; a++) { const x = nx(a), beatLine = a % 2 === 0; if (x > X0 + 4) { ctx.fillStyle = a % 8 === 0 ? 'rgba(255,255,255,.7)' : beatLine ? 'rgba(255,255,255,.3)' : 'rgba(255,255,255,.12)'; ctx.fillRect(x - .5, Y - (beatLine ? 8 : 4), 1, beatLine ? 16 : 8); } }
+    if (B.phase === 'rec') for (let b = Math.max(B.recBar, bar - 1); b <= bar + 1; b++) for (const p of LOOP_PAT[L]) {
+      const a = b * 8 + p, x = nx(a); if (x > X1 - 8 || x < X0 + 2) continue;
+      const hit = B.hits[a] || (B.hold && B.hold.abs === a), col = hit ? '#7ee081' : x < RX - 14 ? 'rgba(150,150,150,.7)' : '#ff6fa8';
+      if (L === 2) rrect(x - 7, Y - 6, Math.min(2 * sl * SPD, X1 - 6 - x) + 7, 12, 6, col); else { ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, Y, 7, 0, 7); ctx.fill(); }
+      txt(L === 3 ? ARROW[S.dirs[(((b % 4) + 4) % 4) * 4 + (p >> 1)]] : BTN_A, x, Y - 3.5, L === 3 ? 7 : 6, '#fff', 'center', true, false);
+    }
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(RX, Y, 9 + (((B.t / S.beat) % 1 + 1) % 1 < .12 ? 1.5 : 0), 0, 7); ctx.stroke();
+    const mid = (X0 + X1) / 2;
+    if (B.t < 0) txt(t('Count-in... {0}', Math.ceil(-B.t / S.beat)), mid, 54, 9, '#3a2a1a', 'center', true, false);
+    else if (B.phase === 'rec') txt(bar < B.recBar ? t('{0} is next. Listen and get ready...', t(LOOP_NAMES[L])) : t(LOOP_HELP[L]), mid, 54, 7.5, '#3a2a1a', 'center', true, false);
+    else if (B.phase === 'jam') txt(t('SOLO! Play [A] and the arrows on the beat! 🎸'), mid, 54, 8, '#3a2a1a', 'center', true, false);
     txt(t('B: stop'), VW - 8, 8, 7, '#3a2a1a', 'right', false, false);
-    if (B.phase === 'done') { panelUI(60, 70); txt(t('Tips: ${0} 💵', B.tips), VW / 2, 72, 14, '#ffd34d', 'center', true, false); txt(t('[A]: collect'), VW / 2, 104, 8, '#ffd34d', 'center', true, false); }
+    if (B.phase === 'done') {
+      panelUI(54, 92); txt(t('Tips: ${0} 💵', B.tips), VW / 2, 62, 14, '#ffd34d', 'center', true, false);
+      txt('★'.repeat(B.stars) + '☆'.repeat(3 - B.stars), VW / 2, 82, 13, '#ffd34d', 'center', false, false);
+      txt(B.record ? t('New record! 🎉') : t('Best so far: ${0}', Math.max(B.best, B.tips)), VW / 2, 102, 8, B.record ? '#9fe0a0' : '#ddd', 'center', B.record, false);
+      txt(t('[A]: collect'), VW / 2, 126, 8, '#ffd34d', 'center', true, false);
+    }
     screenParts();
   },
 };
@@ -1273,9 +1347,9 @@ SCENES.wine = {
     const m = (Math.sin(Wn.t * 3.2) + 1) / 2;
     if (inp.a) {
       Wn.hit = .2;
-      if (Math.abs(m - .5) < .11) { Wn.cork += .14; tone(120, .08, 'square', .14); popText(140, 90, 'Thunk!', '#fff', 'screen'); }
+      if (Math.abs(m - .5) < .15) { Wn.cork += 1 / 7; tone(120, .08, 'square', .14); popText(140, 90, 'Thunk!', '#fff', 'screen'); }
       else { Wn.cracks++; tone(1900, .12, 'triangle', .08); shake = .15; popText(140, 90, t('Crack! 😬'), '#ff9a9a', 'screen'); }
-      if (Wn.cork >= 1) { Wn.done = true; Wn.ok = true; noise(.15, .3, 900); tone(600, .15, 'sine', .15, 400); sfx.ding(); }
+      if (Wn.cork >= .999) { Wn.done = true; Wn.ok = true; noise(.15, .3, 900); tone(600, .15, 'sine', .15, 400); sfx.ding(); }
       if (Wn.cracks >= 3) { Wn.done = true; Wn.ok = false; noise(.4, .3, 3000); }
     }
   },
@@ -1295,7 +1369,7 @@ SCENES.wine = {
   ui() {
     const Wn = WN, m = (Math.sin(Wn.t * 3.2) + 1) / 2;
     txt(t('THE SHOE METHOD 👟🍷'), VW / 2, 6, 11, '#ffffff', 'center', true);
-    rrect(92, 24, 200, 10, 5, 'rgba(0,0,0,.4)'); rrect(92 + 200 * .39, 24, 200 * .22, 10, 4, '#7ee081'); rrect(90 + 200 * m, 21, 4, 16, 2, '#ffffff');
+    rrect(92, 24, 200, 10, 5, 'rgba(0,0,0,.4)'); rrect(92 + 200 * .35, 24, 200 * .3, 10, 4, '#7ee081'); rrect(90 + 200 * m, 21, 4, 16, 2, '#ffffff');
     txt(t('Cork: {0}%   ·   Cracks: {1}/3', Math.min(100, Math.round(Wn.cork * 100)), Wn.cracks), VW / 2, 40, 8, '#fff', 'center', true);
     if (Wn.t < 4) txt(t('Tap [A] when the marker is in the green zone!'), VW / 2, 200, 8, '#fff', 'center', true);
     if (Wn.done) { panelUI(60, 70); txt(Wn.ok ? t('POP! 🍾 Cheers!') : t('The bottle broke... 🍷💔'), VW / 2, 74, 12, '#ffd34d', 'center', true, false); txt(t('[A]: continue'), VW / 2, 104, 8, '#ffd34d', 'center', true, false); }
@@ -1530,7 +1604,7 @@ SCENES.glissade = {
   music: 'slide',
   update(dt) {
     const G = GL;
-    if (G.done) { if (inp.a) backToWorld(() => { const j = JAY_SPOTS.trailhead; P.x = j.x; P.y = j.y + 18; say([['C-Real', 'Glissading is the BEST part. Best day ever? Best day ever. ❤'], ['Sarah', G.axe ? 'And I still have my ice axe!' : 'We\'ll find the ice axe in spring. Probably.']], () => {
+    if (G.done) { if (inp.a) backToWorld(() => { const j = JAY_SPOTS.trailhead; P.x = j.x; P.y = j.y + 18; l2UpdateGates(); say([['C-Real', 'Glissading is the BEST part. Best day ever? Best day ever. ❤'], ['Sarah', G.axe ? 'And I still have my ice axe!' : 'We\'ll find the ice axe in spring. Probably.']], () => {
       saveGame();
       if (LEVELS[3] && !ST.l3.flags.arrived) say([['C-Real', 'Shasta slides, wildfires, rockfall... Time to fly home. And maybe refresh our first aid. 🩹'], ['Sarah', 'Home to Baar! ✈️']], () => startFlight3());
     }); }); return; }
@@ -1579,6 +1653,20 @@ SCENES.glissade = {
 
 // ================================================================ translations [English, Deutsch, Schwiizerdütsch]
 addTR([
+  // looper jam
+  ["Four layers: drums, bass, chords, melody. Hit each note when it reaches the ring: [A], hold [A] for the chords, arrows for the melody.", "Vier Spuren: Schlagzeug, Bass, Akkorde, Melodie. Triff jede Note, wenn sie den Ring erreicht: [A], [A] halten für die Akkorde, Pfeile für die Melodie.", "Vier Spure: Schlagzüüg, Bass, Akkörd, Melodie. Triff jedi Note, wenn si de Ring erreicht: [A], [A] hebe für d Akkörd, Pfiil für d Melodie."],
+  ["Whatever you play is what loops. Then we solo! The tighter we are, the better the crowd tips.", "Was du spielst, wird geloopt. Dann kommt das Solo! Je tighter wir sind, desto besser gibt das Publikum Trinkgeld.", "Was du spielsch, wird gloopt. Denn chunnt s Solo! Je tighter mer sind, desto besser git s Publikum Trinkgäld."],
+  ["Drums: [A] when a note reaches the ring!", "Schlagzeug: [A], wenn eine Note den Ring erreicht!", "Schlagzüüg: [A], wenn e Note de Ring erreicht!"],
+  ["Bass: these notes fall between the beats. [A] on the ring!", "Bass: Diese Noten liegen zwischen den Schlägen. [A] auf dem Ring!", "Bass: Die Note ligged zwüsche de Schläg. [A] uf em Ring!"],
+  ["Chords: hold [A] through the long notes!", "Akkorde: [A] durch die langen Noten halten!", "Akkörd: [A] dur di lange Note hebe!"],
+  ["Melody: press the arrow shown on each note!", "Melodie: Drück den Pfeil, der auf der Note steht!", "Melodie: Drück de Pfiil, wo uf de Note staht!"],
+  ["{0} is next. Listen and get ready...", "Als Nächstes: {0}. Hör zu und mach dich bereit...", "Als Nächschts: {0}. Los zue und mach di parat..."],
+  ["SOLO! Play [A] and the arrows on the beat! 🎸", "SOLO! Spiel [A] und die Pfeile im Takt! 🎸", "SOLO! Spiel [A] und d Pfiil im Takt! 🎸"],
+  ["Too early", "Zu früh", "Z früeh"], ["Too late", "Zu spät", "Z spat"], ["Hold it longer!", "Länger halten!", "Länger hebe!"], ["Wrong arrow!", "Falscher Pfeil!", "Falsche Pfiil!"], ["Use the arrows!", "Nimm die Pfeile!", "Nimm d Pfiil!"],
+  ["Best so far: ${0}", "Bisher bestes: ${0}", "Bis jetzt s Bescht: ${0}"], ["New record! 🎉", "Neuer Rekord! 🎉", "Neue Rekord! 🎉"],
+  ["A bit wobbly... but hey, that's jazz. 🎷", "Etwas wacklig... aber hey, das ist Jazz. 🎷", "Echli wacklig... aber hey, das isch Jazz. 🎷"],
+  ["Solid loop! The crowd loved it.", "Solider Loop! Das Publikum war begeistert.", "Solide Loop! S Publikum isch begeischteret gsi."],
+  ["THAT groove!! We should go on tour. 🚐", "DIESER Groove!! Wir sollten auf Tournee gehen. 🚐", "DE Groove!! Mir sötted uf Tournee gah. 🚐"],
   // signs & zones
   ["CARMEL-BY-THE-SEA. Charming. Very charming. Suspiciously charming.", "CARMEL-BY-THE-SEA. Charmant. Sehr charmant. Verdächtig charmant.", "CARMEL-BY-THE-SEA. Herzig. Sehr herzig. Verdächtig herzig."],
   ["PACIFIC GROVE — \"Butterfly Town, USA\". Please do not disturb the monarch butterflies.", "PACIFIC GROVE — \"Butterfly Town, USA\". Bitte die Monarchfalter nicht stören.", "PACIFIC GROVE — \"Butterfly Town, USA\". Bitte d Monarchfalter nöd störe."],
@@ -1627,7 +1715,6 @@ addTR([
   ["Big Sur Wildfire", "Waldbrand in Big Sur", "Waldbrand z Big Sur"], ["Highway 1 evacuation", "Evakuierung über den Highway 1", "Evakuierig über de Highway 1"], ["south of Big Sur", "südlich von Big Sur", "südlich vo Big Sur"],
   ["Wildfires are part of California life. Follow the rangers, keep the tank full, and never stop for selfies.", "Waldbrände gehören zu Kalifornien. Folge den Rangern, halte den Tank voll und halte nie für Selfies an.", "Waldbränd ghöred zu Kalifornie. Folg de Ranger, heb de Tank voll und halt nie für Selfies aa."],
   ["14,179 ft volcano", "4322 m hoher Vulkan", "4322 m höche Vulkan"], ["on Mount Shasta", "auf dem Mount Shasta", "uf em Mount Shasta"],
-  ["A lonely giant volcano you can see from 100 miles away. Above 10,000 ft you need a summit pass. And a looper pedal, apparently.", "Ein einsamer Riesenvulkan, den man aus 160 km Entfernung sieht. Über 3000 m brauchst du einen Gipfelpass. Und offenbar ein Looper-Pedal.", "En einsame Riesevulkan, wo me us 160 km gseht. Über 3000 m bruuchsch en Gipfelpass. Und offebar es Looper-Pedal."],
   // weird laws
   ["No sleeping in bars", "Kein Schlafen in Bars", "Kei Schlafe i Bars"], ["California weird law: it's illegal to sleep in a bar.", "Verrücktes Gesetz in Kalifornien: Es ist verboten, in einer Bar zu schlafen.", "Verrückts Gsetz z Kalifornie: Es isch verbote, imene Bar z schlafe."],
   ["What can I get you?", "Was darf's sein?", "Was dörfs si?"], ["Honestly? Just a little nap. Jetlag...", "Ehrlich? Nur ein kleines Nickerchen. Jetlag...", "Ehrlich? Nur es chliises Nickerli. Jetlag..."],
@@ -1702,7 +1789,6 @@ addTR([
   ["Glad you made it out. Big Sur will grow back. It always does.", "Schön, dass du rausgekommen bist. Big Sur wächst nach. Das tut es immer.", "Schön, bisch use cho. Big Sur wachst wieder noche. Das tuets immer."],
   ["Fire season's no joke. If you head south on Highway 1, keep your tank full.", "Die Waldbrandsaison ist kein Witz. Wenn du auf dem Highway 1 nach Süden fährst, halt den Tank voll.", "D Waldbrandsaison isch kei Witz. Wenn uf em Highway 1 nach Süde fahrsch, heb de Tank voll."],
   ["The summit trail opens once you've seen the rest of California. Postcards: {0}/6.", "Der Gipfelweg öffnet, sobald du den Rest von Kalifornien gesehen hast. Postkarten: {0}/6.", "De Gipfelwäg gaht uf, sobald du de Rescht vo Kalifornie gseh hesch. Poschtcharte: {0}/6."],
-  ["The trail to the summit is open. Go get that view! 🏔", "Der Weg zum Gipfel ist offen. Hol dir diese Aussicht! 🏔", "De Wäg zum Gipfel isch offe. Hol dir die Ussicht! 🏔"],
   // buildings & places
   ["The Hilton breakfast buffet. Never again. (Unless I'm cooking.)", "Das Frühstücksbuffet im Hilton. Nie wieder. (Ausser ich koche.)", "S Zmorgebuffet im Hilton. Nie meh. (Ussert ich choche.)"],
   ["The Hilton breakfast: soggy muffins, cold hollandaise... a crime against eggs.", "Das Hilton-Frühstück: matschige Muffins, kalte Hollandaise... ein Verbrechen an Eiern.", "De Hilton-Zmorge: pflotschigi Muffins, chalti Hollandaise... es Verbräche a de Eier."],
@@ -1733,7 +1819,6 @@ addTR([
   ["Free camping, no fire. Ranger Jay would be proud.", "Gratis campen, kein Feuer. Ranger Jay wäre stolz.", "Gratis campe, kei Füür. De Ranger Jay wär stolz."],
   ["Sunset, the Pacific and... sparkling water. Legal and sad.", "Sonnenuntergang, der Pazifik und... Mineralwasser. Legal und traurig.", "Sunneundergang, de Pazifik und... Mineral. Legal und truurig."],
   ["The summit of Mount Shasta. 14,179 feet. I can see... everything.", "Der Gipfel des Mount Shasta. 4322 Meter. Ich sehe... alles.", "De Gipfel vom Mount Shasta. 4322 Meter. Ich gseh... alles."],
-  ["And I brought the amp. 🎸 One last loop?", "Und ich habe den Verstärker mitgebracht. 🎸 Ein letzter Loop?", "Und ich ha de Verstärker mitbracht. 🎸 En letschte Loop?"],
   // wildfire
   ["Is that... smoke?", "Ist das... Rauch?", "Isch das... Rauch?"],
   ["📻 EVACUATION ORDER for Big Sur! Wildfire moving north fast. Head north on Highway 1 to my checkpoint!", "📻 EVAKUIERUNG für Big Sur! Der Waldbrand breitet sich schnell nach Norden aus. Fahr auf dem Highway 1 nach Norden zu meinem Checkpoint!", "📻 EVAKUIERIG für Big Sur! De Waldbrand chunnt schnell nach Norde. Fahr uf em Highway 1 nach Norde zu mim Checkpoint!"],
@@ -1785,10 +1870,10 @@ addTR([
   ["You found the shrimp! 🦐", "Du hast die Crevette gefunden! 🦐", "Du hesch d Crevette gfunde! 🦐"],
   ["🥁 Drums", "🥁 Schlagzeug", "🥁 Schlagzüüg"], ["🎸 Bass", "🎸 Bass", "🎸 Bass"], ["🎹 Chords", "🎹 Akkorde", "🎹 Akkord"], ["🎵 Melody", "🎵 Melodie", "🎵 Melodie"],
   ["Welcome to my looper show! 🎸 I play, you record.", "Willkommen zu meiner Looper-Show! 🎸 Ich spiele, du nimmst auf.", "Willkomme zu minere Looper-Show! 🎸 Ich spiel, du nimmsch uf."],
-  ["Press [A] on each of the 4 beats to record a loop layer: drums, bass, chords, melody.", "Drück [A] auf jeden der 4 Schläge, um eine Loop-Spur aufzunehmen: Schlagzeug, Bass, Akkorde, Melodie.", "Drück [A] uf jede vo de 4 Schläg, zum e Loop-Spur ufneh: Schlagzüüg, Bass, Akkord, Melodie."],
-  ["The tighter we are, the better the crowd tips!", "Je tighter wir sind, desto besser gibt das Publikum Trinkgeld!", "Je tighter mer sind, desto besser git s Publikum Trinkgäld!"], ["Jam session! Hit [A] on the beat. 🎸", "Jam-Session! Drück [A] im Takt. 🎸", "Jam-Session! Drück [A] im Takt. 🎸"],
+  
+  ["Jam session! Hit [A] on the beat. 🎸", "Jam-Session! Drück [A] im Takt. 🎸", "Jam-Session! Drück [A] im Takt. 🎸"],
   ["🎸 The crowd tipped ${0}!", "🎸 Das Publikum gab ${0} Trinkgeld!", "🎸 S Publikum het ${0} Trinkgäld gä!"], ["{0} recorded!", "{0} aufgenommen!", "{0} ufgnoh!"], ["Again! 🔁", "Nochmal! 🔁", "Nomal! 🔁"], ["Off beat", "Neben dem Takt", "Näb em Takt"],
-  ["UNION SQUARE LOOPER JAM", "UNION SQUARE LOOPER JAM", "UNION SQUARE LOOPER JAM"], ["Count-in... {0}", "Einzählen... {0}", "Iizelle... {0}"], ["Hit [A] on every beat! ({0}/4 in this bar)", "Drück [A] auf jeden Schlag! ({0}/4 in diesem Takt)", "Drück [A] uf jede Schlag! ({0}/4 i dem Takt)"],
+  ["UNION SQUARE LOOPER JAM", "UNION SQUARE LOOPER JAM", "UNION SQUARE LOOPER JAM"], ["Count-in... {0}", "Einzählen... {0}", "Iizelle... {0}"], 
   ["Full loop! The crowd goes wild! 🙌", "Voller Loop! Das Publikum tobt! 🙌", "Volle Loop! S Publikum flippt us! 🙌"], ["B: stop", "B: stopp", "B: stopp"], ["Tips: ${0} 💵", "Trinkgeld: ${0} 💵", "Trinkgäld: ${0} 💵"], ["[A]: collect", "[A]: einsammeln", "[A]: iisammle"],
   ["The shoe method! You're a genius. Cheers! 🍷", "Die Schuh-Methode! Du bist ein Genie. Prost! 🍷", "D Schue-Methode! Du bisch es Genie. Proscht! 🍷"],
   ["Hearts restored. Checkpoint set. Feet... slightly purple.", "Herzen aufgefüllt. Checkpoint gesetzt. Füsse... leicht violett.", "Härzli wieder volle. Checkpoint gsetzt. Füess... chli violett."],

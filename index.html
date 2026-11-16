@@ -293,6 +293,13 @@ const TR_LIST = [
   ["A bonus sketch! Miller & Maranta would frame that one. 🏔", "Eine Bonus-Skizze! Miller & Maranta würden die einrahmen. 🏔", "E Bonus-Skizze! Miller & Maranta würded die iirahme. 🏔"],
   ["🏔 Level 1: Luzern", "🏔 Level 1: Luzern", "🏔 Level 1: Lozärn"], ["✈️ Level 2: California", "✈️ Level 2: Kalifornien", "✈️ Level 2: Kalifornie"],
   ["[A]: fly to California ✈️   ·   B: keep exploring", "[A]: nach Kalifornien fliegen ✈️   ·   B: weiter erkunden", "[A]: uf Kalifornie flüge ✈️   ·   B: wiiter erkunde"],
+  ["Save {0}", "Stand {0}", "Stand {0}"], ["Level {0}", "Level {0}", "Level {0}"], ["Delete {0}? [A]: yes", "{0} löschen? [A]: ja", "{0} lösche? [A]: ja"],
+  ["The save list is full ({0}). Delete a save first: B on the Continue row.", "Die Liste ist voll ({0}). Lösche zuerst einen Spielstand: B auf der Zeile «Weiterspielen».", "D Lischte isch voll ({0}). Lösch zerscht en Spielstand: B uf de Ziile «Wiiterspiele»."],
+  ["[A]: delete for good · B or ▲ ▼: keep it", "[A]: endgültig löschen · B oder ▲ ▼: behalten", "[A]: für immer lösche · B oder ▲ ▼: bhalte"],
+  ["◀ ▶: choose a save · [A]: continue · B: delete this save", "◀ ▶: Spielstand wählen · [A]: weiterspielen · B: Spielstand löschen", "◀ ▶: Spielstand wähle · [A]: wiiterspiele · B: Spielstand lösche"],
+  ["[A]: continue · B: delete this save", "[A]: weiterspielen · B: Spielstand löschen", "[A]: wiiterspiele · B: Spielstand lösche"],
+  ["[A]: jump to this level of the selected save", "[A]: zu diesem Level des gewählten Spielstands springen", "[A]: zu dem Level vom gwählte Spielstand gumpe"],
+  ["Starts a new save. Your other saves are kept.", "Beginnt einen neuen Spielstand. Die anderen bleiben erhalten.", "Fangt en neue Spielstand aa. Di andere bliibed erhalte."],
 ];
 const TR = { de: {}, gsw: {} };
 function addTR(rows) { for (const [en, de, gsw] of rows) { TR.de[en] = de; TR.gsw[en] = gsw; } }
@@ -464,7 +471,17 @@ function music(dt, which) {
 }
 
 // ---------------------------------------------------------------- save state
-const SAVE_KEY = 'sarchitect_v1';
+// Saved games: up to MAX_SAVES slots. Slot 1 keeps the original key, so an existing save simply shows up as "Save 1".
+// ?debug runs write to their own hidden key and never touch real saves.
+const SAVE_KEY = 'sarchitect_v1', CUR_KEY = 'sarchitect_cur', MAX_SAVES = 5;
+let curSlot = 1;
+const slotKey = n => DEBUG ? SAVE_KEY + '_debug' : n === 1 ? SAVE_KEY : SAVE_KEY + '_' + n;
+function setSlot(n) { curSlot = n; try { localStorage.setItem(CUR_KEY, String(n)); } catch (e) { } }
+function lastSlot() { try { return +localStorage.getItem(CUR_KEY) || 1; } catch (e) { return 1; } }
+function slotUsed(n) { try { return localStorage.getItem(slotKey(n)) !== null; } catch (e) { return false; } }
+function freeSlot() { for (let n = 1; n <= MAX_SAVES; n++) if (!slotUsed(n)) return n; return 0; }
+function deleteSlot(n) { try { localStorage.removeItem(slotKey(n)); } catch (e) { } }
+function listSaves() { const L = []; for (let n = 1; n <= (DEBUG ? 1 : MAX_SAVES); n++) { const d = readSlot(n); if (d) L.push({ n, d }); } return L; }
 function defaultState() {
   return { level: 1, sk: {}, items: { pin: false, bike: false, key: false }, cats: [], mush: 0, mushTaken: [], maxHearts: CONFIG.startHearts, hearts: CONFIG.startHearts,
     flags: {}, cp: 'baar', met: {}, visited: {}, tiger: false, px: null, py: null, pos: {}, stats: { poop: 0, caught: 0, hits: 0, mush: 0, slide: 0, beers: 0 },
@@ -482,12 +499,14 @@ let ST = defaultState();
 function saveGame() {
   try {
     if (scene === 'world') { ST.px = P.x; ST.py = P.y; ST.pos[ST.level] = { x: P.x, y: P.y }; }
-    localStorage.setItem(SAVE_KEY, JSON.stringify(ST));
+    ST.savedAt = Date.now();
+    localStorage.setItem(slotKey(curSlot), JSON.stringify(ST));
   } catch (e) { }
 }
-function loadGame() {
+function loadGame() { return readSlot(curSlot); }
+function readSlot(n) {
   try {
-    const s = localStorage.getItem(SAVE_KEY);
+    const s = localStorage.getItem(slotKey(n));
     if (s) {
       const d = JSON.parse(s), base = defaultState();
       return Object.assign(base, d, { stats: Object.assign(base.stats, d.stats || {}), items: Object.assign(base.items, d.items || {}), l2: Object.assign(base.l2, d.l2 || {}), l3: Object.assign(base.l3, d.l3 || {}), l4: Object.assign(base.l4, d.l4 || {}), l5: Object.assign(base.l5, d.l5 || {}), pos: d.pos || {}, level: d.level || 1 });
@@ -808,7 +827,7 @@ function transition(cb) { if (fade.dir === 1) return; fade.dir = 1; fade.cb = cb
 let scene = 'title', time = 0, paused = false, shake = 0, cam = { x: 0, y: 0 }, curZone = null;
 let saveT = 0, textT = 60, guitT = 0, IN = null, RP = null, SL = null, EN = null;
 const book = { open: false, sel: 0 };
-const title = { sel: 0, hasSave: false };
+const title = { sel: 0, saves: [], si: 0, lv: 0, confirmDel: false, note: 0 };
 
 // ---------------------------------------------------------------- game flow
 function newGame() {
@@ -825,7 +844,7 @@ function continueGame() {
 // switch to level n and place Sarah at her saved spot there (or the level's start)
 function enterLevel(n) {
   const first = !ST.pos[n];
-  loadLevel(n); ST.level = n;
+  ST.level = n; loadLevel(n);   // level first: Level 4/5 share helpers that read ST.level
   const pos = ST.pos[n] || (n === 1 && ST.px ? { x: ST.px, y: ST.py } : null);
   P.x = pos ? pos.x : START.x; P.y = pos ? pos.y : START.y;
   startWorld();
@@ -954,7 +973,7 @@ function hurt(src) {
 }
 function l1Respawn() {
   const s = CR_SPOTS[ST.cp] || CR_SPOTS.baar; P.x = s.x; P.y = s.y + 18;
-  for (const l of lions) { l.x = l.hx; l.y = l.hy; l.chasing = false; }
+  for (const l of lions) { l.x = l.hx; l.y = l.hy; l.chasing = false; l.fear = 0; }
   say([['C-Real', 'Whoa, I\'ve got you. Those lions... 😟 Sit down, I made tea.'], ['Sarah', 'I\'m fine. I\'m FINE. ...Is there poop on me?'], ['C-Real', '...let\'s not talk about it.']]);
 }
 function doJump() { if (P.jump <= 0) { P.jump = .55; sfx.jump(); } }
@@ -1168,26 +1187,65 @@ function update(dt) {
 // extra scenes (minigames, cutscenes) registered by levels: { update(dt), draw(), ui(), music }
 const SCENES = {};
 const LEVEL_LABELS = { 1: '🏔 Level 1: Luzern', 2: '✈️ Level 2: California', 3: '✚ Level 3: Kanton Zug', 4: '⏳ Level 4: Through the Ages', 5: '🏰 Level 5: Helvetia' };
+// the title menu: [Continue + save picker] [level picker] [New game] [Language]
+function unlockedLevels(sv) {
+  const u = [1];
+  if (sv.flags.finished && LEVELS[2]) u.push(2);
+  if (sv.l2.flags.finished && LEVELS[3]) u.push(3);
+  if (sv.l3.flags.finished && LEVELS[4]) u.push(4);
+  if (sv.l4.flags.finished && LEVELS[5]) u.push(5);
+  return u;
+}
+function refreshTitle() {
+  title.saves = listSaves(); title.si = Math.max(0, title.saves.findIndex(q => q.n === lastSlot()));
+  title.lv = 0; title.confirmDel = false;
+}
+function saveLabel(S) {
+  let s = t('Save {0}', S.n) + ' · ' + t('Level {0}', S.d.level || 1);
+  if (S.d.savedAt) { const d = new Date(S.d.savedAt); s += ' · ' + d.getDate() + '.' + (d.getMonth() + 1) + '.'; }
+  return s;
+}
 function titleOptions() {
-  const sv = loadGame(), o = [];
-  if (sv) o.push({ label: 'Continue', act: continueGame });
-  o.push({ label: 'New game', act: newGame });
-  if (sv) {   // jump to any other unlocked level
-    const unlocked = { 1: true, 2: !!(sv.flags.finished && LEVELS[2]), 3: !!(sv.l2 && sv.l2.flags && sv.l2.flags.finished && LEVELS[3]), 4: !!(sv.l3 && sv.l3.flags && sv.l3.flags.finished && LEVELS[4]), 5: !!(sv.l4 && sv.l4.flags && sv.l4.flags.finished && LEVELS[5]) };
-    for (const n of [1, 2, 3, 4, 5]) if (unlocked[n] && n !== sv.level && (n !== 1 || unlocked[2])) o.push({ label: LEVEL_LABELS[n], act: () => { ST = loadGame(); enterLevel(n); } });
+  const o = [], S = title.saves[title.si];
+  if (S) {
+    o.push({ kind: 'save' });
+    const lv = unlockedLevels(S.d).filter(n => n !== (S.d.level || 1) && LEVELS[n]);   // jump to any other unlocked level
+    if (lv.length) o.push({ kind: 'level', lv });
   }
-  o.push({ lang: true });
+  o.push({ kind: 'new' }, { kind: 'lang' });
   return o;
 }
-function updateTitle() {
-  title.opts = titleOptions(); title.hasSave = title.opts.length > 2;
-  const n = title.opts.length;
-  if (inp.up || inp.down) { title.sel = (title.sel + (inp.up ? -1 : 1) + n) % n; sfx.blip(); }
+function titleLabel(o) {
+  const S = title.saves[title.si], many = title.saves.length > 1;
+  if (o.kind === 'save') return title.confirmDel ? t('Delete {0}? [A]: yes', t('Save {0}', S.n)) : (many ? '◀ ' : '') + t('Continue') + ' · ' + saveLabel(S) + (many ? ' ▶' : '');
+  if (o.kind === 'level') return (o.lv.length > 1 ? '◀ ' : '') + t(LEVEL_LABELS[o.lv[title.lv % o.lv.length]]) + (o.lv.length > 1 ? ' ▶' : '');
+  if (o.kind === 'new') return t('New game');
+  return '◀ ' + t('Language: {0}', LANG_NAMES[LANG]) + ' ▶';
+}
+function updateTitle(dt) {
+  const opts = title.opts = titleOptions(), n = opts.length;
+  title.note = Math.max(0, title.note - (dt || 0));
   if (title.sel >= n) title.sel = 0;
-  const o = title.opts[title.sel];
-  if (o.lang && (inp.a || inp.left || inp.right)) { cycleLang(inp.left ? -1 : 1); sfx.blip(); return; }
-  if (inp.left || inp.right) { cycleLang(inp.left ? -1 : 1); sfx.blip(); }
-  if (inp.a) { audioInit(); sfx.ding(); transition(o.act); }
+  if (inp.up || inp.down) { title.sel = (title.sel + (inp.up ? -1 : 1) + n) % n; title.confirmDel = false; sfx.blip(); }
+  const o = opts[title.sel], dir = inp.left ? -1 : inp.right ? 1 : 0, S = title.saves[title.si];
+  if (o.kind === 'lang') { if (inp.a || dir) { cycleLang(dir || 1); sfx.blip(); } return; }
+  if (o.kind === 'save') {
+    if (dir && title.saves.length > 1) { title.si = (title.si + dir + title.saves.length) % title.saves.length; title.lv = 0; title.confirmDel = false; sfx.blip(); }
+    else if (inp.b) { title.confirmDel = !title.confirmDel; sfx.blip(); }
+    else if (inp.a && title.confirmDel) { deleteSlot(S.n); sfx.bonk(); refreshTitle(); title.sel = 0; }
+    else if (inp.a) { audioInit(); sfx.ding(); transition(() => { setSlot(S.n); continueGame(); }); }
+    return;
+  }
+  if (o.kind === 'level') {
+    if (dir) { title.lv = (title.lv + dir + o.lv.length) % o.lv.length; sfx.blip(); }
+    if (inp.a) { const lv = o.lv[title.lv % o.lv.length]; audioInit(); sfx.ding(); transition(() => { setSlot(S.n); ST = loadGame() || defaultState(); enterLevel(lv); }); }
+    return;
+  }
+  if (inp.a) {   // New game: always a new save, never an overwrite
+    const free = DEBUG ? 1 : freeSlot();
+    if (!free) { title.note = 4; sfx.bonk(); return; }
+    audioInit(); sfx.ding(); transition(() => { setSlot(free); newGame(); });
+  }
 }
 function updatePlayer(dt, solid) {
   let ax = inp.ax, ay = inp.ay; const l = Math.hypot(ax, ay); if (l > 1) { ax /= l; ay /= l; }
@@ -1263,16 +1321,20 @@ function l1Update(dt) {
   // lions
   for (const l of lions) {
     const d = dist(l.x, l.y, P.x, P.y);
-    const tg = ST.tiger && dist(l.x, l.y, tiger.x, tiger.y) < 95;
+    // Schneeflocke scares lions for a while (fear timer), so they don't flip between fleeing and chasing every frame
+    const td = ST.tiger ? dist(l.x, l.y, tiger.x, tiger.y) : Infinity;
+    l.roarT = Math.max(0, (l.roarT || 0) - dt);
+    if (td < 95) { if (!(l.fear > 0)) popText(l.x, l.y - 18, '?!', '#fff'); l.fear = 2.5; }
+    else l.fear = Math.max(0, (l.fear || 0) - dt);
+    const tg = l.fear > 0;
     let vx = 0, vy = 0;
-    if (tg) { const a = Math.atan2(l.y - tiger.y, l.x - tiger.x); vx = Math.cos(a) * 85; vy = Math.sin(a) * 85; if (!l.scared) { l.scared = true; popText(l.x, l.y - 18, '?!', '#fff'); } l.chasing = false; }
+    if (tg) { const a = Math.atan2(l.y - tiger.y, l.x - tiger.x); vx = Math.cos(a) * 85; vy = Math.sin(a) * 85; l.chasing = false; }
     else if (l.cool > 0) { l.cool -= dt; const a = Math.atan2(l.y - P.y, l.x - P.x); vx = Math.cos(a) * 40; vy = Math.sin(a) * 40; }
-    else if (d < 90 && dist(l.x, l.y, l.hx, l.hy) < 260) {
-      l.scared = false;
-      if (!l.chasing) { l.chasing = true; sfx.roar(); popText(l.x, l.y - 18, 'ROAR!', '#ffcf6b'); }
+    else if (d < 90 && td > 140 && dist(l.x, l.y, l.hx, l.hy) < 260) {
+      if (!l.chasing) { l.chasing = true; if (l.roarT <= 0) { l.roarT = 3; sfx.roar(); popText(l.x, l.y - 18, 'ROAR!', '#ffcf6b'); } }
       const a = Math.atan2(P.y - l.y, P.x - l.x); vx = Math.cos(a) * 54; vy = Math.sin(a) * 54;
     } else {
-      l.scared = false; l.chasing = false; l.t -= dt;
+      l.chasing = false; l.t -= dt;
       if (l.t <= 0) { l.t = 1.5 + rnd() * 2.5; if (rnd() < .4) l.vx = l.vy = 0; else { const a = rnd() * 6.28; l.vx = Math.cos(a) * 22; l.vy = Math.sin(a) * 22; } if (dist(l.x, l.y, l.hx, l.hy) > 70) { const a = Math.atan2(l.hy - l.y, l.hx - l.x); l.vx = Math.cos(a) * 22; l.vy = Math.sin(a) * 22; } }
       vx = l.vx; vy = l.vy;
     }
@@ -1802,7 +1864,8 @@ function drawInterior() {
     else { R(sx, sy + ((x + y) % 2) * 8, 16, 1, st.line); R(sx, sy + 15, 16, 1, st.line); }
     if (ch === 'w') { R(sx, sy, 16, 16, '#3f8fb5'); R(sx + 3 + Math.round(Math.sin(time * 2 + x + y) * 2), sy + 5 + (x % 3) * 3, 6, 1, 'rgba(255,255,255,.4)'); }
     if (ch === 'g') { R(sx, sy, 16, 16, '#2f6a32'); for (let k = 0; k < 6; k++) R(sx + hash(x * 9 + k, y) % 14, sy + hash(y * 3 + k, x) % 12, 1, 3, ['#b48be0', '#ffffff', '#e86fa8', '#7ec850', '#c9a0f0', '#4f9a4a'][k]); }
-    if (ch === 'h') { R(sx + 1, sy + 1, 14, 14, '#d9b44a'); R(sx + 1, sy + 1, 14, 2, '#e8c862'); for (let k = 3; k < 14; k += 3) R(sx + k, sy + 3, 1, 11, '#c49a32'); }
+    if (ch === 'h' && IN.d.style === 'fugger') { R(sx + 1, sy + 1, 14, 14, '#e8c868'); R(sx + 1, sy + 1, 14, 4, '#b8432f'); R(sx + 1, sy + 5, 14, 1, '#8a2a1a'); R(sx + 5, sy + 8, 5, 5, '#8fc1e3'); R(sx + 7, sy + 8, 1, 5, '#6a4a2a'); }
+    else if (ch === 'h') { R(sx + 1, sy + 1, 14, 14, '#d9b44a'); R(sx + 1, sy + 1, 14, 2, '#e8c862'); for (let k = 3; k < 14; k += 3) R(sx + k, sy + 3, 1, 11, '#c49a32'); }
     if (ch === 'b') { R(sx + 1, sy + 4, 14, 9, IN.d.style === 'chapel' ? '#b58b52' : '#7a4a22'); R(sx + 1, sy + 4, 14, 2, IN.d.style === 'chapel' ? '#cfa76a' : '#94602e'); }
     if (ch === 'b' && IN.d.style === 'cellar' && (x + y) % 2) { R(sx + 6, sy + 4, 4, 4, '#f2c230'); R(sx + 6, sy + 3, 4, 1, '#ffffff'); R(sx + 10, sy + 5, 1, 2, '#dddddd'); }
     if (ch === 'r') { R(sx + 2, sy + 1, 12, 14, '#8a5a2c'); R(sx + 4, sy + 1, 2, 14, '#a06a38'); R(sx + 2, sy + 3, 12, 1, '#4a4a4a'); R(sx + 2, sy + 11, 12, 1, '#4a4a4a'); R(sx + 7, sy + 7, 2, 2, '#c0c0c0'); }
@@ -2027,10 +2090,18 @@ function drawUI() {
   if (scene === 'title') {
     txt('SARCHITECT', VW / 2, 26, 34, '#ffffff', 'center', true);
     txt(t('Break in · Sketch · Slide'), VW / 2, 64, 10, '#3a4a6a', 'center', true, false);
-    const opts = (title.opts || titleOptions()).map(o => o.lang ? '◀ ' + t('Language: {0}', LANG_NAMES[LANG]) + ' ▶' : t(o.label));
-    const oy = 82 - Math.max(0, opts.length - 3) * 8;
-    opts.forEach((o, i) => { const y = oy + i * 16, sel = i === title.sel; rrect(VW / 2 - 70, y, 140, 14, 7, sel ? 'rgba(255,111,168,.92)' : 'rgba(255,255,255,.55)'); txt((sel && i < opts.length - 1 ? '▶ ' : '') + o, VW / 2, y + 3, 8.5, sel ? '#fff' : '#334', 'center', true, false); });
-    txt(t('Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M'), VW / 2, 146, 6.5, '#334', 'center', false, false);
+    const opts = title.opts || titleOptions(), oy = 82 - Math.max(0, opts.length - 3) * 8, cur = opts[Math.min(title.sel, opts.length - 1)];
+    opts.forEach((o, i) => {
+      const y = oy + i * 16, sel = i === title.sel, warn = sel && o.kind === 'save' && title.confirmDel;
+      rrect(VW / 2 - 108, y, 216, 14, 7, warn ? 'rgba(200,50,50,.95)' : sel ? 'rgba(255,111,168,.92)' : 'rgba(255,255,255,.55)');
+      txt((sel && o.kind === 'new' ? '▶ ' : '') + titleLabel(o), VW / 2, y + 3.5, 7.5, sel ? '#fff' : '#334', 'center', true, false);
+    });
+    const hint = title.note > 0 ? t('The save list is full ({0}). Delete a save first: B on the Continue row.', MAX_SAVES)
+      : cur.kind === 'save' ? t(title.confirmDel ? '[A]: delete for good · B or ▲ ▼: keep it' : title.saves.length > 1 ? '◀ ▶: choose a save · [A]: continue · B: delete this save' : '[A]: continue · B: delete this save')
+      : cur.kind === 'level' ? t('[A]: jump to this level of the selected save')
+      : cur.kind === 'new' && title.saves.length ? t('Starts a new save. Your other saves are kept.')
+      : t('Move: Arrows/WASD · Action: Enter/Space/E · Bike: B · Book: Tab · Pause: Esc · Mute: M');
+    txt(hint, VW / 2, 146, 6.5, title.note > 0 ? '#a02020' : '#334', 'center', title.note > 0, false);
     txt(t('a game by C-Real, for Sarah ♥'), VW / 2, 156, 7.5, '#b0306a', 'center', true, false);
     return;
   }
@@ -2148,8 +2219,9 @@ function drawPause() {
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, VW, VH);
   rrect(VW / 2 - 120, 30, 240, 156, 8, 'rgba(18,16,28,.95)', '#ff8fb1');
   txt(t('PAUSED'), VW / 2, 38, 14, '#fff', 'center', true, false);
-  (LV.pauseLines || ['Move: Arrow keys / WASD / stick', '[A]: talk · pet · rope skip', 'Hold [A] at a ✨ spot to sketch it', 'B (B, Shift): hop on / off the black bike', 'Book (Tab, Q): your sketchbook', 'M: mute · Esc / P: pause', '', 'Avoid guard flashlight cones & lions.', 'Jump over lion poop. Pet cats. ❤']).concat([t('◀ ▶ Language: {0}', LANG_NAMES[LANG]), 'Press [A] or Esc to continue'])
-    .forEach((s, i) => txt(s ? t(s) : '', VW / 2, 60 + i * 10.5, 7.5, i >= 9 ? '#ffd34d' : '#ddd', 'center', i === 9, false));
+  const help = LV.pauseLines || ['Move: Arrow keys / WASD / stick', '[A]: talk · pet · rope skip', 'Hold [A] at a ✨ spot to sketch it', 'B (B, Shift): hop on / off the black bike', 'Book (Tab, Q): your sketchbook', 'M: mute · Esc / P: pause', '', 'Avoid guard flashlight cones & lions.', 'Jump over lion poop. Pet cats. ❤'], n = help.length;
+  help.concat([t('◀ ▶ Language: {0}', LANG_NAMES[LANG]), 'Press [A] or Esc to continue'])
+    .forEach((s, i) => txt(s ? t(s) : '', VW / 2, 60 + i * 10.5, 7.5, i >= n ? '#ffd34d' : '#ddd', 'center', i === n, false));
 }
 function pencil(fn) { ctx.save(); ctx.strokeStyle = '#4a4a52'; ctx.lineWidth = .7; ctx.lineCap = 'round'; fn(); ctx.restore(); }
 function jline(x0, y0, x1, y1, seed = 1) { const r = mulberry32(seed + Math.round(x0 * 7 + y0 * 13)); ctx.beginPath(); ctx.moveTo(x0 + (r() - .5), y0 + (r() - .5)); ctx.lineTo((x0 + x1) / 2 + (r() - .5) * 1.4, (y0 + y1) / 2 + (r() - .5) * 1.4); ctx.lineTo(x1 + (r() - .5), y1 + (r() - .5)); ctx.stroke(); }
@@ -2264,7 +2336,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.se
 // start once every script (index + california.js) has loaded
 function boot() {
   buildTiles(); loadLevel(1);
-  title.hasSave = !!loadGame();
+  refreshTitle();
   if (/debug2/.test(location.search) && LEVELS[2]) { newGame(); enterLevel(2); if (LEVELS[2].debug) LEVELS[2].debug(); }
   if (/debug3/.test(location.search) && LEVELS[3]) { newGame(); enterLevel(3); if (LEVELS[3].debug) LEVELS[3].debug(); }
   if (/debug4/.test(location.search) && LEVELS[4]) { newGame(); if (LEVELS[4].debug) LEVELS[4].debug(); enterLevel(4); }

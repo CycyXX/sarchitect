@@ -56,7 +56,7 @@ const CARDS5 = {
   muestair: { e: 0, y: 800, a: 1, i: '🎨', title: 'The frescoes of Müstair', text: 'The convent of St. John in the Graubünden Alps keeps the largest cycle of Carolingian wall paintings still standing. It is a UNESCO World Heritage Site (1983).' },
   charlemagne: { e: 0, y: 800, i: '👑', title: 'Charlemagne is crowned', text: 'On Christmas Day 800 Pope Leo III crowned the Frankish king Charlemagne emperor in Rome. His empire stretched from the Pyrenees to the Elbe, including today\'s Switzerland.' },
   minuscule: { e: 0, y: 790, a: 1, i: '✍️', title: 'Carolingian minuscule', text: 'Charlemagne\'s scholars, led by Alcuin, introduced a clear, rounded script with lowercase letters and spaces between the words. It is the ancestor of the small letters you are reading now.' },
-  aachen: { e: 0, y: 800, a: 1, i: '🕌', title: 'The Palatine Chapel at Aachen', text: 'Built around 800 as Charlemagne\'s court chapel: an octagon crowned by a dome, inspired by San Vitale in Ravenna. Charlemagne\'s throne still stands in the upper gallery.' },
+  aachen: { e: 0, y: 800, a: 1, i: '🏛️', title: 'The Palatine Chapel at Aachen', text: 'Built around 800 as Charlemagne\'s court chapel: an octagon crowned by a dome, inspired by San Vitale in Ravenna. Charlemagne\'s throne still stands in the upper gallery.' },
   stgall: { e: 0, y: 820, a: 1, i: '📜', title: 'The Plan of St. Gall', text: 'Drawn around 820 on five pieces of parchment: an ideal monastery with a church, library, hospital, gardens and even a brewery. It is the only surviving architectural drawing from the early Middle Ages.' },
   // era 1: high Middle Ages
   habsburg: { e: 1, y: 1020, a: 1, i: '🏰', title: 'Habsburg Castle', text: 'Built around 1020 in what is now Aargau. The counts of Habsburg later became dukes of Austria (1282) and one of Europe\'s most powerful families.' },
@@ -162,8 +162,8 @@ function m1Terrain(tx, ty, r) {
 const E5_1 = {
   key: 'high', name: 'The High Middle Ages', years: '~1230–1315', pose: 'hadlaub', music: 'minne', W: 76, H: 48, seed: 1291, from: 1230,
   zoneOf: m1Zone, baseTile: m1Base, terrain: m1Terrain, snowyPine: (tx, ty) => ty >= 38,
-  paths: [[[33, 31], [29, 31], [29, 30]], [[33, 31], [33, 35], [43, 35], [43, 31]], [[43, 35], [43, 43]], [[33, 31], [26, 31], [26, 20], [26, 12], [38, 12], [38, 10]], [[38, 12], [59, 12], [59, 10]], [[59, 12], [58, 16], [58, 21]],
-    [[58, 21], [58, 30], [71, 30]], [[26, 31], [20, 31], [15, 31], [15, 29]], [[15, 31], [15, 35], [14, 41]]],
+  paths: [[[33, 31], [29, 31], [29, 30]], [[33, 31], [33, 35], [43, 35], [43, 31]], [[43, 35], [43, 38], [47, 38], [47, 43], [43, 43]], [[33, 31], [26, 31], [26, 20], [26, 12], [38, 12], [38, 10]], [[38, 12], [59, 12], [59, 10]], [[59, 12], [55, 14], [55, 21], [58, 21]],
+    [[58, 21], [58, 30], [71, 30]], [[26, 31], [20, 31], [15, 31], [15, 29]], [[15, 31], [15, 34], [18, 34], [18, 41], [14, 41]]],
   buildings: [
     { id: 'habsburg', x: 34, y: 4, w: 8, h: 6, kind: 'castle', label: 'Castle' },
     { id: 'manesse', x: 56, y: 6, w: 7, h: 4, kind: 'townhall', label: 'Codex Manesse' },
@@ -207,7 +207,7 @@ const E5_2 = {
   key: 'late', name: 'The Late Middle Ages', years: '~1333–1481', pose: 'gutenberg', music: 'gothic', W: 76, H: 46, seed: 1476, from: 1333,
   zoneOf: m2Zone, baseTile: m2Base, terrain: m2Terrain, snowyPine: (tx, ty) => ty >= 40,
   paths: [cob5([[31, 33], [19, 33], [19, 20], [31, 20]]), [[19, 20], [19, 12], [27, 12], [27, 10]], cob5([[27, 12], [37, 12], [37, 9]]), [[37, 12], [57, 12], [57, 9]], [[31, 33], [27, 33], [27, 39], [33, 39]],
-    [[31, 33], [41, 33], [41, 31]], [[41, 33], [45, 33]], [[45, 33], [55, 33], [55, 22]], [[55, 33], [67, 33], [67, 40]], [[19, 33], [15, 33], [15, 39]]],
+    [[31, 33], [41, 33], [41, 31]], [[41, 33], [45, 33]], [[45, 33], [55, 33], [55, 22]], [[55, 33], [67, 33], [67, 40]], [[19, 33], [19, 39], [15, 39]]],
   buildings: [
     { id: 'kapell', x: 27, y: 17, w: 8, h: 3, kind: 'kapellbruecke', label: 'Sneak in' },
     { id: 'press', x: 54, y: 5, w: 6, h: 4, kind: 'pressshop', label: 'Printing press' },
@@ -251,8 +251,8 @@ function m3Terrain(tx, ty, r) {
 const E5_3 = {
   key: 'renaissance', name: 'Renaissance & Reformation', years: '~1494–1531', pose: 'paracelsus', music: 'renaiss', W: 80, H: 48, seed: 1529, from: 1494,
   zoneOf: m3Zone, baseTile: m3Base, terrain: m3Terrain,
-  paths: [cob5([[20, 31], [24, 31], [24, 29]]), cob5([[20, 31], [19, 31], [19, 22]]), [[24, 31], [33, 31], [33, 15], [39, 15], [39, 17]], [[39, 15], [49, 15], [49, 19]], [[33, 15], [33, 8], [34, 8]], cob5([[20, 31], [20, 38], [12, 38], [12, 44]]),
-    [[24, 31], [46, 31], [46, 41]], [[46, 41], [62, 41]], [[46, 31], [71, 31], [71, 32]]],
+  paths: [cob5([[20, 31], [24, 31], [24, 29]]), cob5([[20, 31], [19, 31], [19, 22]]), [[24, 31], [33, 31], [33, 19], [49, 19]], [[39, 19], [39, 17]], [[33, 19], [33, 8], [34, 8]], cob5([[20, 31], [20, 38], [16, 38], [16, 44], [12, 44]]),
+    [[24, 31], [49, 31], [49, 41], [46, 41]], [[46, 41], [62, 41]], [[49, 31], [68, 31], [68, 32], [71, 32]]],
   buildings: [
     { id: 'froben', x: 16, y: 18, w: 6, h: 4, kind: 'pressshop', label: 'Erasmus' },
     { id: 'apothecary', x: 22, y: 26, w: 5, h: 3, kind: 'apothecary', label: 'Paracelsus' },
@@ -344,19 +344,19 @@ Object.assign(SPEAKER_COL, { 'Othmar': '#c8a878', 'Librarian': '#c8b090', 'Alcui
 // who stands where in each era
 const NPCS5 = [
   [['Othmar', 35, 21], ['Alemann', 31, 25], ['Librarian', 46, 21], ['Alcuin', 39, 21], ['Charlemagne', 9, 15], ['Nun', 58, 25]],
-  [['Urner', 45, 42], ['Elder', 30, 31], ['Gessler', 44, 32], ['Knight', 40, 11], ['Mason', 16, 40], ['Count Peter', 17, 30]],
+  [['Urner', 46, 43], ['Elder', 30, 31], ['Gessler', 44, 32], ['Knight', 40, 11], ['Mason', 16, 42], ['Count Peter', 17, 30]],
   [['Fust', 55, 10], ['Doctor', 28, 11], ['Säumer', 34, 40], ['Runner', 16, 40], ['Hus', 54, 23], ['Brother Klaus', 46, 34], ['Pikeman', 43, 32], ['Charles', 17, 35], ['Guildmaster', 36, 11]],
-  [['Erasmus', 19, 23], ['Holbein', 21, 24], ['Froschauer', 40, 17], ['Zwingli', 48, 20], ['Reisläufer', 61, 42], ['Fugger', 35, 9], ['Dürer', 33, 12], ['Watchman', 28, 9], ['Clockmaker', 12, 43], ['Zürcher', 44, 40], ['Innerschweizer', 48, 40]],
+  [['Erasmus', 19, 23], ['Holbein', 21, 24], ['Froschauer', 40, 17], ['Zwingli', 48, 20], ['Reisläufer', 61, 42], ['Fugger', 35, 9], ['Dürer', 33, 12], ['Watchman', 28, 9], ['Clockmaker', 14, 45], ['Zürcher', 43, 41], ['Innerschweizer', 48, 40]],
 ];
 const HAZ_SPAWN5 = [
-  [['wolf', 8, 36], ['wolf', 18, 34], ['wolf', 5, 24], ['boar', 62, 28]],
+  [['wolf', 8, 36], ['wolf', 20, 38], ['wolf', 5, 24], ['boar', 62, 28]],
   [['soldier', 36, 12], ['soldier', 46, 12], ['wolf', 55, 26], ['wolf', 46, 44], ['wolf', 22, 22]],
   [['rat', 24, 35], ['rat', 38, 32], ['rat', 20, 12], ['rat', 50, 28], ['soldier', 10, 40]],
   [['bull', 52, 34], ['bull', 60, 26], ['soldier', 66, 40]],
 ];
 Object.assign(HAZ4, {
-  wolf: { sp: 66, range: 100, leash: 220, wsp: 18, hit: 11, msg: 'AROOO!' }, soldier: { sp: 50, range: 70, leash: 160, wsp: 14, hit: 11, msg: 'Halt!' },
-  rat: { sp: 76, range: 50, leash: 90, wsp: 20, hit: 8, msg: 'Squeak!' }, bull: { sp: 72, range: 70, leash: 130, wsp: 8, hit: 13, msg: 'MOO!' },
+  wolf: { sp: 58, range: 100, leash: 220, wsp: 18, hit: 11, msg: 'AROOO!' }, soldier: { sp: 50, range: 70, leash: 160, wsp: 14, hit: 11, msg: 'Halt!' },
+  rat: { sp: 60, range: 50, leash: 90, wsp: 20, hit: 8, msg: 'Squeak!' }, bull: { sp: 60, range: 70, leash: 130, wsp: 8, hit: 13, msg: 'MOO!' },
 });
 let G5 = { npcs: [], haz: [], bear: null };
 function l5Spawn() {
@@ -530,7 +530,7 @@ function l5Drawables(D, vis) {
   if (G5.bear) add(G5.bear, () => drawBear5(G5.bear.x, G5.bear.y, 1, time));
 }
 function l5WorldLabels(ox, oy) {
-  const near = (id, label, col = '#fff', dy = -8) => { const b = BMAP[id]; if (b && dist(b.doorX, b.doorY, P.x, P.y) < 180) txt(label, b.doorX + ox, b.y * 16 + oy + dy, 6.5, col, 'center', true); };
+  const near = (id, label, col = '#fff', dy = -8) => { const b = BMAP[id]; if (b && dist(b.doorX, b.doorY, P.x, P.y) < 180) txt(t(label), b.doorX + ox, b.y * 16 + oy + dy, 6.5, col, 'center', true); };
   const e = L5().era;
   if (e === 0) { near('scripto', 'ST. GALLEN', '#ffe8b0', -34); near('aachen', 'AACHEN', '#ffe8b0', -10); near('muestair', 'MÜSTAIR', '#ffe8b0', -22); }
   if (e === 1) { near('habsburg', 'HABSBURG', '#ffe8b0', -34); near('chillon', 'CHILLON', '#ffe8b0', -22); near('lausanne', 'LAUSANNE', '#ffe8b0', -28); near('manesse', 'ZÜRICH', '#ffe8b0', -10); }
@@ -556,7 +556,7 @@ Object.assign(TIMING4, {
     },
   },
   apple: {
-    title: 'THE APPLE SHOT', goal: 1, speed: 3, zone: .15, music: 'minne', tip: 'Hold your breath... press [A] when the crosshair is on the apple (green zone)!',
+    title: 'THE APPLE SHOT', goal: 1, speed: 2.4, zone: .2, music: 'minne', tip: 'Hold your breath... press [A] when the crosshair is on the apple (green zone)!',
     win: 'Bullseye! 🍎', winSub: 'In the legend, Tell shot the apple off his own son\'s head, and kept a second bolt for the tyrant. The story first appears in the 15th century.', lose: 'The bolt flew wide! (C-Real faints.)',
     draw(M, k) {
       sky4('#8ac4ee', '#e8f4fa', 120); drawMountains(110, '#8aa3c2', true, 19); R(0, 108, VW, 108, '#b8aa8a'); for (let y = 112; y < VH; y += 10) for (let x = (y / 10 % 2) * 7; x < VW; x += 14) R(x, y, 13, 1, '#a89a7a');
@@ -845,12 +845,22 @@ const WIN5 = {
   murten: won5('murten', [['Runner', '*gasps* Victory at Murten! Charles the Bold is beaten!'], ['C-Real', 'Legend says the messenger carried a linden branch to Fribourg. Today a 17 km race remembers him.']], 'murten'),
   dose: won5('dose', [['C-Real', 'Everything is poison, and nothing is without poison. Only the dose makes it right.'], ['Sarah', 'That is why every medicine has a dosage on it!'], ['C-Real', 'And in 1543 a doctor from Brussels will print the first modern anatomy book right here in Basel: Vesalius.']], ['paracelsus', 'vesalius']),
   erasmus: won5('erasmus', [['Erasmus', 'Books are the best way to spread ideas. And printers are excellent company.'], ['Erasmus', 'My friend Holbein painted my portrait last year. He makes everyone look intelligent.']], 'erasmus'),
-  wurst: won5('wurst', [['Zwingli', 'The Bible alone is the measure. Zürich will change.'], ['C-Real', 'A few months earlier, in Wittenberg, Luther had started the Reformation by criticising the sale of indulgences.']], ['wurst', 'luther']),
+  wurst: won5('wurst', [['Zwingli', 'The Bible alone is the measure. Zürich will change.'], ['C-Real', 'Five years earlier, in 1517, Luther had started the Reformation in Wittenberg by criticising the sale of indulgences.']], ['wurst', 'luther']),
   marignano: won5('marignano', [['Reisläufer', 'We lost. Time to go home and keep out of foreign wars.'], ['C-Real', 'Swiss soldiers still served abroad for centuries. Since 1506 the Pope\'s own guard has been Swiss.']], ['marignano', 'swissguard']),
   soup: won5('soup', [['Innerschweizer', 'Cheers! I never thought I would eat with a Zürcher.'], ['Zürcher', 'This soup tastes better than war.'], ['C-Real', 'In 1531 war did break out and Zwingli fell. But for one afternoon in 1529, soup beat swords.']], ['kappel', 'kappel2']),
 };
 const winStGall5 = () => { L5().sk.stgall = 1; st5('sketches'); say([['Sarah', 'Got it! The Plan of St. Gall. ✏️'], ['Sketchbook', 'An ideal monastery on five sheets of parchment: church, library, hospital, gardens and even a brewery.']], () => { card4('stgall'); toast(t('✏️ Sketched: {0}', t(SKETCHES5[0][2]))); checkEra5(); }); };
-const quiz5 = id => startQuiz4({ ...QUIZ5[id], onWin: WIN5[id] });
+// a finished conversation gets a short closing line instead of replaying the whole quiz
+const DONE5 = {
+  devil: [['Urner', 'A goat for the devil! Best deal Uri ever made.']],
+  oath: [['Elder', 'The oath is sworn. Now keep it!']],
+  plague: [['Doctor', 'Wash, wait and keep your distance. That is all I know.']],
+  wurst: [['Froschauer', 'The sausages were excellent. The scandal was even better.']],
+  marignano: [['Reisläufer', 'We lost at Marignano. Time to go home and keep out of foreign wars.']],
+};
+const quiz5 = id => { if (q5(id) && DONE5[id]) say(DONE5[id]); else startQuiz4({ ...QUIZ5[id], onWin: WIN5[id] }); };
+// Erasmus: the quiz first, then (once the era is done) the Chronicler's exam, which can be retaken here
+function erasmusAct5() { if (!q5('erasmus')) quiz5('erasmus'); else if (eraDone5(3) && !L5().flags.exam) startExam5(); else say([['Erasmus', 'Books are the best way to spread ideas.']]); }
 const INTRO5 = [
   [['C-Real', 'Sarah! Behold: Gallus, Irish monk. Brown cowl, walking staff... and a very polite bear.'], ['Sarah', 'Gallus? The founder of St. Gallen?'], ['C-Real', 'Exactly! It is the year 612, and I am about to settle in these woods. The monks here will one day keep one of the greatest libraries in Europe.'],
     ['C-Real', 'The portal stone in the south-east wakes up once we understand this era: help the bear, learn to copy books, and sketch the Plan of St. Gall and the Palatine Chapel at Aachen.']],
@@ -905,7 +915,7 @@ const NPC_TALK5 = {
   'Pikeman'() { quickCard5([['Pikeman', 'I carry the long pike. At Sempach in 1386 the knights of Habsburg met our halberds and pikes. We won.'], ['Pikeman', 'They tell of Winkelried who gathered the enemy spears in his arms. Nobody wrote it down for 150 years, though.']], ['sempach', 'winkelried']); },
   'Charles'() { say([['Charles', 'I am Charles the Bold, Duke of Burgundy. I will conquer Switzerland! Behold my cannons!'], ['Sarah', 'In 1476 you lose at Grandson and Murten. And in 1477 you die at Nancy.'], ['Charles', 'Do not spoil my war!']]); },
   'Guildmaster'() { quickCard5([['Guildmaster', 'Greetings from Zürich! In 1336 our guilds, led by Rudolf Brun, took power from the old noble families.'], ['Guildmaster', 'Butchers, bakers, weavers: now the craftsmen have a vote in the council. Very modern.']], 'zuerich'); },
-  'Erasmus'() { quiz5('erasmus'); },
+  'Erasmus'() { erasmusAct5(); },
   'Holbein'() { quickCard5([['Holbein', 'I am Hans Holbein the Younger. I paint portraits: Erasmus, merchants, councillors. And now you, Sarah!'], ['Sarah', 'Do I need to hold still?'], ['Holbein', 'Yes. Three hours. Think of a very important building.'], ['Sarah', '...Done. How do I look?'], ['Holbein', 'Like a woman who has just sketched the Pantheon. Splendid.']], 'holbein'); },
   'Froschauer'() { quiz5('wurst'); },
   'Zwingli'() { if (!q5('wurst')) say([['Zwingli', 'I am Ulrich Zwingli, people\'s priest at the Grossmünster. I preach straight from the Bible.'], ['Zwingli', 'The printer Froschauer has made a delicious scandal with his sausages. Go and talk to him.']]); else say([['Zwingli', 'Zürich will be reformed: no images in churches, no fasting rules, no pilgrimages.']]); },
@@ -942,7 +952,7 @@ function l5BuildingAct(b) {
     case 'council': NPC_TALK5.Hus(); return;
     case 'winkel': quickCard5([['Sarah', 'A memorial for Winkelried at Sempach. The legend is much younger than the battle.'], ['C-Real', 'Legends grow, Sarah. That is why historians check them.']], ['sempach', 'winkelried']); return;
     case 'ranft': NPC_TALK5['Brother Klaus'](); return;
-    case 'froben': if (!q5('erasmus')) quiz5('erasmus'); else if (eraDone5(3) && !L5().flags.exam) startExam5(); else say([['Erasmus', 'Books are the best way to spread ideas.']]); return;
+    case 'froben': erasmusAct5(); return;
     case 'apothecary': if (!q5('dose')) say([['C-Real', 'My apothecary in Basel! Every remedy has a poison inside. Today: the right dose.']], () => startDose5(WIN5.dose)); else say([['C-Real', 'Everything is poison. Only the dose decides.']]); return;
     case 'froschauer': quiz5('wurst'); return;
     case 'grossmuenster': NPC_TALK5.Zwingli(); return;
@@ -1202,7 +1212,7 @@ addTR([
   ["William Tell", "Wilhelm Tell", "De Wilhelm Täll"], ["The tale of Tell, the hat on the pole and the apple shot was first written down around 1470 in the White Book of Sarnen. It is a legend, not a historical record.", "Die Geschichte von Tell, dem Hut auf der Stange und dem Apfelschuss wurde um 1470 erstmals im Weissen Buch von Sarnen aufgeschrieben. Sie ist eine Legende, kein Geschichtsbericht.", "D Gschicht vom Täll, em Huet uf de Stange und em Öpfelschuss isch um 1470 zerscht im Wiisse Buech vo Sarne ufgschribe worde. Si isch e Legände, kei Gschichtsbricht."],
   ["The Battle of Morgarten", "Die Schlacht am Morgarten", "D Schlacht am Morgarte"], ["On 15 November 1315 the Confederates ambushed Duke Leopold's Habsburg army in the narrow pass at Morgarten near the Ägerisee, with rocks and logs, so tradition says.", "Am 15. November 1315 überfielen die Eidgenossen das Heer Herzog Leopolds von Habsburg im engen Pass am Morgarten beim Ägerisee, der Überlieferung nach mit Steinen und Baumstämmen.", "Am 15. November 1315 händ d Eidgnosse s Heer vom Herzog Leopold vo Habsburg im ängschte Pass am Morgarte bim Ägerisee überfalle, nach de Überlieferig mit Stei und Boumstämm."],
   ["The Codex Manesse", "Die Manessische Liederhandschrift", "D Manessisch Liederhandschrift"], ["A songbook made in Zürich around 1300 with songs by about 140 poets, most with a full-page painting. Johannes Hadlaub, who sang of courtly love, is one of them.", "Ein Liederbuch aus Zürich um 1300 mit Liedern von etwa 140 Dichtern, die meisten mit einem ganzseitigen Bild. Johannes Hadlaub, der von der höfischen Liebe sang, ist einer davon.", "Es Liederbuech us Züri um 1300 mit Lieder vo öppe 140 Dichter, di meischte mit emne ganzsiitige Bild. De Johannes Hadlaub, wo vo de höfische Liebi gsunge het, isch eine devo."],
-  ["The Kapellbrücke", "Die Kapellbrücke", "D Chapällbrugg"], ["The covered wooden bridge in Lucerne was built around 1333 as part of the city's defences. Its roof triangles were painted in the 17th century. Burnt in 1993 and rebuilt.", "Die gedeckte Holzbrücke in Luzern wurde um 1333 als Teil der Stadtbefestigung gebaut. Die Dreiecksbilder im Dach wurden im 17. Jahrhundert gemalt. 1993 brannte sie ab und wurde wieder aufgebaut.", "D gedeckt Holzbrugg z Luzärn isch um 1333 als Teil vo de Stadtbefestigig baut worde. D Dreiecksbilder im Dach sind im 17. Jahrhundert gmalt worde. 1993 isch si abbrännt und wieder ufbaut worde."],
+  ["The Kapellbrücke", "Die Kapellbrücke", "D Chapällbrugg"], ["The covered wooden bridge in Lucerne was built around 1333 as part of the city's defences. Its roof triangles were painted in the 17th century. Burnt in 1993 and rebuilt.", "Die gedeckte Holzbrücke in Luzern wurde um 1333 als Teil der Stadtbefestigung gebaut. Die Dreiecksbilder im Dach wurden im 17. Jahrhundert gemalt. 1993 brannte sie ab und wurde wieder aufgebaut.", "D gedeckt Holzbrugg z Lozärn isch um 1333 als Teil vo de Stadtbefestigig baut worde. D Dreiecksbilder im Dach sind im 17. Jahrhundert gmalt worde. 1993 isch si abbrännt und wieder ufbaut worde."],
   ["Zürich's guilds take power", "Zürichs Zünfte übernehmen die Macht", "Zürichs Zünft übernämed d Macht"], ["In 1336 Rudolf Brun and the craft guilds took power from the old noble families. Zürich's constitution with guilds lasted for centuries.", "1336 nahmen Rudolf Brun und die Handwerkerzünfte den alten Adelsfamilien die Macht ab. Zürichs Zunftverfassung hielt Jahrhunderte.", "1336 händ de Rudolf Brun und d Handwärkerzünft de alte Adelsfamilie d Macht abgnoh. Zürichs Zunftverfassig het Jahrhundert ghebt."],
   ["The Black Death", "Der Schwarze Tod", "De Schwarz Tod"], ["The plague reached Europe in 1347 and killed about a third of its people. Frightened people blamed others: Jewish communities in many cities, including Basel and Zürich, were attacked. In reality fleas on rats carried the bacterium.", "Die Pest erreichte Europa 1347 und tötete etwa ein Drittel der Menschen. Verängstigte Menschen machten andere verantwortlich: In vielen Städten, auch in Basel und Zürich, wurden jüdische Gemeinden angegriffen. In Wahrheit übertrugen Flöhe auf Ratten das Bakterium.", "D Pescht het Europa 1347 erreicht und öppe es Drittel vo de Mänsche tödet. Verängschtigti Mänsche händ anderi verantwortlich gmacht: I vilne Städt, au z Basel und Züri, sind jüdischi Gmeinde aagriffe worde. I Würklichkeit händ Flöh uf Ratte s Bakterium überträge."],
   ["The Basel earthquake", "Das Basler Erdbeben", "S Basler Ärdbebe"], ["On St. Luke's Day 1356 the strongest earthquake recorded in Central Europe destroyed Basel and many castles nearby. Fires followed. The city was rebuilt.", "Am Lukastag 1356 zerstörte das stärkste je in Mitteleuropa verzeichnete Erdbeben Basel und viele Burgen in der Umgebung. Brände folgten. Die Stadt wurde wieder aufgebaut.", "Am Lukastag 1356 het s stärchscht je i Mitteleuropa verzeichnet Ärdbebe Basel und vill Burge i de Umgäbig zerstört. Brönd sind gfolgt. D Stadt isch wieder ufbaut worde."],
@@ -1266,14 +1276,14 @@ addTR([
   ["The Gotthard route made Uri rich: tolls, mules and mountain cheese. 🧀", "Die Gotthardroute machte Uri reich: Zölle, Maultiere und Bergkäse. 🧀", "D Gotthardroute het Uri riich gmacht: Zöll, Mulä und Bärgchäs. 🧀"],
   ["Everyone in this century says \"the Emperor\" like he is next door. He is in Italy. Mostly.", "In diesem Jahrhundert sagen alle \"der Kaiser\", als wohne er nebenan. Er ist in Italien. Meistens.", "I dem Jahrhundert säged alli \"de Kaiser\", als wohni er näbedra. Er isch i Italie. Meischtens."],
    
-  ["LUZERN, ~1333. A covered wooden bridge zigzags across the Reuss and doubles as part of the city wall.", "LUZERN, um 1333. Eine gedeckte Holzbrücke führt im Zickzack über die Reuss und ist zugleich Teil der Stadtmauer.", "LUZÄRN, um 1333. E gedeckti Holzbrugg füehrt im Zickzack über d Reuss und isch zugliich Teil vo de Stadtmuur."],
+  ["LUZERN, ~1333. A covered wooden bridge zigzags across the Reuss and doubles as part of the city wall.", "LUZERN, um 1333. Eine gedeckte Holzbrücke führt im Zickzack über die Reuss und ist zugleich Teil der Stadtmauer.", "LOZÄRN, um 1333. E gedeckti Holzbrugg füehrt im Zickzack über d Reuss und isch zugliich Teil vo de Stadtmuur."],
   ["BASEL, 1356. A great earthquake shook the city, and fires finished the job. Rebuilding has begun.", "BASEL, 1356. Ein grosses Erdbeben erschütterte die Stadt, und Brände vollendeten das Werk. Der Wiederaufbau hat begonnen.", "BASEL, 1356. E grosses Ärdbebe het d Stadt gschüttlet, und Brönd händ s Wärch vollendet. De Wideraufbau het aagfange."],
   ["MAINZ, ~1450. It smells of ink and hot metal. Someone is up to something with little metal letters.", "MAINZ, um 1450. Es riecht nach Tinte und heissem Metall. Jemand tüftelt an etwas mit kleinen Metallbuchstaben.", "MAINZ, um 1450. Es schmöckt nach Tinte und heisse Metall. Öpper tüftlet a öppis mit chliine Metallbuechstabe."],
   ["MURTEN, 1476. Charles the Bold of Burgundy is besieging the little town.", "MURTEN, 1476. Karl der Kühne von Burgund belagert das Städtchen.", "MURTE, 1476. De Karl de Chüen vo Burgund belageret s Städtli."],
   ["SEMPACH, 1386. Here the Confederates defeated the Habsburg knights.", "SEMPACH, 1386. Hier besiegten die Eidgenossen die Habsburger Ritter.", "SEMPACH, 1386. Da händ d Eidgnosse d Habsburger Ritter bsiegt."],
   ["THE GOTTHARD ROAD. Mules, merchants, monks and the occasional avalanche.", "DIE GOTTHARDSTRASSE. Maultiere, Händler, Mönche und gelegentlich eine Lawine.", "D GOTTHARDSTRASS. Mulä, Händler, Mönch und gäng wieder e Lawine."],
-  ["Luzern ~1333", "Luzern um 1333", "Luzärn um 1333"], ["Murten 1476", "Murten 1476", "Murte 1476"], ["Basel ~1356", "Basel um 1356", "Basel um 1356"], ["Mainz ~1450", "Mainz um 1450", "Mainz um 1450"], ["Constance ~1414", "Konstanz um 1414", "Konschtanz um 1414"], ["The Gotthard road", "Die Gotthardstrasse", "D Gotthardstrass"],
-  ["Luzern! Home town of... well, of Sarah, in a few centuries. 🌉", "Luzern! Heimatstadt von... na ja, von Sarah, in ein paar Jahrhunderten. 🌉", "Luzärn! Heimatstadt vo... naja, vo de Sarah, i es paar Jahrhundert. 🌉"],
+  ["Luzern ~1333", "Luzern um 1333", "Lozärn um 1333"], ["Murten 1476", "Murten 1476", "Murte 1476"], ["Basel ~1356", "Basel um 1356", "Basel um 1356"], ["Mainz ~1450", "Mainz um 1450", "Mainz um 1450"], ["Constance ~1414", "Konstanz um 1414", "Konschtanz um 1414"], ["The Gotthard road", "Die Gotthardstrasse", "D Gotthardstrass"],
+  ["Luzern! Home town of... well, of Sarah, in a few centuries. 🌉", "Luzern! Heimatstadt von... na ja, von Sarah, in ein paar Jahrhunderten. 🌉", "Lozärn! Heimatstadt vo... naja, vo de Sarah, i es paar Jahrhundert. 🌉"],
   ["Basel: the new university, the Rhine and a very nervous doctor. 🎓", "Basel: die neue Universität, der Rhein und ein sehr nervöser Arzt. 🎓", "Basel: di neu Universität, de Rhii und en sehr nervöse Arzt. 🎓"],
   ["Mainz. Listen: *clunk, clunk*. The sound of the future. 🔤", "Mainz. Hör zu: *klonk, klonk*. Das Geräusch der Zukunft. 🔤", "Mainz. Lose: *klonk, klonk*. S Gruusch vo de Zuekunft. 🔤"],
   ["Murten: city walls, a lake and an army outside. ⚔️", "Murten: Stadtmauern, ein See und ein Heer davor. ⚔️", "Murte: Stadtmuure, en See und es Heer dervor. ⚔️"],
@@ -1281,7 +1291,7 @@ addTR([
   ["The mule track over the Gotthard. Watch your step. 🫏", "Der Saumpfad über den Gotthard. Pass auf, wohin du trittst. 🫏", "De Saumpfad über de Gotthard. Pass uf, wo du häre trittsch. 🫏"],
   ["Before printing, one book took a scribe a year. Gutenberg makes 200 copies in the same time. 🔤", "Vor dem Buchdruck brauchte ein Schreiber ein Jahr für ein Buch. Gutenberg macht in derselben Zeit 200 Kopien. 🔤", "Vor em Buechdruck het en Schriiber es Jahr für es Buech bruucht. De Gutenberg macht i de glyche Ziit 200 Kopie. 🔤"],
   ["Do not touch the rats. Do not touch ANYTHING. 🐀", "Fass die Ratten nicht an. Fass NICHTS an. 🐀", "Lang d Ratte nöd aa. Lang NÜT aa. 🐀"],
-  ["Luzern's bridge has the plague paintings... in 300 years. Spoilers!", "Luzerns Brücke bekommt die Pestbilder... in 300 Jahren. Spoiler!", "D Luzärner Brugg überchunnt d Pestbilder... i 300 Jahr. Spoiler!"],
+  ["Luzern's bridge has the plague paintings... in 300 years. Spoilers!", "Luzerns Brücke bekommt die Pestbilder... in 300 Jahren. Spoiler!", "D Lozärner Brugg überchunnt d Pestbilder... i 300 Jahr. Spoiler!"],
   ["Swiss pikemen are the most feared soldiers in Europe. Politely stay out of their way.", "Schweizer Pikeniere sind die gefürchtetsten Soldaten Europas. Geh ihnen höflich aus dem Weg.", "Schwiizer Pikeniere sind di gfürchtetschte Soldate vo Europa. Gang ine höflich uus em Wäg."],
   ["BASEL, ~1520. Printing shops on every corner. Even the cobblestones seem to read.", "BASEL, um 1520. Druckereien an jeder Ecke. Sogar das Pflaster scheint zu lesen.", "BASEL, um 1520. Druckereie a jedere Egge. Sogar s Pflaschter schiint z läse."],
   ["ZÜRICH, 1522. A preacher named Zwingli is stirring up trouble. Sausage-shaped trouble.", "ZÜRICH, 1522. Ein Prediger namens Zwingli sorgt für Ärger. Wurstförmigen Ärger.", "ZÜRI, 1522. En Prediger namens Zwingli macht Ärger. Wurschtförmige Ärger."],
@@ -1509,7 +1519,7 @@ addTR([
   ["Books are the best way to spread ideas. And printers are excellent company.", "Bücher sind der beste Weg, Ideen zu verbreiten. Und Drucker sind eine hervorragende Gesellschaft.", "Büecher sind de beschti Wäg, Ideene z verbreite. Und Drucker sind e prima Gsellschaft."],
   ["My friend Holbein painted my portrait last year. He makes everyone look intelligent.", "Mein Freund Holbein hat letztes Jahr mein Porträt gemalt. Er lässt jeden intelligent aussehen.", "Min Fründ Holbein het letscht Jahr mis Porträt gmalt. Er lat jede intelligänt usgseh."],
   ["The Bible alone is the measure. Zürich will change.", "Allein die Bibel ist das Mass. Zürich wird sich ändern.", "Elei d Bible isch s Mass. Züri wird sich ändere."],
-  ["A few months earlier, in Wittenberg, Luther had started the Reformation by criticising the sale of indulgences.", "Wenige Monate zuvor hatte Luther in Wittenberg die Reformation begonnen, indem er den Ablasshandel kritisierte.", "Wenigi Monet vorhär het de Luther z Wittenberg d Reformation aagfange, indem er de Ablasshandel kritisiert het."],
+  ["Five years earlier, in 1517, Luther had started the Reformation in Wittenberg by criticising the sale of indulgences.", "Fünf Jahre zuvor, 1517, hatte Luther in Wittenberg die Reformation begonnen, indem er den Ablasshandel kritisierte.", "Föif Jahr vorhär, 1517, het de Luther z Wittenberg d Reformation aagfange, indem er de Ablasshandel kritisiert het."],
   ["We lost. Time to go home and keep out of foreign wars.", "Wir haben verloren. Zeit, nach Hause zu gehen und sich aus fremden Kriegen herauszuhalten.", "Mir händ verlore. Ziit, hei z gah und sich us fremde Chriege useznäh."],
   ["Swiss soldiers still served abroad for centuries. Since 1506 the Pope's own guard has been Swiss.", "Schweizer Soldaten dienten noch Jahrhunderte im Ausland. Seit 1506 ist die Garde des Papstes schweizerisch.", "Schwiizer Soldate händ no Jahrhundert im Usland dient. Sit 1506 isch d Garde vom Papscht schwiizerisch."],
   ["Cheers! I never thought I would eat with a Zürcher.", "Zum Wohl! Ich hätte nie gedacht, dass ich mit einem Zürcher esse.", "Zum Wohl! Ich hett nie dänkt, dass ich mit emne Züri ässe."],
@@ -1527,7 +1537,7 @@ addTR([
   ["To wake the portal stone in the east: outsmart the devil, take the apple shot, join the oath, join the ambush, and sketch Château de Chillon.", "Um den Portalstein im Osten zu wecken: Überliste den Teufel, wage den Apfelschuss, schwöre den Eid, mach beim Hinterhalt mit und skizziere Schloss Chillon.", "Zum de Portalstei im Oschte z wecke: Überlischte de Tüfel, wag de Öpfelschuss, schwör de Eid, mach bim Hinderhalt mit und skizzier s Schloss Chillon."],
   ["Sarah! Johannes Gutenberg, goldsmith from Mainz. My hands are full of ink and my pockets are full of debt.", "Sarah! Johannes Gutenberg, Goldschmied aus Mainz. Meine Hände sind voller Tinte und meine Taschen voller Schulden.", "Sarah! Johannes Gutenberg, Goldschmied us Mainz. Mini Händ sind voll Tinte und mini Täsche voll Schulde."],
   ["The printing guy! Letters made of metal!", "Der Drucker-Typ! Buchstaben aus Metall!", "De Drucker-Typ! Buechstabe us Metall!"],
-  ["The years 1333 to 1481: the Black Death, war with Burgundy, the Council of Constance... and soon, books for everyone. Tour: Luzern, Basel, Mainz and the Gotthard road.", "Die Jahre 1333 bis 1481: der Schwarze Tod, Krieg mit Burgund, das Konzil von Konstanz... und bald Bücher für alle. Route: Luzern, Basel, Mainz und die Gotthardstrasse.", "D Jahr 1333 bis 1481: De Schwarz Tod, Chrieg mit Burgund, s Konzil vo Konschtanz... und bald Büecher für alli. Route: Luzärn, Basel, Mainz und d Gotthardstrass."],
+  ["The years 1333 to 1481: the Black Death, war with Burgundy, the Council of Constance... and soon, books for everyone. Tour: Luzern, Basel, Mainz and the Gotthard road.", "Die Jahre 1333 bis 1481: der Schwarze Tod, Krieg mit Burgund, das Konzil von Konstanz... und bald Bücher für alle. Route: Luzern, Basel, Mainz und die Gotthardstrasse.", "D Jahr 1333 bis 1481: De Schwarz Tod, Chrieg mit Burgund, s Konzil vo Konschtanz... und bald Büecher für alli. Route: Lozärn, Basel, Mainz und d Gotthardstrass."],
   ["Quests: print, lead a mule over the Gotthard, learn about the plague, run the Murten messenger race, and sketch the Kapellbrücke at night.", "Aufgaben: drucken, ein Maultier über den Gotthard führen, etwas über die Pest lernen, den Murtener Botenlauf laufen und die Kapellbrücke nachts skizzieren.", "Ufgabe: drucke, es Muli über de Gotthard füehre, öppis über d Pescht lerne, de Murtener Botelauf laufe und d Chapällbrugg znacht skizziere."],
   ["Sarah! Theophrastus Bombastus von Hohenheim, called Paracelsus. Doctor, alchemist, big mouth.", "Sarah! Theophrastus Bombastus von Hohenheim, genannt Paracelsus. Arzt, Alchemist, grosse Klappe.", "Sarah! Theophrastus Bombastus von Hohenheim, gnännt Paracelsus. Arzt, Alchemischt, grossi Gosche."],
   ["Paracelsus, from Einsiedeln! The \"dose makes the poison\" man!", "Paracelsus aus Einsiedeln! Der \"Dosis macht das Gift\"-Mann!", "Paracelsus us Einsidle! De \"Dosis macht s Gift\"-Maa!"],
@@ -1544,10 +1554,10 @@ addTR([
   ["Morgarten, in the east, beside the Ägerisee. Bring a good throwing arm.", "Morgarten, im Osten, am Ägerisee. Bring einen guten Wurfarm mit.", "Morgarte, im Oschte, am Ägerisee. Bring en gueten Wurfarm mit."],
   ["Château de Chillon, on Lake Geneva in the west. Savoyard guards... sneak in!", "Schloss Chillon, am Genfersee im Westen. Savoyer Wachen... schleich dich ein!", "S Schloss Chillon, am Gfersee im Weschte. Savoyer Wache... schliich di ii!"],
   ["Mainz, in the north-east: my printing shop!", "Mainz, im Nordosten: meine Druckerei!", "Mainz, im Nordoschte: mini Druckerei!"],
-  ["The mule stable on the Gotthard road, south of Luzern. 🫏", "Der Maultierstall an der Gotthardstrasse, südlich von Luzern. 🫏", "De Mulistall a de Gotthardstrass, südlich vo Luzärn. 🫏"],
+  ["The mule stable on the Gotthard road, south of Luzern. 🫏", "Der Maultierstall an der Gotthardstrasse, südlich von Luzern. 🫏", "De Mulistall a de Gotthardstrass, südlich vo Lozärn. 🫏"],
   ["The doctor at the Basel hospital, in the north-west. Mask on.", "Der Arzt im Basler Spital, im Nordwesten. Maske auf.", "De Arzt im Basler Spital, im Nordweschte. Maske uf."],
   ["The runner at the wall of Murten, in the west, needs fast legs.", "Der Läufer an der Mauer von Murten, im Westen, braucht schnelle Beine.", "De Läufer a de Muur vo Murte, im Weschte, bruucht schnelli Bei."],
-  ["The Kapellbrücke in Luzern at night. Watchmen... sneak in!", "Die Kapellbrücke in Luzern bei Nacht. Wächter... schleich dich ein!", "D Chapällbrugg z Luzärn znacht. Wächter... schliich di ii!"],
+  ["The Kapellbrücke in Luzern at night. Watchmen... sneak in!", "Die Kapellbrücke in Luzern bei Nacht. Wächter... schleich dich ein!", "D Chapällbrugg z Lozärn znacht. Wächter... schliich di ii!"],
   ["Paracelsus' apothecary in Basel. Bring a steady hand.", "Paracelsus' Apotheke in Basel. Bring eine ruhige Hand mit.", "S Paracelsus siner Apothek z Basel. Bring e ruhigi Hand mit."],
   ["Erasmus is at Froben's printing shop in Basel.", "Erasmus ist in Frobens Druckerei in Basel.", "De Erasmus isch i de Froben sinere Druckerei z Basel."],
   ["The printer Froschauer in Zürich has sausages and trouble.", "Der Drucker Froschauer in Zürich hat Würste und Ärger.", "De Drucker Froschauer z Züri het Würscht und Ärger."],
@@ -1740,6 +1750,13 @@ addTR([
   ["Guildmaster", "Zunftmeister", "Zunftmeischter"], ["Fever", "Fieber", "Fieber"], ["Pain", "Schmerz", "Schmärz"], ["poppy", "Mohn", "Mohn"], ["foxglove", "Fingerhut", "Fingerhuet"],
   ["Revolution", "Revolution", "Revolution"], ["Rebirth", "Wiedergeburt", "Widergburt"], ["Reformation", "Reformation", "Reformation"], ["Clockmaker", "Uhrmacher", "Uhrmacher"], ["Watchman", "Wächter", "Wächter"],
   ["Zürich", "Zürich", "Züri"], ["Aachen", "Aachen", "Aache"], ["25 December", "25. Dezember", "25. Dezämber"], ["1 May", "1. Mai", "1. Mai"], ["Benedict", "Benedikt", "Benedikt"],
+  // audit fixes: closing lines of finished conversations, world labels
+  ["A goat for the devil! Best deal Uri ever made.", "Eine Geiss für den Teufel! Das beste Geschäft, das Uri je gemacht hat.", "E Geiss für de Tüfel! S bescht Gschäft, wo Uri je gmacht het."],
+  ["The oath is sworn. Now keep it!", "Der Eid ist geschworen. Jetzt haltet ihn auch!", "De Eid isch gschwore. Jetzt haltet en au!"],
+  ["Wash, wait and keep your distance. That is all I know.", "Waschen, warten und Abstand halten. Mehr weiss ich nicht.", "Wäsche, warte und Abstand halte. Meh weiss ich nöd."],
+  ["The sausages were excellent. The scandal was even better.", "Die Würste waren ausgezeichnet. Der Skandal war noch besser.", "D Würscht sind uusgezeichnet gsi. De Skandal na besser."],
+  ["We lost at Marignano. Time to go home and keep out of foreign wars.", "Wir haben bei Marignano verloren. Zeit, heimzugehen und uns aus fremden Kriegen herauszuhalten.", "Mir händ bi Marignano verlore. Zit, hei z gah und sich us fremde Chriege uuse z halte."],
+  ["CONSTANCE", "KONSTANZ", "KONSTANZ"], ["ZÜRICH", "ZÜRICH", "ZÜRI"], ["LUZERN", "LUZERN", "LOZÄRN"],
   // @@TR5E
 
 ]);
